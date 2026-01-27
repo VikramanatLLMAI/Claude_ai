@@ -571,10 +571,27 @@ function ChatContent({
                 const isStreaming = isLoading && isLastMessage && isAssistant
                 const messageText = getMessageText(message)
 
+                // Debug: Log message for artifact detection
+                if (isAssistant && messageText && messageText.length > 0) {
+                  console.log(`Message ${index}:`, {
+                    preview: messageText.substring(0, 200),
+                    length: messageText.length,
+                    hasArtifactTag: messageText.includes('<artifact')
+                  })
+                }
+
                 // Detect artifacts in message
                 const messageHasArtifacts = hasArtifacts(messageText)
                 const artifacts = messageHasArtifacts ? extractArtifacts(messageText) : []
                 const cleanedMessageText = messageHasArtifacts ? getMessageWithoutArtifacts(messageText) : messageText
+
+                // Debug: Log artifact detection results
+                if (messageHasArtifacts) {
+                  console.log('Artifacts detected!', {
+                    count: artifacts.length,
+                    types: artifacts.map(a => a.type)
+                  })
+                }
 
                 return (
                   <Message
