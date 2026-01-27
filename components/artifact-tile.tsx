@@ -28,13 +28,13 @@ export function ArtifactTile({ artifact, onClick, isActive = false }: ArtifactTi
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold capitalize">{artifact.type}</h3>
+          <h3 className="font-semibold">{artifact.title}</h3>
           <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-            Artifact
+            {artifact.language}
           </span>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Click to view the interactive artifact
+          {artifact.type} • Click to view
         </p>
       </div>
 

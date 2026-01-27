@@ -67,9 +67,12 @@ export function ArtifactPreview({ artifact, isStreaming = false, onClose }: Arti
               <span className="text-sm">Preview</span>
             </Button>
           </div>
-          <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-            {artifact.type}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm">{artifact.title}</span>
+            <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+              {artifact.language}
+            </span>
+          </div>
           {isStreaming && (
             <span className="text-xs text-muted-foreground">Streaming...</span>
           )}
