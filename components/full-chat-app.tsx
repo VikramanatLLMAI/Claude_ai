@@ -474,10 +474,22 @@ function ChatContent({
 
   const getMessageText = (message: UIMessage): string => {
     const parts = Array.isArray(message.parts) ? message.parts : []
+
+    // Debug: Log message parts structure
+    console.log('getMessageText - parts:', parts.map(p => ({
+      type: p.type,
+      hasText: 'text' in p,
+      textLength: ('text' in p) ? (p.text as string)?.length : 0,
+      textPreview: ('text' in p) ? (p.text as string)?.substring(0, 200) : ''
+    })))
+
     const textFromParts = parts
       .filter((part) => part.type === "text" || part.type === "reasoning")
       .map((part) => ("text" in part ? part.text : ""))
       .join("")
+
+    console.log('getMessageText - combined text length:', textFromParts.length)
+    console.log('getMessageText - combined text preview:', textFromParts.substring(0, 300))
 
     if (textFromParts) {
       return textFromParts
