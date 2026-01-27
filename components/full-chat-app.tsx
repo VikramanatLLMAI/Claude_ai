@@ -359,6 +359,7 @@ function ChatContent({
   const optimisticMessageCounterRef = useRef(0)
   const [activeArtifact, setActiveArtifact] = useState<Artifact | null>(null)
   const [showArtifactPreview, setShowArtifactPreview] = useState(false)
+  const [isStreamingArtifact, setIsStreamingArtifact] = useState(false)
 
   // Determine API endpoint based on solution type
   const apiEndpoint = solutionType ? `/api/chat/${solutionType}` : "/api/chat"
@@ -451,6 +452,49 @@ function ChatContent({
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Auto-detect artifacts during streaming and open preview
+  useEffect(() => {
+    if (messages.length === 0) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage.role !== 'assistant') return
+
+    const messageText = getMessageText(lastMessage)
+    const hasArtifact = hasArtifacts(messageText)
+
+    if (hasArtifact) {
+      const artifacts = extractArtifacts(messageText)
+
+      if (artifacts.length > 0) {
+        const latestArtifact = artifacts[artifacts.length - 1]
+
+        // Auto-open preview if not already open
+        if (!showArtifactPreview) {
+          console.log('🎨 Auto-opening artifact preview during streaming')
+          setShowArtifactPreview(true)
+        }
+
+        // Update artifact content (this will show live updates)
+        setActiveArtifact(latestArtifact)
+        setIsStreamingArtifact(isLoading)
+
+        console.log('📡 Artifact streaming update:', {
+          isLoading,
+          contentLength: latestArtifact.content.length,
+          title: latestArtifact.title
+        })
+      }
+    }
+  }, [messages, isLoading, showArtifactPreview])
+
+  // When streaming stops, keep artifact open but mark as complete
+  useEffect(() => {
+    if (!isLoading && isStreamingArtifact) {
+      console.log('✅ Streaming complete - artifact ready for preview')
+      setIsStreamingArtifact(false)
+    }
+  }, [isLoading, isStreamingArtifact])
 
   const selectedModelInfo = CLAUDE_MODELS.find((m) => m.id === selectedModel)
 
@@ -646,8 +690,8 @@ function ChatContent({
                             {cleanedMessageText || (isStreaming ? "Thinking..." : "")}
                           </MessageContent>
 
-                          {/* Render artifact tiles */}
-                          {artifacts.length > 0 && artifacts.map((artifact, artifactIndex) => (
+                          {/* Render artifact tiles - only show when not streaming or preview not open */}
+                          {!isStreaming && artifacts.length > 0 && artifacts.map((artifact, artifactIndex) => (
                             <ArtifactTile
                               key={`${message.id}-artifact-${artifactIndex}`}
                               artifact={artifact}
@@ -655,6 +699,7 @@ function ChatContent({
                               onClick={() => {
                                 setActiveArtifact(artifact)
                                 setShowArtifactPreview(true)
+                                setIsStreamingArtifact(false)
                               }}
                             />
                           ))}
@@ -768,10 +813,11 @@ function ChatContent({
           <div className="w-1/2">
             <ArtifactPreview
               artifact={activeArtifact}
-              isStreaming={isLoading && messages.length > 0 && messages[messages.length - 1].role === "assistant"}
+              isStreaming={isStreamingArtifact}
               onClose={() => {
                 setShowArtifactPreview(false)
                 setActiveArtifact(null)
+                setIsStreamingArtifact(false)
               }}
             />
           </div>

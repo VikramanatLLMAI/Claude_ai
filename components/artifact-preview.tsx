@@ -13,17 +13,26 @@ interface ArtifactPreviewProps {
 }
 
 export function ArtifactPreview({ artifact, isStreaming = false, onClose }: ArtifactPreviewProps) {
-  const [mode, setMode] = useState<"code" | "preview">(isStreaming ? "code" : "preview")
+  const [mode, setMode] = useState<"code" | "preview">("code")
   const [copied, setCopied] = useState(false)
   const [iframeKey, setIframeKey] = useState(0)
 
-  // Switch to preview mode when streaming is done
+  // Set to code mode when streaming starts
+  useEffect(() => {
+    if (isStreaming) {
+      setMode("code")
+      console.log('📝 Streaming started - showing code mode')
+    }
+  }, [isStreaming])
+
+  // Auto-switch to preview mode when streaming is done
   useEffect(() => {
     if (!isStreaming && mode === "code") {
+      console.log('⏳ Streaming done - auto-switching to preview in 0.5s')
       const timer = setTimeout(() => {
         setMode("preview")
-        // Force iframe reload
         setIframeKey((prev) => prev + 1)
+        console.log('✅ Switched to preview mode')
       }, 500)
       return () => clearTimeout(timer)
     }
@@ -111,6 +120,12 @@ export function ArtifactPreview({ artifact, isStreaming = false, onClose }: Arti
             <pre className="text-sm">
               <code>{artifact.content}</code>
             </pre>
+            {isStreaming && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
+                Streaming code...
+              </div>
+            )}
           </div>
         ) : (
           <div className="h-full overflow-hidden bg-white">
