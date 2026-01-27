@@ -17,13 +17,17 @@ export interface Artifact {
 export function hasArtifacts(content: string): boolean {
   if (!content || typeof content !== 'string') return false
 
-  // Check for artifact tags with type, title, and language attributes
-  const hasArtifactTag = /<artifact\s+type=["'][^"']+["']\s+title=["'][^"']*["']\s+language=["'][^"']+["']>[\s\S]*?<\/artifact>/i.test(content)
+  // More flexible regex - checks for <artifact with any attributes
+  const hasArtifactTag = /<artifact\s+[^>]*type=/i.test(content) && /<\/artifact>/i.test(content)
 
   console.log('Artifact detection:', {
     contentLength: content.length,
     hasArtifactTag,
-    preview: content.substring(0, 200)
+    hasOpenTag: /<artifact\s+/i.test(content),
+    hasCloseTag: /<\/artifact>/i.test(content),
+    hasTypeAttr: /type=/i.test(content),
+    preview: content.substring(0, 300),
+    searchFor: '<artifact'
   })
 
   return hasArtifactTag
@@ -38,29 +42,37 @@ export function extractArtifacts(content: string): Artifact[] {
 
   const artifacts: Artifact[] = []
 
-  // Match artifact tags with type, title, and language attributes
-  // Supports both single and double quotes, and flexible attribute order
-  const pattern = /<artifact\s+(?:type=["']([^"']+)["']\s+)?(?:title=["']([^"']*?)["']\s+)?(?:language=["']([^"']+)["']\s*)?(?:type=["']([^"']+)["']\s+)?(?:title=["']([^"']*?)["']\s+)?(?:language=["']([^"']+)["'])?[^>]*>([\s\S]*?)<\/artifact>/gi
-
-  // Simpler pattern that expects specific order: type, title, language
-  const simplePattern = /<artifact\s+type=["']([^"']+)["']\s+title=["']([^"']*?)["']\s+language=["']([^"']+)["']>([\s\S]*?)<\/artifact>/gi
+  // More flexible pattern - extract attributes separately
+  // This handles any whitespace and attribute order
+  const artifactRegex = /<artifact\s+([^>]+)>([\s\S]*?)<\/artifact>/gi
 
   let match
-  while ((match = simplePattern.exec(content)) !== null) {
-    artifacts.push({
-      type: match[1],
-      title: match[2],
-      language: match[3],
-      content: match[4].trim(),
-      rawMatch: match[0],
-    })
+  while ((match = artifactRegex.exec(content)) !== null) {
+    const attributes = match[1]
+    const artifactContent = match[2]
+
+    // Extract individual attributes
+    const typeMatch = /type=["']([^"']+)["']/i.exec(attributes)
+    const titleMatch = /title=["']([^"']*?)["']/i.exec(attributes)
+    const languageMatch = /language=["']([^"']+)["']/i.exec(attributes)
+
+    if (typeMatch) {
+      artifacts.push({
+        type: typeMatch[1],
+        title: titleMatch ? titleMatch[1] : 'Untitled',
+        language: languageMatch ? languageMatch[1] : 'text',
+        content: artifactContent.trim(),
+        rawMatch: match[0],
+      })
+    }
   }
 
   console.log('Extracted artifacts:', artifacts.length, artifacts.map(a => ({
     type: a.type,
     title: a.title,
     language: a.language,
-    contentLength: a.content.length
+    contentLength: a.content.length,
+    contentPreview: a.content.substring(0, 100)
   })))
 
   return artifacts

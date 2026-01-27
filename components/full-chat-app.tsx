@@ -572,12 +572,13 @@ function ChatContent({
                 const messageText = getMessageText(message)
 
                 // Debug: Log message for artifact detection
-                if (isAssistant && messageText && messageText.length > 0) {
-                  console.log(`Message ${index}:`, {
-                    preview: messageText.substring(0, 200),
-                    length: messageText.length,
-                    hasArtifactTag: messageText.includes('<artifact')
-                  })
+                if (isAssistant) {
+                  console.log(`\n=== Message ${index} Debug ===`)
+                  console.log('Message text length:', messageText?.length || 0)
+                  console.log('First 500 chars:', messageText?.substring(0, 500))
+                  console.log('Contains <artifact:', messageText?.includes('<artifact'))
+                  console.log('Contains </artifact>:', messageText?.includes('</artifact>'))
+                  console.log('Message object:', message)
                 }
 
                 // Detect artifacts in message
@@ -587,10 +588,18 @@ function ChatContent({
 
                 // Debug: Log artifact detection results
                 if (messageHasArtifacts) {
-                  console.log('Artifacts detected!', {
+                  console.log('✅ Artifacts detected!', {
                     count: artifacts.length,
-                    types: artifacts.map(a => a.type)
+                    artifacts: artifacts.map(a => ({
+                      type: a.type,
+                      title: a.title,
+                      language: a.language,
+                      contentLength: a.content.length
+                    }))
                   })
+                } else if (isAssistant && messageText?.includes('<artifact')) {
+                  console.log('❌ Artifact tag found but detection failed!')
+                  console.log('Message text:', messageText)
                 }
 
                 return (
