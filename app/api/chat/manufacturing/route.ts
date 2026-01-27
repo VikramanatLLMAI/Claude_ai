@@ -79,15 +79,30 @@ export async function POST(req: Request) {
 
   // Save user message to database if conversationId is provided
   if (conversationId && messages.length > 0) {
-    const lastUserMessage = messages[messages.length - 1]
-    if (lastUserMessage.role === "user") {
-      await prisma.message.create({
-        data: {
-          role: "user",
-          content: extractMessageText(lastUserMessage),
-          conversationId,
-        },
-      })
+    // Verify conversation exists before saving message
+    const conversationExists = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { id: true }
+    })
+
+    if (conversationExists) {
+      const lastUserMessage = messages[messages.length - 1]
+      if (lastUserMessage.role === "user") {
+        try {
+          await prisma.message.create({
+            data: {
+              role: "user",
+              content: extractMessageText(lastUserMessage),
+              conversationId,
+            },
+          })
+        } catch (error) {
+          console.error('Error saving user message:', error)
+          // Continue with streaming even if save fails
+        }
+      }
+    } else {
+      console.warn(`Conversation ${conversationId} not found, skipping message save`)
     }
   }
 
