@@ -15,22 +15,24 @@ export interface Artifact {
  * Format: <artifact type="TYPE" title="TITLE" language="LANG">content</artifact>
  */
 export function hasArtifacts(content: string): boolean {
-  if (!content || typeof content !== 'string') return false
+  if (!content || typeof content !== 'string') {
+    console.log('hasArtifacts: content is null or not string')
+    return false
+  }
 
-  // More flexible regex - checks for <artifact with any attributes
-  const hasArtifactTag = /<artifact\s+[^>]*type=/i.test(content) && /<\/artifact>/i.test(content)
+  // Super simple check - just look for the artifact tag opening
+  const simpleCheck = content.includes('<artifact')
+  const hasClosing = content.includes('</artifact>')
 
-  console.log('Artifact detection:', {
+  console.log('Artifact detection (simple):', {
     contentLength: content.length,
-    hasArtifactTag,
-    hasOpenTag: /<artifact\s+/i.test(content),
-    hasCloseTag: /<\/artifact>/i.test(content),
-    hasTypeAttr: /type=/i.test(content),
-    preview: content.substring(0, 300),
-    searchFor: '<artifact'
+    simpleCheck,
+    hasClosing,
+    indexOf_artifact: content.indexOf('<artifact'),
+    preview_first_500: content.substring(0, 500),
   })
 
-  return hasArtifactTag
+  return simpleCheck && hasClosing
 }
 
 /**

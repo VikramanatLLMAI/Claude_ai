@@ -586,11 +586,19 @@ function ChatContent({
                 // Debug: Log message for artifact detection
                 if (isAssistant) {
                   console.log(`\n=== Message ${index} Debug ===`)
+                  console.log('Raw message object:', JSON.stringify(message, null, 2))
                   console.log('Message text length:', messageText?.length || 0)
-                  console.log('First 500 chars:', messageText?.substring(0, 500))
+                  console.log('First 1000 chars:', messageText?.substring(0, 1000))
                   console.log('Contains <artifact:', messageText?.includes('<artifact'))
                   console.log('Contains </artifact>:', messageText?.includes('</artifact>'))
-                  console.log('Message object:', message)
+
+                  // Test with exact string from user
+                  const testString = '<artifact type="application"'
+                  console.log(`Contains "${testString}":`, messageText?.includes(testString))
+
+                  // Check for HTML entities
+                  console.log('Contains &lt;:', messageText?.includes('&lt;'))
+                  console.log('Contains &gt;:', messageText?.includes('&gt;'))
                 }
 
                 // Detect artifacts in message
