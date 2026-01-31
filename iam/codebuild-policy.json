@@ -37,7 +37,10 @@
         "s3:PutObject",
         "s3:GetObjectVersion"
       ],
-      "Resource": "arn:aws:s3:::codebuild-*/*"
+      "Resource": [
+        "arn:aws:s3:::codebuild-*/*",
+        "arn:aws:s3:::athena-mcp-build-628203515088/*"
+      ]
     }
   ]
 }

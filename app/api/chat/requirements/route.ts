@@ -178,7 +178,7 @@ export async function POST(req: Request) {
                     type: `tool-${toolCall.toolName}`,
                     toolCallId: toolCall.toolCallId,
                     toolName: toolCall.toolName,
-                    input: toolCall.args,
+                    input: (toolCall as Record<string, unknown>).args ?? {},
                     state: toolResult ? 'output-available' : 'input-available',
                     output: toolResult?.result,
                   });

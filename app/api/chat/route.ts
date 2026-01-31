@@ -190,7 +190,7 @@ export async function POST(req: Request) {
         if (event.toolCalls && event.toolCalls.length > 0) {
           console.log(`[Chat] Tool calls made:`, event.toolCalls.map(tc => ({
             name: tc.toolName,
-            args: JSON.stringify(tc.args).substring(0, 200)
+            args: JSON.stringify((tc as Record<string, unknown>).args ?? {}).substring(0, 200)
           })));
         }
 
@@ -274,7 +274,7 @@ export async function POST(req: Request) {
                     type: `tool-${toolCall.toolName}`,
                     toolCallId: toolCall.toolCallId,
                     toolName: toolCall.toolName,
-                    input: toolCall.args,
+                    input: (toolCall as Record<string, unknown>).args ?? {},
                     state: toolResult ? 'output-available' : 'input-available',
                     output: toolResult?.result,
                   });
