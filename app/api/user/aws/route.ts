@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateUser, getUserById } from '@/lib/storage';
+import { requireAuth } from '@/lib/auth-middleware';
+import { updateUser } from '@/lib/storage';
 import { encrypt, decrypt } from '@/lib/encryption';
 
-// Default user ID for demo mode
-const DEMO_USER_ID = 'demo-user-id';
-
 // GET /api/user/aws - Get AWS configuration (masked)
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
-    const user = await getUserById(DEMO_USER_ID);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
     // Return masked credentials for security
     const hasAccessKey = !!user.awsAccessKeyEncrypted;
     const hasSecretKey = !!user.awsSecretKeyEncrypted;
@@ -47,6 +41,11 @@ export async function GET() {
 
 // POST /api/user/aws - Save AWS credentials
 export async function POST(req: NextRequest) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { accessKeyId, secretAccessKey, region } = await req.json();
 
@@ -69,8 +68,8 @@ export async function POST(req: NextRequest) {
     const encryptedAccessKey = encrypt(accessKeyId);
     const encryptedSecretKey = encrypt(secretAccessKey);
 
-    // Update user record
-    await updateUser(DEMO_USER_ID, {
+    // Update authenticated user's record
+    await updateUser(user.id, {
       awsAccessKeyEncrypted: encryptedAccessKey,
       awsSecretKeyEncrypted: encryptedSecretKey,
       awsRegion: region || 'us-east-1',

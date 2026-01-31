@@ -21,10 +21,6 @@ export type {
   Session,
 };
 
-// Default user ID for unauthenticated access (demo mode)
-// In production, this should always come from authenticated session
-const DEFAULT_USER_ID = 'demo-user-id';
-
 // ============================================
 // User Operations
 // ============================================
@@ -128,16 +124,11 @@ export async function createConversation(data: {
   title?: string;
   model?: string;
   solutionType?: string | null;
-  userId?: string;
+  userId: string;
 }): Promise<Conversation> {
-  const userId = data.userId || DEFAULT_USER_ID;
-
-  // Ensure demo user exists for unauthenticated access
-  await ensureDemoUser();
-
   return prisma.conversation.create({
     data: {
-      userId,
+      userId: data.userId,
       title: data.title || 'New Chat',
       model: data.model || 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
       solutionType: data.solutionType || null,
@@ -156,11 +147,9 @@ export async function getConversation(id: string): Promise<(Conversation & { mes
   });
 }
 
-export async function getAllConversations(userId?: string): Promise<Conversation[]> {
-  const whereClause = userId ? { userId } : { userId: DEFAULT_USER_ID };
-
+export async function getAllConversations(userId: string): Promise<Conversation[]> {
   return prisma.conversation.findMany({
-    where: whereClause,
+    where: { userId },
     orderBy: [
       { isPinned: 'desc' },
       { updatedAt: 'desc' },
@@ -170,15 +159,13 @@ export async function getAllConversations(userId?: string): Promise<Conversation
 
 export async function getConversationsBySolution(
   solutionType: string | null,
-  userId?: string
+  userId: string
 ): Promise<Conversation[]> {
-  const baseWhere = userId ? { userId } : { userId: DEFAULT_USER_ID };
-
   // If no solution type, get conversations without a solution type (general chat)
   // If solution type provided, get conversations for that specific solution
   const whereClause = solutionType
-    ? { ...baseWhere, solutionType }
-    : { ...baseWhere, solutionType: null };
+    ? { userId, solutionType }
+    : { userId, solutionType: null };
 
   return prisma.conversation.findMany({
     where: whereClause,
@@ -413,31 +400,6 @@ export async function deleteMcpConnection(id: string): Promise<boolean> {
 // ============================================
 // Helper Functions
 // ============================================
-
-/**
- * Ensure demo user exists for unauthenticated access
- * This allows the app to work without full authentication
- */
-async function ensureDemoUser(): Promise<void> {
-  const existingUser = await prisma.user.findUnique({
-    where: { id: DEFAULT_USER_ID },
-  });
-
-  if (!existingUser) {
-    try {
-      await prisma.user.create({
-        data: {
-          id: DEFAULT_USER_ID,
-          email: 'demo@athena.local',
-          passwordHash: 'demo-user-no-password',
-          name: 'Demo User',
-        },
-      });
-    } catch {
-      // User might already exist from concurrent request
-    }
-  }
-}
 
 /**
  * Convert message to UIMessage format for frontend

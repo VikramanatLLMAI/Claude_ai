@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateMessage } from '@/lib/storage';
+import { requireAuth } from '@/lib/auth-middleware';
+import { updateMessage, getConversation } from '@/lib/storage';
 import prisma from '@/lib/db';
 import {
   MessageFeedbackSchema,
@@ -13,6 +14,11 @@ import {
 } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const body = await req.json();
 
@@ -30,12 +36,22 @@ export async function POST(req: NextRequest) {
     // Get current message to preserve existing metadata
     const message = await prisma.message.findUnique({
       where: { id: messageId },
+      include: { conversation: true },
     });
 
     if (!message) {
       return NextResponse.json(
         { error: 'Message not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify the message belongs to a conversation owned by the user
+    const conversation = await getConversation(message.conversationId);
+    if (!conversation || conversation.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to provide feedback on this message' },
+        { status: 403 }
       );
     }
 

@@ -1,3 +1,4 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { streamText, convertToModelMessages, stepCountIs } from 'ai';
 import { bedrock } from '@/lib/bedrock';
 import { extractArtifacts } from '@/lib/artifacts';
@@ -5,6 +6,7 @@ import { addMessage, createArtifact } from '@/lib/storage';
 import { buildSystemPromptWithTools } from '@/lib/system-prompts';
 import { loadActiveMcpToolsWithDescriptions } from '@/lib/mcp-client';
 import { webSearchTool } from '@/lib/code-executor';
+import { requireAuth } from '@/lib/auth-middleware';
 
 export const maxDuration = 60;
 
@@ -25,10 +27,11 @@ function supportsReasoning(modelId: string): boolean {
 // Solution type for this route
 const SOLUTION_TYPE = 'manufacturing';
 
-// Default user ID for demo mode (no auth)
-const DEMO_USER_ID = 'demo-user-id';
+export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
 
-export async function POST(req: Request) {
   try {
     const {
       messages: uiMessages,
@@ -226,7 +229,7 @@ export async function POST(req: Request) {
               await createArtifact({
                 conversationId,
                 messageId: message.id,
-                userId: DEMO_USER_ID,
+                userId: user.id,
                 type: artifact.type || 'html',
                 title: artifact.title,
                 content: artifact.content,

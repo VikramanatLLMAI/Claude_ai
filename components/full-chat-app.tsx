@@ -23,7 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuSub,
@@ -70,7 +69,6 @@ import {
   Plus,
   Settings,
   Share2,
-  Sparkles,
   Square,
   ThumbsDown,
   ThumbsUp,
@@ -79,9 +77,9 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useKeyboardShortcuts, getShortcutDisplay, CHAT_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts"
+import { useKeyboardShortcuts, CHAT_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts"
 import { motion, AnimatePresence } from "motion/react"
-import { extractArtifacts, getMessageWithoutArtifacts, hasArtifacts, getTextBeforeArtifact, getTextAfterArtifact, isArtifactStreaming, getStreamingArtifact, hasPartialArtifactTag, type Artifact } from "@/lib/artifacts"
+import { extractArtifacts, hasArtifacts, getTextBeforeArtifact, getTextAfterArtifact, isArtifactStreaming, getStreamingArtifact, type Artifact } from "@/lib/artifacts"
 import { ArtifactTile } from "@/components/artifact-tile"
 import { ArtifactPreview } from "@/components/artifact-preview"
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels"
@@ -139,6 +137,30 @@ interface Conversation {
 const AUTH_SESSION_KEY = "athena_auth_session"
 const AUTH_TOKEN_KEY = "athena_auth_token"
 
+// Helper function to get auth headers for API calls
+function getAuthHeaders(): Record<string, string> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) || "" : ""
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  }
+}
+
+// Helper function to get user name from session
+function getUserNameFromSession(): string {
+  if (typeof window === 'undefined') return "User"
+  try {
+    const sessionData = localStorage.getItem(AUTH_SESSION_KEY)
+    if (sessionData) {
+      const session = JSON.parse(sessionData)
+      return session.user?.name || session.user?.email?.split('@')[0] || "User"
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return "User"
+}
+
 // Solution type display names
 const SOLUTION_NAMES: Record<string, string> = {
   'manufacturing': 'Manufacturing',
@@ -168,13 +190,15 @@ function McpConnectionsSubmenu({
   useEffect(() => {
     const fetchConnections = async () => {
       try {
-        const res = await fetch("/api/mcp/connections")
+        const res = await fetch("/api/mcp/connections", {
+          headers: getAuthHeaders(),
+        })
         if (res.ok) {
           const data = await res.json()
           setConnections(data)
         }
-      } catch (error) {
-        console.error("Error fetching MCP connections:", error)
+      } catch {
+        // Silently fail - MCP connections are optional
       } finally {
         setIsLoading(false)
       }
@@ -268,6 +292,7 @@ function ChatSidebar({
   onPinConversation,
   onShareConversation,
   solutionType,
+  userName,
 }: {
   conversations: Conversation[]
   selectedId: string | null
@@ -277,6 +302,7 @@ function ChatSidebar({
   onPinConversation: (id: string, isPinned: boolean) => void
   onShareConversation: (id: string) => void
   solutionType?: string | null
+  userName: string
 }) {
   const router = useRouter()
 
@@ -467,7 +493,7 @@ function ChatSidebar({
                   tooltip="Account"
                 >
                   <User2 className="size-4" />
-                  <span>John Doe</span>
+                  <span>{userName}</span>
                   <ChevronUp className="ml-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -525,7 +551,9 @@ function ChatContent({
 
     const loadConnectedMcps = async () => {
       try {
-        const res = await fetch("/api/mcp/connections")
+        const res = await fetch("/api/mcp/connections", {
+          headers: getAuthHeaders(),
+        })
         if (res.ok) {
           const connections = await res.json()
           // Enable all connected MCPs by default
@@ -536,7 +564,7 @@ function ChatContent({
             setActiveMcpIds(connectedIds)
           }
         }
-      } catch (error) {
+      } catch {
         // Silently fail - MCP connections are optional
       }
     }
@@ -712,10 +740,11 @@ function ChatContent({
     activeMcpIds,
   }), [selectedModel, webSearchEnabled, conversationId, activeMcpIds])
 
-  // Create transport with memoized configuration
+  // Create transport with memoized configuration - includes auth headers
   const transport = useMemo(() => new DefaultChatTransport({
     api: apiEndpoint,
     body: requestBody,
+    headers: getAuthHeaders(),
   }), [apiEndpoint, requestBody])
 
   const {
@@ -757,11 +786,10 @@ function ChatContent({
     try {
       const res = await fetch(`/api/conversations/${convId}/title`, {
         method: 'POST',
+        headers: getAuthHeaders(),
       })
-      if (res.ok) {
-        const data = await res.json()
-        console.log('Generated title:', data.title)
-        // The parent component will refresh the conversations list
+      if (!res.ok) {
+        console.error('Failed to generate title: HTTP', res.status)
       }
     } catch (error) {
       console.error('Failed to generate title:', error)
@@ -782,7 +810,7 @@ function ChatContent({
     try {
       await fetch('/api/messages/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ messageId, feedback, comment }),
       })
     } catch (error) {
@@ -837,7 +865,6 @@ function ChatContent({
 
     // Small delay to ensure React state is fully updated and transport is recreated
     const timeoutId = setTimeout(() => {
-      console.log(`Sending pending message for new conversation ${conversationId}`)
       sendMessage({ text: pending.text, messageId: pending.messageId }, { body: requestBody })
       // Clear the new conversation flag after message is sent
       isNewConversationRef.current = false
@@ -850,7 +877,6 @@ function ChatContent({
   useEffect(() => {
     // Skip loading if this is a new conversation being created
     if (isNewConversationRef.current) {
-      console.log('Skipping message load - new conversation being created')
       return
     }
 
@@ -862,7 +888,9 @@ function ChatContent({
 
       const fetchMessages = async () => {
         try {
-          const res = await fetch(`/api/conversations/${conversationId}`)
+          const res = await fetch(`/api/conversations/${conversationId}`, {
+            headers: getAuthHeaders(),
+          })
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}`)
           }
@@ -870,14 +898,12 @@ function ChatContent({
 
           // Check if we're still on the same conversation using the ref
           if (currentConversationRef.current !== conversationId) {
-            console.log(`Conversation changed while loading, ignoring messages for ${conversationId}`)
             return
           }
 
           if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
             // API now returns UIMessage format directly - no transformation needed
             const loadedMessages: UIMessage[] = data.messages
-            console.log(`Loaded ${loadedMessages.length} messages for conversation ${conversationId}`)
 
             // Set both initial messages and current messages
             setInitialMessages(loadedMessages)
@@ -885,11 +911,9 @@ function ChatContent({
             setTimeout(() => {
               if (currentConversationRef.current === conversationId) {
                 setMessages(loadedMessages)
-                console.log(`Messages set for conversation ${conversationId}`)
               }
             }, 0)
           } else {
-            console.log(`No messages from server for conversation ${conversationId}`)
             // Clear messages for this conversation since server has none
             setInitialMessages([])
             setTimeout(() => {
@@ -1080,16 +1104,27 @@ function ChatContent({
       try {
         // Mark that we're creating a new conversation - this prevents the message loading effect from clearing messages
         isNewConversationRef.current = true
+        console.log("[createConversation] Creating with solutionType:", solutionType)
         const response = await fetch("/api/conversations", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             title: text.slice(0, 50) + (text.length > 50 ? "..." : ""),
             model: selectedModel,
             solutionType: solutionType,
           }),
         })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || `HTTP ${response.status}`)
+        }
+
         const newConversation = await response.json()
+        console.log("[createConversation] Created:", newConversation.id, "solutionType:", newConversation.solutionType)
+        if (!newConversation.id) {
+          throw new Error("Invalid conversation response - no ID")
+        }
         onConversationCreated(newConversation.id)
         pendingMessageRef.current = { text, messageId: optimisticMessageId }
       } catch (error) {
@@ -1755,10 +1790,16 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
   const [selectedModel, setSelectedModel] = useState<ClaudeModelId>(CLAUDE_MODELS[0].id)
   const [isLoading, setIsLoading] = useState(true)
   const [solutionType, setSolutionType] = useState<string | null>(propSolutionType ?? null)
+  const [userName, setUserName] = useState<string>("User")
   // Track the chat key separately - stays stable during new conversation creation
   // Only changes when user explicitly selects an existing conversation
   const [chatKey, setChatKey] = useState<string>('new-chat')
   const router = useRouter()
+
+  // Load user name from session on mount
+  useEffect(() => {
+    setUserName(getUserNameFromSession())
+  }, [])
 
   // Get solution type from prop or URL on mount
   useEffect(() => {
@@ -1797,13 +1838,35 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
         url.searchParams.set("solutionType", "")
       }
 
-      const response = await fetch(url.toString())
+      console.log("[fetchConversations] Fetching with solutionType:", solutionType, "URL:", url.toString())
+
+      const response = await fetch(url.toString(), {
+        headers: getAuthHeaders(),
+      })
+
+      console.log("[fetchConversations] Response status:", response.status)
+
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        // Auth failed - user needs to log in
+        if (response.status === 401) {
+          console.log("[fetchConversations] 401 - redirecting to login")
+          window.location.href = '/'
+          return
+        }
+        console.error("[fetchConversations] Failed:", response.status)
+        setConversations([])
+        return
+      }
+
       const data = await response.json()
+      console.log("[fetchConversations] Data received:", data?.length ?? 0, "conversations")
+
       // Only set if response is an array (not an error object)
       if (Array.isArray(data)) {
         setConversations(data)
       } else {
-        console.error("Invalid conversations data:", data)
+        console.error("[fetchConversations] Invalid data format:", data)
         setConversations([])
       }
     } catch (error) {
@@ -1852,11 +1915,14 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
     setSelectedConversationId(id)
     // Refresh conversations list
     fetchConversations()
-  }, [])
+  }, [fetchConversations])
 
   const handleDeleteConversation = useCallback(async (id: string) => {
     try {
-      await fetch(`/api/conversations/${id}`, { method: "DELETE" })
+      await fetch(`/api/conversations/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      })
       setConversations((prev) => prev.filter((c) => c.id !== id))
       if (selectedConversationId === id) {
         // Reset both ID and chatKey to force ChatContent remount
@@ -1873,7 +1939,7 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
     try {
       await fetch(`/api/conversations/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ isPinned }),
       })
       setConversations((prev) =>
@@ -1888,7 +1954,7 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
     try {
       await fetch(`/api/conversations/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ isShared: true }),
       })
       // Copy share link to clipboard
@@ -1911,6 +1977,7 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
         onPinConversation={handlePinConversation}
         onShareConversation={handleShareConversation}
         solutionType={solutionType}
+        userName={userName}
       />
       <SidebarInset className="overflow-hidden">
         <ChatContent

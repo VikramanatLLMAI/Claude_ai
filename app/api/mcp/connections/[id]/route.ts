@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-middleware';
 import { getMcpConnection, updateMcpConnection, deleteMcpConnection } from '@/lib/storage';
 
 // GET /api/mcp/connections/[id] - Get a single MCP connection
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
     const connection = await getMcpConnection(id);
@@ -14,6 +20,14 @@ export async function GET(
       return NextResponse.json(
         { error: 'MCP connection not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    if (connection.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to access this MCP connection' },
+        { status: 403 }
       );
     }
 
@@ -42,6 +56,11 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -51,6 +70,14 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'MCP connection not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    if (connection.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to update this MCP connection' },
+        { status: 403 }
       );
     }
 
@@ -95,9 +122,14 @@ export async function PATCH(
 
 // DELETE /api/mcp/connections/[id] - Delete an MCP connection
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
 
@@ -106,6 +138,14 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'MCP connection not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    if (connection.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this MCP connection' },
+        { status: 403 }
       );
     }
 

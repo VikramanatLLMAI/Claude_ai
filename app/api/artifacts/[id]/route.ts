@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getArtifact, updateArtifact, deleteArtifact } from '@/lib/storage';
+import { requireAuth } from '@/lib/auth-middleware';
 
 // GET /api/artifacts/[id] - Get a single artifact with full content
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
     const artifact = await getArtifact(id);
@@ -14,6 +19,14 @@ export async function GET(
       return NextResponse.json(
         { error: 'Artifact not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify user owns this artifact
+    if (artifact.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to access this artifact' },
+        { status: 403 }
       );
     }
 
@@ -41,6 +54,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -51,6 +68,14 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'Artifact not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify user owns this artifact
+    if (artifact.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to update this artifact' },
+        { status: 403 }
       );
     }
 
@@ -87,9 +112,13 @@ export async function PATCH(
 
 // DELETE /api/artifacts/[id] - Delete an artifact
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
 
@@ -98,6 +127,14 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Artifact not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify user owns this artifact
+    if (artifact.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this artifact' },
+        { status: 403 }
       );
     }
 

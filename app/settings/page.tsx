@@ -213,10 +213,21 @@ export default function SettingsPage() {
     }
   }
 
+  // Helper function to get auth headers
+  const getAuthHeaders = useCallback(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY) || ""
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    }
+  }, [])
+
   // Fetch MCP connections
   const fetchConnections = useCallback(async () => {
     try {
-      const res = await fetch("/api/mcp/connections")
+      const res = await fetch("/api/mcp/connections", {
+        headers: getAuthHeaders(),
+      })
       if (res.ok) {
         const data = await res.json()
         setConnections(data)
@@ -226,7 +237,7 @@ export default function SettingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [getAuthHeaders])
 
   useEffect(() => {
     fetchConnections()
@@ -243,7 +254,7 @@ export default function SettingsPage() {
   }) => {
     const res = await fetch("/api/mcp/connections", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     })
 
@@ -258,6 +269,7 @@ export default function SettingsPage() {
   const handleConnect = async (id: string) => {
     const res = await fetch(`/api/mcp/connections/${id}/test`, {
       method: "POST",
+      headers: getAuthHeaders(),
     })
 
     if (res.ok) {
@@ -268,7 +280,7 @@ export default function SettingsPage() {
   const handleDisconnect = async (id: string) => {
     await fetch(`/api/mcp/connections/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ status: "disconnected", isActive: false }),
     })
     await fetchConnections()
@@ -282,6 +294,7 @@ export default function SettingsPage() {
   const handleDeleteConnection = async (id: string) => {
     await fetch(`/api/mcp/connections/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     })
     await fetchConnections()
   }
@@ -289,6 +302,7 @@ export default function SettingsPage() {
   const handleRefreshTools = async (id: string) => {
     await fetch(`/api/mcp/connections/${id}/discover`, {
       method: "POST",
+      headers: getAuthHeaders(),
     })
     await fetchConnections()
   }

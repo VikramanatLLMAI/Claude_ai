@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getConversationArtifacts, createArtifact } from '@/lib/storage';
-
-// Default user ID for demo mode
-const DEMO_USER_ID = 'demo-user-id';
+import { getConversationArtifacts, createArtifact, getConversation } from '@/lib/storage';
+import { requireAuth } from '@/lib/auth-middleware';
 
 // GET /api/artifacts?conversationId=xxx - Get all artifacts for a conversation
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const conversationId = req.nextUrl.searchParams.get('conversationId');
 
@@ -13,6 +15,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         { error: 'conversationId is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify user owns this conversation
+    const conversation = await getConversation(conversationId);
+    if (!conversation || conversation.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to access this conversation' },
+        { status: 403 }
       );
     }
 
@@ -42,6 +53,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/artifacts - Create a new artifact
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const body = await req.json();
     const { conversationId, messageId, type, title, content } = body;
@@ -53,10 +68,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify user owns this conversation
+    const conversation = await getConversation(conversationId);
+    if (!conversation || conversation.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to access this conversation' },
+        { status: 403 }
+      );
+    }
+
     const artifact = await createArtifact({
       conversationId,
       messageId,
-      userId: DEMO_USER_ID,
+      userId: user.id,
       type: type || 'html',
       title,
       content,

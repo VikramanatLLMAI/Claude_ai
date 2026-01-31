@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plug, Settings, Check } from "lucide-react"
+import { Plug, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -15,6 +15,16 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+
+const AUTH_TOKEN_KEY = "athena_auth_token"
+
+function getAuthHeaders(): Record<string, string> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) || "" : ""
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  }
+}
 
 interface McpConnection {
   id: string
@@ -38,7 +48,9 @@ export function McpToggle({ activeMcpIds, onToggle, className }: McpToggleProps)
   useEffect(() => {
     const fetchConnections = async () => {
       try {
-        const res = await fetch("/api/mcp/connections")
+        const res = await fetch("/api/mcp/connections", {
+          headers: getAuthHeaders(),
+        })
         if (res.ok) {
           const data = await res.json()
           setConnections(data)

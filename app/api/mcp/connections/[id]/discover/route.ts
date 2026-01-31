@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-middleware';
 import { getMcpConnection, updateMcpConnection } from '@/lib/storage';
 import { decrypt } from '@/lib/encryption';
 
@@ -10,9 +11,14 @@ interface McpTool {
 
 // POST /api/mcp/connections/[id]/discover - Discover available tools from MCP server
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
     const connection = await getMcpConnection(id);
@@ -21,6 +27,14 @@ export async function POST(
       return NextResponse.json(
         { error: 'MCP connection not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    if (connection.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to access this MCP connection' },
+        { status: 403 }
       );
     }
 
@@ -87,8 +101,6 @@ export async function POST(
         description: tool.description || '',
         inputSchema: tool.inputSchema || { type: 'object', properties: {} },
       }));
-
-      console.log(`[MCP] Discovered ${toolsWithSchema.length} tools:`, toolsWithSchema.map(t => t.name));
 
       await updateMcpConnection(id, {
         availableTools: toolsWithSchema,

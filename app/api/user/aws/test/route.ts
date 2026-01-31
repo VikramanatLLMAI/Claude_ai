@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-middleware';
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
 
 // POST /api/user/aws/test - Test AWS Bedrock connection
 export async function POST(req: NextRequest) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  // User is authenticated - proceed with test
+
   try {
     const { accessKeyId, secretAccessKey, region } = await req.json();
 
@@ -25,7 +31,7 @@ export async function POST(req: NextRequest) {
     // The actual test happens when we try to use it
     try {
       // Create a simple model reference - this validates the credentials
-      const model = testBedrock('us.anthropic.claude-sonnet-4-5-20250929-v1:0');
+      testBedrock('us.anthropic.claude-sonnet-4-5-20250929-v1:0');
 
       // If we get here, credentials are valid enough to create the client
       // A full test would require making an actual API call, but that would incur costs

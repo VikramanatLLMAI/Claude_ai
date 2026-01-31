@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-middleware';
 import { getMcpConnection, updateMcpConnection } from '@/lib/storage';
 import { decrypt } from '@/lib/encryption';
 
 // POST /api/mcp/connections/[id]/test - Test connection to MCP server
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Require authentication
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await params;
     const connection = await getMcpConnection(id);
@@ -15,6 +21,14 @@ export async function POST(
       return NextResponse.json(
         { error: 'MCP connection not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    if (connection.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to test this MCP connection' },
+        { status: 403 }
       );
     }
 
@@ -128,12 +142,10 @@ export async function POST(
             await updateMcpConnection(id, {
               availableTools: discoveredTools,
             });
-
-            console.log(`[MCP] Auto-discovered ${discoveredTools.length} tools from ${connection.name}`);
           }
         }
-      } catch (discoverError) {
-        console.log('[MCP] Tool discovery failed (non-critical):', discoverError);
+      } catch {
+        // Tool discovery failed (non-critical) - continue without logging
       }
 
       return NextResponse.json({

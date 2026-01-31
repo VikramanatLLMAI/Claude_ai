@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm run lint)",
       "Bash(npx tsc:*)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma studio)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd authentication to all API routes and security fixes\n\n- Add requireAuth middleware to all unprotected API routes:\n  - conversations/[id]/messages\n  - mcp/connections/[id], test, discover\n  - user/aws, user/aws/test\n  - messages/feedback\n- Add ownership verification to prevent unauthorized access\n- Remove DEMO_USER_ID from user/aws routes\n- Delete debug endpoint \\(app/api/mcp/debug/route.ts\\)\n- Add auth headers to all frontend API calls\n- Fix fetchConversations to handle 401 and redirect to login\n- Add debugging logs for conversation fetching\n- Remove hardcoded user name, use actual session user\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

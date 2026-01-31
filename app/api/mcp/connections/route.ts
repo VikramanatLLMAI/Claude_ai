@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createMcpConnection, getUserMcpConnections } from '@/lib/storage';
 import { encrypt } from '@/lib/encryption';
-
-// Default user ID for demo mode
-const DEMO_USER_ID = 'demo-user-id';
+import { requireAuth } from '@/lib/auth-middleware';
 
 // GET /api/mcp/connections - List all MCP connections for user
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
-    const connections = await getUserMcpConnections(DEMO_USER_ID);
+    const connections = await getUserMcpConnections(user.id);
 
     // Map to response format (exclude encrypted credentials)
     const response = connections.map((conn) => ({
@@ -35,6 +37,10 @@ export async function GET() {
 
 // POST /api/mcp/connections - Create a new MCP connection
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const body = await req.json();
     const { name, serverUrl, authType, oauthClientId, oauthClientSecret, apiKey } = body;
@@ -69,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     // Create connection
     const connection = await createMcpConnection({
-      userId: DEMO_USER_ID,
+      userId: user.id,
       name,
       serverUrl,
       authType: authType || 'none',

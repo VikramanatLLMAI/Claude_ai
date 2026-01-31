@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getConversation, updateConversation } from '@/lib/storage';
+import { requireAuth } from '@/lib/auth-middleware';
 import { bedrock } from '@/lib/bedrock';
 import { generateText } from 'ai';
 
@@ -13,6 +14,10 @@ export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
     const { id } = await context.params;
 
@@ -23,6 +28,14 @@ export async function POST(
       return NextResponse.json(
         { error: 'Conversation not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify user owns this conversation
+    if (conversation.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Not authorized to access this conversation' },
+        { status: 403 }
       );
     }
 
