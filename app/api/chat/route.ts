@@ -197,9 +197,10 @@ export async function POST(req: Request) {
         if (event.toolResults && event.toolResults.length > 0) {
           console.log(`[Chat] Tool results received:`);
           event.toolResults.forEach((tr, i) => {
-            const resultStr = typeof tr.result === 'string'
-              ? tr.result.substring(0, 300)
-              : JSON.stringify(tr.result).substring(0, 300);
+            const trResult = (tr as Record<string, unknown>).result;
+            const resultStr = typeof trResult === 'string'
+              ? trResult.substring(0, 300)
+              : JSON.stringify(trResult).substring(0, 300);
             console.log(`[Chat]   Result ${i + 1}:`, resultStr);
           });
         }
@@ -276,7 +277,7 @@ export async function POST(req: Request) {
                     toolName: toolCall.toolName,
                     input: (toolCall as Record<string, unknown>).args ?? {},
                     state: toolResult ? 'output-available' : 'input-available',
-                    output: toolResult?.result,
+                    output: toolResult ? (toolResult as Record<string, unknown>).result : undefined,
                   });
                 }
               } else if (step.text && step.text.trim()) {

@@ -180,7 +180,7 @@ export async function POST(req: Request) {
                     toolName: toolCall.toolName,
                     input: (toolCall as Record<string, unknown>).args ?? {},
                     state: toolResult ? 'output-available' : 'input-available',
-                    output: toolResult?.result,
+                    output: toolResult ? (toolResult as Record<string, unknown>).result : undefined,
                   });
                 }
               } else if (step.text && step.text.trim()) {
