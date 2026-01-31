@@ -4,6 +4,8 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Check, Copy } from "lucide-react"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 export type CodeBlockProps = React.HTMLAttributes<HTMLDivElement>
 
@@ -11,7 +13,7 @@ function CodeBlock({ className, children, ...props }: CodeBlockProps) {
   return (
     <div
       className={cn(
-        "not-prose w-full overflow-hidden rounded-lg border border-border bg-card text-card-foreground",
+        "not-prose w-full overflow-hidden rounded-lg border border-border bg-card text-card-foreground my-3",
         className
       )}
       {...props}
@@ -24,15 +26,67 @@ function CodeBlock({ className, children, ...props }: CodeBlockProps) {
 export type CodeBlockCodeProps = {
   code: string
   language?: string
-} & React.HTMLAttributes<HTMLPreElement>
+} & React.HTMLAttributes<HTMLDivElement>
+
+// Language mapping for common aliases
+const LANGUAGE_ALIASES: Record<string, string> = {
+  js: "javascript",
+  ts: "typescript",
+  tsx: "tsx",
+  jsx: "jsx",
+  py: "python",
+  rb: "ruby",
+  sh: "bash",
+  shell: "bash",
+  yml: "yaml",
+  md: "markdown",
+  json: "json",
+  html: "markup",
+  xml: "markup",
+  css: "css",
+  scss: "scss",
+  sql: "sql",
+  go: "go",
+  rust: "rust",
+  c: "c",
+  cpp: "cpp",
+  java: "java",
+  kotlin: "kotlin",
+  swift: "swift",
+  php: "php",
+  plaintext: "text",
+  text: "text",
+}
+
+function normalizeLanguage(language: string): string {
+  const lower = language.toLowerCase()
+  return LANGUAGE_ALIASES[lower] || lower
+}
 
 function CodeBlockCode({
   code,
-  language,
+  language = "plaintext",
   className,
   ...props
 }: CodeBlockCodeProps) {
   const [copied, setCopied] = React.useState(false)
+  const [isDarkMode, setIsDarkMode] = React.useState(false)
+
+  // Detect dark mode
+  React.useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains("dark"))
+    }
+    checkDarkMode()
+
+    // Watch for theme changes
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    })
+    return () => observer.disconnect()
+  }, [])
 
   const handleCopy = React.useCallback(async () => {
     try {
@@ -49,30 +103,67 @@ function CodeBlockCode({
     return () => window.clearTimeout(timeoutId)
   }, [copied])
 
+  const normalizedLanguage = normalizeLanguage(language)
+  const lineCount = code.split("\n").length
+
+  // Custom style overrides for better integration with theme
+  const customStyle: React.CSSProperties = {
+    margin: 0,
+    padding: "0.75rem 1rem",
+    fontSize: "0.875rem",
+    lineHeight: "1.6",
+    background: "transparent",
+    borderRadius: 0,
+  }
+
   return (
-    <div className="relative">
-      <div className="absolute right-2 top-2 z-10">
+    <div className="relative" {...props}>
+      {/* Header with language label and copy button */}
+      <div className="flex items-center justify-between border-b border-border bg-muted/50 px-4 py-2">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {language !== "plaintext" && language !== "text" ? language : "code"}
+        </span>
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size="sm"
           aria-label={copied ? "Copied" : "Copy code"}
           onClick={handleCopy}
-          className="h-8 w-8 rounded-none border-0 bg-transparent p-0 hover:bg-transparent"
+          className="h-7 px-2 text-xs"
         >
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          {copied ? (
+            <>
+              <Check className="mr-1 size-3" />
+              Copied
+            </>
+          ) : (
+            <>
+              <Copy className="mr-1 size-3" />
+              Copy
+            </>
+          )}
         </Button>
       </div>
-      <pre
-        className={cn(
-          "w-full overflow-x-auto px-4 py-3 text-sm leading-6",
-          className
-        )}
-        data-language={language}
-        {...props}
-      >
-        <code className={cn("font-mono")}>{code}</code>
-      </pre>
+
+      {/* Syntax highlighted code */}
+      <div className="overflow-x-auto">
+        <SyntaxHighlighter
+          language={normalizedLanguage}
+          style={isDarkMode ? oneDark : oneLight}
+          customStyle={customStyle}
+          showLineNumbers={lineCount > 3}
+          lineNumberStyle={{
+            minWidth: "2.5em",
+            paddingRight: "1em",
+            color: isDarkMode ? "#636d83" : "#9ca3af",
+            userSelect: "none",
+          }}
+          wrapLines
+          wrapLongLines={false}
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
     </div>
   )
 }

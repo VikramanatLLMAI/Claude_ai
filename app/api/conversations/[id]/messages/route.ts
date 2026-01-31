@@ -1,82 +1,91 @@
-import { prisma } from "@/lib/db"
-import { NextResponse } from "next/server"
+import {
+  getConversation,
+  addMessage,
+  getMessages,
+  clearMessages,
+  toUIMessage,
+} from '@/lib/storage';
 
-type RouteParams = { params: Promise<{ id: string }> }
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
 
-// GET /api/conversations/[id]/messages - Get all messages for a conversation
+// GET /api/conversations/[id]/messages - List all messages in conversation
 export async function GET(req: Request, { params }: RouteParams) {
   try {
-    const { id } = await params
+    const { id } = await params;
+    const conversation = await getConversation(id);
 
-    const messages = await prisma.message.findMany({
-      where: { conversationId: id },
-      orderBy: { createdAt: "asc" },
-    })
-
-    return NextResponse.json(messages)
-  } catch (error) {
-    console.error("Error fetching messages:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch messages" },
-      { status: 500 }
-    )
-  }
-}
-
-// POST /api/conversations/[id]/messages - Add a message to a conversation
-export async function POST(req: Request, { params }: RouteParams) {
-  try {
-    const { id } = await params
-    const body = await req.json()
-    const { role, content } = body
-
-    if (!role || !content) {
-      return NextResponse.json(
-        { error: "Role and content are required" },
-        { status: 400 }
-      )
+    if (!conversation) {
+      return Response.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      );
     }
 
-    // Create the message
-    const message = await prisma.message.create({
-      data: {
-        role,
-        content,
-        conversationId: id,
-      },
-    })
-
-    // Update conversation's updatedAt timestamp
-    await prisma.conversation.update({
-      where: { id },
-      data: { updatedAt: new Date() },
-    })
-
-    return NextResponse.json(message, { status: 201 })
+    const messages = await getMessages(id);
+    return Response.json(messages.map(toUIMessage));
   } catch (error) {
-    console.error("Error creating message:", error)
-    return NextResponse.json(
-      { error: "Failed to create message" },
+    console.error('Error fetching messages:', error);
+    return Response.json(
+      { error: 'Failed to fetch messages' },
       { status: 500 }
-    )
+    );
   }
 }
 
-// DELETE /api/conversations/[id]/messages - Delete all messages in a conversation (clear chat)
+// POST /api/conversations/[id]/messages - Add message to conversation
+export async function POST(req: Request, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    const { role, content, parts } = body;
+
+    if (!role || !content) {
+      return Response.json(
+        { error: 'Role and content are required' },
+        { status: 400 }
+      );
+    }
+
+    const message = await addMessage(id, { role, content, parts });
+
+    if (!message) {
+      return Response.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      );
+    }
+
+    return Response.json(toUIMessage(message), { status: 201 });
+  } catch (error) {
+    console.error('Error adding message:', error);
+    return Response.json(
+      { error: 'Failed to add message' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/conversations/[id]/messages - Clear all messages in conversation
 export async function DELETE(req: Request, { params }: RouteParams) {
   try {
-    const { id } = await params
+    const { id } = await params;
+    const cleared = await clearMessages(id);
 
-    await prisma.message.deleteMany({
-      where: { conversationId: id },
-    })
+    if (!cleared) {
+      return Response.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json({ success: true })
+    return Response.json({ success: true });
   } catch (error) {
-    console.error("Error deleting messages:", error)
-    return NextResponse.json(
-      { error: "Failed to delete messages" },
+    console.error('Error clearing messages:', error);
+    return Response.json(
+      { error: 'Failed to clear messages' },
       { status: 500 }
-    )
+    );
   }
 }

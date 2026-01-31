@@ -21,11 +21,12 @@ Athena MCP is a modern, full-stack AI chat application built with Next.js 16, fe
 - **react-markdown v10.1.0 & remark-gfm v4.0.1** - Markdown rendering
 
 ### Backend Technologies
-- **Vercel AI SDK v6.0.48** - AI/LLM integration and streaming
-- **AWS Bedrock (@ai-sdk/amazon-bedrock v4.0.29)** - Claude model provider
-- **Prisma v5.22.0** - ORM for database operations
-- **SQLite** - Embedded database (dev.db)
+- **Vercel AI SDK v6.0.62** - AI/LLM integration and streaming
+- **AWS Bedrock (@ai-sdk/amazon-bedrock v4.0.41)** - Claude model provider
+- **Prisma v7.3.0** - ORM for database operations with PostgreSQL adapter
+- **PostgreSQL** - Local PostgreSQL database with @prisma/adapter-pg
 - **Zod v4.3.6** - Schema validation
+- **AES-256-GCM** - Encryption for sensitive credentials
 
 ### Development Tools
 - **ESLint v9** - Code linting with Next.js rules
@@ -83,11 +84,15 @@ athena_mcp/
 ├── hooks/                      # Custom React hooks
 │   └── use-mobile.tsx         # Mobile viewport detection
 ├── lib/                        # Utilities & shared code
-│   ├── db.ts                  # Prisma client singleton
+│   ├── db.ts                  # Prisma client singleton with PostgreSQL adapter
+│   ├── storage.ts             # Database CRUD operations
+│   ├── encryption.ts          # AES-256-GCM encryption utilities
+│   ├── bedrock.ts             # AWS Bedrock client
+│   ├── artifacts.ts           # Artifact parsing and prompts
+│   ├── generated/prisma/      # Generated Prisma client
 │   └── utils.ts               # Utility functions (cn)
 ├── prisma/                     # Database layer
-│   ├── schema.prisma          # Database schema
-│   ├── dev.db                 # SQLite database file
+│   ├── schema.prisma          # PostgreSQL database schema
 │   └── migrations/            # Database migrations
 ├── ref_docs/                   # Reference documentation
 │   └── prompt-kit-docs/       # Prompt Kit component examples
@@ -100,45 +105,115 @@ athena_mcp/
 └── eslint.config.mjs          # ESLint configuration
 ```
 
-## Database Schema
+## Database Schema (PostgreSQL)
+
+### User Model
+- `id` (UUID) - Primary key
+- `email` (String, unique) - User email
+- `passwordHash` (String) - Scrypt hashed password
+- `name` (String, nullable) - Display name
+- `avatarUrl` (String, nullable) - Profile picture URL
+- `awsAccessKeyEncrypted` (String, nullable) - AES-256-GCM encrypted AWS access key
+- `awsSecretKeyEncrypted` (String, nullable) - AES-256-GCM encrypted AWS secret key
+- `awsRegion` (String) - AWS region (default: us-east-1)
+- `preferences` (JSON) - User preferences (theme, fontSize, etc.)
+- `createdAt` (DateTime) - Creation timestamp
+- `lastLogin` (DateTime, nullable) - Last login timestamp
+- `emailVerified` (Boolean) - Email verification status
+
+### Session Model
+- `id` (UUID) - Primary key
+- `userId` (String) - Foreign key to User
+- `token` (String, unique) - Session token
+- `expiresAt` (DateTime) - Session expiry
+- `createdAt` (DateTime) - Creation timestamp
+- CASCADE delete on user removal
 
 ### Conversation Model
-- `id` (CUID) - Primary key
+- `id` (UUID) - Primary key
+- `userId` (String) - Foreign key to User
 - `title` (String) - Conversation name
+- `model` (String) - Selected Claude model
+- `activeMcpIds` (JSON) - Active MCP connection IDs
 - `isPinned` (Boolean) - Pin status
 - `isShared` (Boolean) - Share status
-- `model` (String) - Selected Claude model (default: Claude 4.5 Sonnet)
-- `solutionType` (String, nullable) - Solution type identifier (manufacturing, maintenance, support, change-management, impact-analysis, requirements, or null for general)
+- `solutionType` (String, nullable) - Solution type identifier
 - `createdAt` (DateTime) - Creation timestamp
 - `updatedAt` (DateTime) - Last update timestamp
-- `messages[]` - One-to-many relation with messages
+- `lastMessageAt` (DateTime, nullable) - Last message timestamp
+- CASCADE delete on user removal
 
 ### Message Model
-- `id` (CUID) - Primary key
-- `role` (String) - "user" or "assistant"
-- `content` (String) - Message text
+- `id` (UUID) - Primary key
 - `conversationId` (String) - Foreign key to Conversation
-- `conversation` (Conversation) - Relation
+- `role` (String) - "user", "assistant", or "tool"
+- `content` (String) - Message text content
+- `parts` (JSON, nullable) - UIMessage parts array
+- `metadata` (JSON) - Additional data (reasoning, tool_calls, etc.)
 - `createdAt` (DateTime) - Creation timestamp
+- `editedAt` (DateTime, nullable) - Last edit timestamp
 - CASCADE delete on conversation removal
 
-### AnalyticsEvent Model
-- `id` (CUID) - Primary key
-- `eventType` (String) - Event type: "api_call", "conversation_created", "message_sent", "model_switched", "error"
-- `solutionType` (String, nullable) - Solution type for the event
-- `userId` (String, nullable) - User ID (for future auth implementation)
-- `conversationId` (String, nullable) - Optional link to conversation
-- `model` (String, nullable) - Claude model used
-- `metadata` (String, nullable) - JSON string for additional event data
-- `timestamp` (DateTime) - Event timestamp
+### Artifact Model
+- `id` (UUID) - Primary key
+- `conversationId` (String) - Foreign key to Conversation
+- `messageId` (String) - Foreign key to Message
+- `userId` (String) - Foreign key to User
+- `type` (String) - Artifact type (default: html)
+- `title` (String) - Artifact title
+- `content` (String) - Full artifact content
+- `createdAt` (DateTime) - Creation timestamp
+- `updatedAt` (DateTime) - Last update timestamp
+- CASCADE delete on conversation/message/user removal
+
+### McpConnection Model
+- `id` (UUID) - Primary key
+- `userId` (String) - Foreign key to User
+- `name` (String) - Connection name
+- `serverUrl` (String) - MCP server URL
+- `authType` (String) - Auth type (none, api_key, oauth)
+- `authCredentialsEncrypted` (String, nullable) - AES-256-GCM encrypted credentials
+- `availableTools` (JSON) - List of available tools
+- `isActive` (Boolean) - Active status
+- `status` (String) - Connection status
+- `lastError` (String, nullable) - Last error message
+- `createdAt` (DateTime) - Creation timestamp
+- `updatedAt` (DateTime) - Last update timestamp
+- `lastConnectedAt` (DateTime, nullable) - Last connection timestamp
+- CASCADE delete on user removal
 
 ## Key Features
 
 ### Authentication
-- Simple localStorage-based session management
-- Sign-in and sign-up forms
-- Session key: `athena_auth_session`
-- Note: Not production-grade, suitable for demo/development
+- Database-backed session management with PostgreSQL
+- Secure password hashing with scrypt algorithm
+- Session tokens with 30-day expiry
+- Demo mode available for unauthenticated access
+- API routes for login, register, logout, and user info
+
+#### Auth API Endpoints
+- `POST /api/auth/register` - Create new user account
+- `POST /api/auth/login` - Authenticate and get session token
+- `POST /api/auth/logout` - Invalidate session token
+- `GET /api/auth/me` - Get current user info (requires Bearer token)
+- `POST /api/auth/password-reset` - Request password reset email
+- `POST /api/auth/password-reset/confirm` - Confirm password reset with token
+- `POST /api/auth/change-password` - Change password (authenticated)
+
+#### Auth Middleware
+- `lib/auth-middleware.ts` - Authentication utilities for API routes
+- `validateSession()` - Validate session token and return user
+- `requireAuth()` - Require valid session or return 401
+- `withAuth()` - Wrap API handler with authentication check
+- `getUserFromRequest()` - Extract user from Bearer token
+
+#### Input Validation
+- `lib/validation.ts` - Zod schemas for API request validation
+- `RegisterSchema` - User registration validation
+- `LoginSchema` - Login credentials validation
+- `PasswordResetSchema` - Password reset request validation
+- `AwsCredentialsSchema` - AWS credentials validation
+- `ChatRequestSchema` - Chat message validation
 
 ### Chat Interface
 - Real-time AI streaming responses
@@ -187,37 +262,72 @@ Athena MCP provides specialized chat endpoints for different business domains:
 
 ## Environment Variables
 
-Create `.env` and `.env.local` files in the root directory:
+Create `.env` file in the root directory:
 
 ```env
 # AWS Bedrock Credentials
 AWS_ACCESS_KEY_ID=your_access_key_id
 AWS_SECRET_ACCESS_KEY=your_secret_access_key
-AWS_REGION=us-east-1
+AWS_REGION=us-west-2
 
-# Database
-DATABASE_URL=file:./prisma/dev.db
+# PostgreSQL Database
+# Local: postgresql://user:password@localhost:5432/athena_mcp
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/athena_mcp"
+
+# Encryption key for sensitive data (AWS credentials, MCP credentials)
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Must be 64 hex characters (32 bytes) for AES-256
+KEY_ENCRYPTION_SECRET="your_64_hex_character_encryption_key_here"
 ```
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js 20+ installed
+- PostgreSQL 14+ installed and running locally
 - AWS Bedrock access with Claude models enabled
 - AWS credentials with Bedrock permissions
+
+### Database Setup
+
+1. Install PostgreSQL locally or use Docker:
+```bash
+# Using Docker
+docker run --name athena-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16
+
+# Create database
+docker exec -it athena-postgres psql -U postgres -c "CREATE DATABASE athena_mcp;"
+```
+
+2. Or install PostgreSQL natively and create the database:
+```bash
+createdb athena_mcp
+```
 
 ### Installation
 
 ```bash
-# Install dependencies
+# Install dependencies (automatically generates Prisma client)
 npm install
 
-# Set up database
-npx prisma generate
-npx prisma migrate dev
+# Push schema to database (creates tables)
+npm run db:push
+
+# Or run migrations for production
+npm run db:migrate
 
 # Run development server
 npm run dev
+```
+
+### Database Scripts
+
+```bash
+npm run db:generate  # Regenerate Prisma client
+npm run db:migrate   # Run migrations (development)
+npm run db:push      # Push schema directly (development)
+npm run db:studio    # Open Prisma Studio GUI
+npm run db:reset     # Reset database (WARNING: deletes all data)
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.

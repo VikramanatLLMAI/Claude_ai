@@ -2,14 +2,22 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "motion/react"
+import {
+    Shield,
+    Zap,
+    ArrowRight,
+    Check
+} from "lucide-react"
 
 type AuthMode = "signin" | "signup"
 
 const AUTH_SESSION_KEY = "athena_auth_session"
-const AUTH_USER_KEY = "athena_auth_user"
+const AUTH_TOKEN_KEY = "athena_auth_token"
 
 export function LoginPage() {
     const router = useRouter()
@@ -19,28 +27,32 @@ export function LoginPage() {
 
     React.useEffect(() => {
         if (typeof window === "undefined") return
-        const session = window.localStorage.getItem(AUTH_SESSION_KEY)
-        if (session) {
-            router.replace("/solutions")
+        const sessionData = window.localStorage.getItem(AUTH_SESSION_KEY)
+        const token = window.localStorage.getItem(AUTH_TOKEN_KEY)
+
+        if (sessionData && token) {
+            try {
+                const session = JSON.parse(sessionData)
+                if (session.expiresAt && new Date(session.expiresAt) > new Date()) {
+                    router.replace("/solutions")
+                } else {
+                    window.localStorage.removeItem(AUTH_SESSION_KEY)
+                    window.localStorage.removeItem(AUTH_TOKEN_KEY)
+                }
+            } catch {
+                window.localStorage.removeItem(AUTH_SESSION_KEY)
+                window.localStorage.removeItem(AUTH_TOKEN_KEY)
+            }
         }
     }, [router])
 
     const normalizeEmail = (value: string) => value.trim().toLowerCase()
 
-    const readStoredUser = () => {
-        const raw = window.localStorage.getItem(AUTH_USER_KEY)
-        if (!raw) return null
-        try {
-            return JSON.parse(raw) as { email: string; password: string }
-        } catch {
-            return null
-        }
-    }
-
-    const writeSession = (email: string) => {
+    const writeSession = (token: string, user: { id: string; email: string; name?: string | null }, expiresAt: string) => {
+        window.localStorage.setItem(AUTH_TOKEN_KEY, token)
         window.localStorage.setItem(
             AUTH_SESSION_KEY,
-            JSON.stringify({ email, signedInAt: new Date().toISOString() })
+            JSON.stringify({ user, signedInAt: new Date().toISOString(), expiresAt })
         )
     }
 
@@ -49,7 +61,7 @@ export function LoginPage() {
         setError(null)
     }
 
-    const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setError(null)
         setIsSubmitting(true)
@@ -64,24 +76,31 @@ export function LoginPage() {
             return
         }
 
-        const storedUser = readStoredUser()
-        if (!storedUser) {
-            setError("No account found. Please sign up first.")
-            setIsSubmitting(false)
-            return
-        }
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            })
 
-        if (storedUser.email !== email || storedUser.password !== password) {
-            setError("Invalid email or password.")
-            setIsSubmitting(false)
-            return
-        }
+            const data = await response.json()
 
-        writeSession(email)
-        router.push("/solutions")
+            if (!response.ok) {
+                setError(data.error || "Invalid email or password.")
+                setIsSubmitting(false)
+                return
+            }
+
+            writeSession(data.token, data.user, data.expiresAt)
+            router.push("/solutions")
+        } catch (err) {
+            console.error("Login error:", err)
+            setError("Failed to sign in. Please try again.")
+            setIsSubmitting(false)
+        }
     }
 
-    const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setError(null)
         setIsSubmitting(true)
@@ -105,296 +124,354 @@ export function LoginPage() {
             return
         }
 
-        window.localStorage.setItem(
-            AUTH_USER_KEY,
-            JSON.stringify({ email, password, firstName, lastName })
-        )
-        writeSession(email)
-        router.push("/solutions")
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters long.")
+            setIsSubmitting(false)
+            return
+        }
+
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    name: `${firstName} ${lastName}`,
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                setError(data.error || "Failed to create account.")
+                setIsSubmitting(false)
+                return
+            }
+
+            writeSession(data.token, data.user, data.expiresAt)
+            router.push("/solutions")
+        } catch (err) {
+            console.error("Signup error:", err)
+            setError("Failed to create account. Please try again.")
+            setIsSubmitting(false)
+        }
     }
 
+    const capabilities = [
+        "Connect 50+ enterprise data sources via MCP",
+        "Ask questions in natural language",
+        "Generate insights and interactive dashboards",
+        "Enterprise-grade security and compliance",
+    ]
+
     return (
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-emerald-50">
-            <div className="pointer-events-none absolute -top-28 right-12 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-10 left-6 h-80 w-80 rounded-full bg-amber-300/40 blur-3xl" />
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-200/50 blur-3xl" />
+        <div className="relative flex h-screen overflow-y-auto bg-background">
+            {/* Left Section - Branding */}
+            <div className="hidden w-1/2 flex-col justify-between border-r border-border bg-muted/30 p-12 lg:flex">
+                {/* Logo */}
+                <div className="flex items-center gap-5">
+                    <Image
+                        src="/logos/llmatscale-logo.png"
+                        alt="LLM at Scale.AI"
+                        width={220}
+                        height={70}
+                        className="h-[65px] w-auto object-contain"
+                        priority
+                        unoptimized
+                    />
+                    <div className="h-12 w-px bg-border" />
+                    <Image
+                        src="/logos/athena-logo.jpg"
+                        alt="Athena"
+                        width={180}
+                        height={55}
+                        className="h-[55px] w-auto object-contain"
+                        priority
+                        unoptimized
+                    />
+                </div>
 
-            <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-12">
-                <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-                    <section className="flex flex-col gap-8 rounded-3xl border border-white/70 bg-white/70 p-8 shadow-xl backdrop-blur">
-                        <div className="animate-in fade-in slide-in-from-left-6 duration-700">
-                            <span className="inline-flex items-center rounded-full bg-emerald-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-50">
-                                Athena
-                            </span>
-                            <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
-                                Calm onboarding for fast-moving teams.
-                            </h1>
-                            <p className="mt-4 text-base text-slate-600">
-                                Keep your workspace crisp and focused. Sign in to pick up where you left off, or
-                                create a new account in under a minute.
-                            </p>
-                        </div>
+                {/* Main Content */}
+                <div className="max-w-lg">
+                    <h1 className="text-4xl font-semibold leading-tight text-foreground">
+                        Your data, your questions,
+                        <br />
+                        <span className="text-primary">instant insights.</span>
+                    </h1>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            {[
-                                {
-                                    title: "Smart context",
-                                    body: "Your workspace remembers the last project, task, and message trail.",
-                                },
-                                {
-                                    title: "Fast setup",
-                                    body: "Invite teammates, set roles, and start collaborating right away.",
-                                },
-                                {
-                                    title: "No distractions",
-                                    body: "Stay focused with a minimal UI that highlights what matters.",
-                                },
-                                {
-                                    title: "Private by default",
-                                    body: "Control access with tight scopes and clear ownership.",
-                                },
-                            ].map((feature, index) => (
-                                <div
-                                    key={feature.title}
-                                    className={cn(
-                                        "rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 shadow-sm",
-                                        "animate-in fade-in slide-in-from-bottom-4 duration-700",
-                                        index === 0 && "delay-100",
-                                        index === 1 && "delay-150",
-                                        index === 2 && "delay-200",
-                                        index === 3 && "delay-250"
-                                    )}
-                                >
-                                    <p className="text-sm font-semibold text-slate-900">{feature.title}</p>
-                                    <p className="mt-2 text-sm text-slate-600">{feature.body}</p>
+                    <p className="mt-4 text-base text-muted-foreground">
+                        Connect your enterprise data sources, ask questions in natural language,
+                        and unlock powerful analytics — all in one intelligent platform.
+                    </p>
+
+                    {/* Capabilities List */}
+                    <ul className="mt-8 space-y-3">
+                        {capabilities.map((item) => (
+                            <li key={item} className="flex items-center gap-3 text-sm text-foreground/80">
+                                <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
+                                    <Check className="size-3 text-primary" />
                                 </div>
-                            ))}
-                        </div>
-                    </section>
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
 
-                    <section className="animate-in fade-in slide-in-from-right-6 duration-700">
-                        <div className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur">
-                            <div className="flex items-center justify-between">
+                {/* Footer */}
+                <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                        <Shield className="size-3.5 text-primary/70" />
+                        <span>SOC 2 Compliant</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Zap className="size-3.5 text-primary/70" />
+                        <span>Enterprise Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Section - Auth Form */}
+            <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-20">
+                {/* Mobile Logo */}
+                <div className="mb-10 flex items-center gap-4 lg:hidden">
+                    <Image
+                        src="/logos/llmatscale-logo.png"
+                        alt="LLM at Scale.AI"
+                        width={160}
+                        height={50}
+                        className="h-[45px] w-auto object-contain"
+                        priority
+                        unoptimized
+                    />
+                    <div className="h-8 w-px bg-border" />
+                    <Image
+                        src="/logos/athena-logo.jpg"
+                        alt="Athena"
+                        width={130}
+                        height={40}
+                        className="h-[38px] w-auto object-contain"
+                        priority
+                        unoptimized
+                    />
+                </div>
+
+                <div className="mx-auto w-full max-w-sm">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <AnimatePresence mode="wait">
+                            <motion.h2
+                                key={mode}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.15 }}
+                                className="text-2xl font-semibold text-foreground"
+                            >
+                                {mode === "signin" ? "Sign in" : "Create account"}
+                            </motion.h2>
+                        </AnimatePresence>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {mode === "signin"
+                                ? "Enter your credentials to access your account."
+                                : "Get started with your free account today."}
+                        </p>
+                    </div>
+
+                    {/* Error Message */}
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                            >
+                                {error}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Forms */}
+                    <AnimatePresence mode="wait">
+                        {mode === "signin" ? (
+                            <motion.form
+                                key="signin"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="space-y-5"
+                                onSubmit={handleSignIn}
+                            >
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-700">
-                                        Access
-                                    </p>
-                                    <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-                                        {mode === "signin" ? "Welcome back." : "Create your account."}
-                                    </h2>
-                                    <p className="mt-2 text-sm text-slate-600">
-                                        {mode === "signin"
-                                            ? "Sign in with your email and password."
-                                            : "Use your work email to get started."}
-                                    </p>
+                                    <label className="mb-2 block text-sm font-medium text-foreground">
+                                        Email
+                                    </label>
+                                    <Input
+                                        name="email"
+                                        type="email"
+                                        placeholder="you@company.com"
+                                        autoComplete="email"
+                                        required
+                                        className="h-11"
+                                    />
                                 </div>
-                            </div>
-
-                            <div className="mt-6 rounded-full border border-slate-200 bg-white/70 p-1">
-                                <div className="flex gap-1">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className={cn(
-                                            "h-9 flex-1 rounded-full text-sm",
-                                            mode === "signin"
-                                                ? "bg-white text-slate-900 shadow-sm"
-                                                : "text-slate-500 hover:text-slate-800"
-                                        )}
-                                        aria-pressed={mode === "signin"}
-                                        onClick={() => handleModeChange("signin")}
-                                    >
-                                        Sign in
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className={cn(
-                                            "h-9 flex-1 rounded-full text-sm",
-                                            mode === "signup"
-                                                ? "bg-white text-slate-900 shadow-sm"
-                                                : "text-slate-500 hover:text-slate-800"
-                                        )}
-                                        aria-pressed={mode === "signup"}
-                                        onClick={() => handleModeChange("signup")}
-                                    >
-                                        Sign up
-                                    </Button>
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-foreground">
+                                        Password
+                                    </label>
+                                    <Input
+                                        name="password"
+                                        type="password"
+                                        placeholder="Enter your password"
+                                        autoComplete="current-password"
+                                        required
+                                        className="h-11"
+                                    />
                                 </div>
-                            </div>
-
-                            <div className="mt-6">
-                                {mode === "signin" ? (
-                                    <form className="space-y-5" onSubmit={handleSignIn}>
-                                        {error ? (
-                                            <div
-                                                role="alert"
-                                                className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-                                            >
-                                                {error}
-                                            </div>
-                                        ) : null}
-                                        <div className="space-y-2">
-                                            <label htmlFor="signin-email" className="text-sm font-medium text-slate-700">
-                                                Email
-                                            </label>
-                                            <Input
-                                                id="signin-email"
-                                                name="email"
-                                                type="email"
-                                                placeholder="you@company.com"
-                                                autoComplete="email"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label
-                                                htmlFor="signin-password"
-                                                className="text-sm font-medium text-slate-700"
-                                            >
-                                                Password
-                                            </label>
-                                            <Input
-                                                id="signin-password"
-                                                name="password"
-                                                type="password"
-                                                placeholder="Enter your password"
-                                                autoComplete="current-password"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm text-slate-500">
-                                            <label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    className="size-4 rounded border border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                                />
-                                                Remember me
-                                            </label>
-                                            <button
-                                                type="button"
-                                                className="font-medium text-slate-700 underline underline-offset-4"
-                                            >
-                                                Forgot password?
-                                            </button>
-                                        </div>
-                                        <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>
-                                            {isSubmitting ? "Signing in..." : "Sign in"}
-                                        </Button>
-                                        <p className="text-center text-sm text-slate-500">
-                                            New here?{" "}
-                                            <button
-                                                type="button"
-                                                className="font-medium text-slate-700 underline underline-offset-4"
-                                                onClick={() => handleModeChange("signup")}
-                                            >
-                                                Create an account
-                                            </button>
-                                        </p>
-                                    </form>
-                                ) : (
-                                    <form className="space-y-5" onSubmit={handleSignUp}>
-                                        {error ? (
-                                            <div
-                                                role="alert"
-                                                className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-                                            >
-                                                {error}
-                                            </div>
-                                        ) : null}
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <label
-                                                    htmlFor="signup-first-name"
-                                                    className="text-sm font-medium text-slate-700"
-                                                >
-                                                    First name
-                                                </label>
-                                                <Input
-                                                    id="signup-first-name"
-                                                    name="firstName"
-                                                    type="text"
-                                                    placeholder="Sam"
-                                                    autoComplete="given-name"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label
-                                                    htmlFor="signup-last-name"
-                                                    className="text-sm font-medium text-slate-700"
-                                                >
-                                                    Last name
-                                                </label>
-                                                <Input
-                                                    id="signup-last-name"
-                                                    name="lastName"
-                                                    type="text"
-                                                    placeholder="Rivera"
-                                                    autoComplete="family-name"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label
-                                                htmlFor="signup-email"
-                                                className="text-sm font-medium text-slate-700"
-                                            >
-                                                Work email
-                                            </label>
-                                            <Input
-                                                id="signup-email"
-                                                name="email"
-                                                type="email"
-                                                placeholder="sam@company.com"
-                                                autoComplete="email"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label
-                                                htmlFor="signup-password"
-                                                className="text-sm font-medium text-slate-700"
-                                            >
-                                                Password
-                                            </label>
-                                            <Input
-                                                id="signup-password"
-                                                name="password"
-                                                type="password"
-                                                placeholder="Create a password"
-                                                autoComplete="new-password"
-                                                required
-                                            />
-                                        </div>
-                                        <label className="flex items-start gap-2 text-sm text-slate-500">
-                                            <input
-                                                name="terms"
-                                                type="checkbox"
-                                                required
-                                                className="mt-1 size-4 rounded border border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                            />
-                                            I agree to the terms and privacy policy.
+                                <div className="flex items-center justify-between text-sm">
+                                    <label className="flex items-center gap-2 text-muted-foreground">
+                                        <input
+                                            type="checkbox"
+                                            className="size-4 rounded border-input bg-background text-primary focus:ring-ring"
+                                        />
+                                        Remember me
+                                    </label>
+                                    <button
+                                        type="button"
+                                        className="text-muted-foreground hover:text-foreground"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                </div>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="h-11 w-full"
+                                >
+                                    {isSubmitting ? "Signing in..." : "Sign in"}
+                                    {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
+                                </Button>
+                            </motion.form>
+                        ) : (
+                            <motion.form
+                                key="signup"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="space-y-5"
+                                onSubmit={handleSignUp}
+                            >
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-foreground">
+                                            First name
                                         </label>
-                                        <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>
-                                            {isSubmitting ? "Creating account..." : "Create account"}
-                                        </Button>
-                                        <p className="text-center text-sm text-slate-500">
-                                            Already have an account?{" "}
-                                            <button
-                                                type="button"
-                                                className="font-medium text-slate-700 underline underline-offset-4"
-                                                onClick={() => handleModeChange("signin")}
-                                            >
-                                                Sign in
-                                            </button>
-                                        </p>
-                                    </form>
-                                )}
-                            </div>
-                        </div>
-                    </section>
+                                        <Input
+                                            name="firstName"
+                                            type="text"
+                                            placeholder="John"
+                                            autoComplete="given-name"
+                                            required
+                                            className="h-11"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-foreground">
+                                            Last name
+                                        </label>
+                                        <Input
+                                            name="lastName"
+                                            type="text"
+                                            placeholder="Doe"
+                                            autoComplete="family-name"
+                                            required
+                                            className="h-11"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-foreground">
+                                        Work email
+                                    </label>
+                                    <Input
+                                        name="email"
+                                        type="email"
+                                        placeholder="you@company.com"
+                                        autoComplete="email"
+                                        required
+                                        className="h-11"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-foreground">
+                                        Password
+                                    </label>
+                                    <Input
+                                        name="password"
+                                        type="password"
+                                        placeholder="Min. 8 characters"
+                                        autoComplete="new-password"
+                                        required
+                                        className="h-11"
+                                    />
+                                </div>
+                                <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                                    <input
+                                        name="terms"
+                                        type="checkbox"
+                                        required
+                                        className="mt-0.5 size-4 rounded border-input bg-background text-primary focus:ring-ring"
+                                    />
+                                    I agree to the Terms of Service and Privacy Policy
+                                </label>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="h-11 w-full"
+                                >
+                                    {isSubmitting ? "Creating account..." : "Create account"}
+                                    {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
+                                </Button>
+                            </motion.form>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Mode Switch */}
+                    <p className="mt-6 text-center text-sm text-muted-foreground">
+                        {mode === "signin" ? (
+                            <>
+                                Don&apos;t have an account?{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => handleModeChange("signup")}
+                                    className="font-medium text-primary hover:text-primary/80"
+                                >
+                                    Sign up
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                Already have an account?{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => handleModeChange("signin")}
+                                    className="font-medium text-primary hover:text-primary/80"
+                                >
+                                    Sign in
+                                </button>
+                            </>
+                        )}
+                    </p>
+
+                    {/* Copyright */}
+                    <p className="mt-12 text-center text-[11px] text-muted-foreground/60">
+                        © 2026 LLM at Scale.AI. All Rights Reserved.
+                        <br />
+                        Confidential and Proprietary Information. Version 1.0
+                    </p>
                 </div>
             </div>
         </div>

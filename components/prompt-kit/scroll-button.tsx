@@ -1,53 +1,43 @@
-import * as React from "react"
-import { ArrowDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+"use client"
+
+import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { type VariantProps } from "class-variance-authority"
+import { ChevronDown } from "lucide-react"
+import { useStickToBottomContext } from "use-stick-to-bottom"
 
-interface ScrollButtonProps extends Omit<React.ComponentProps<typeof Button>, 'containerRef' | 'scrollRef'> {
-    containerRef?: React.RefObject<HTMLElement | null>
-    scrollRef?: React.RefObject<HTMLElement | null>
+export type ScrollButtonProps = {
+    className?: string
+    variant?: VariantProps<typeof buttonVariants>["variant"]
+    size?: VariantProps<typeof buttonVariants>["size"]
+} & React.ButtonHTMLAttributes<HTMLButtonElement>
+
+function ScrollButton({
+    className,
+    variant = "outline",
+    size = "sm",
+    ...props
+}: ScrollButtonProps) {
+    const { isAtBottom, scrollToBottom } = useStickToBottomContext()
+
+    return (
+        <Button
+            variant={variant}
+            size={size}
+            className={cn(
+                "h-10 w-10 rounded-full shadow-lg transition-all duration-200 ease-out",
+                !isAtBottom
+                    ? "translate-y-0 scale-100 opacity-100"
+                    : "pointer-events-none translate-y-4 scale-95 opacity-0",
+                className
+            )}
+            onClick={() => scrollToBottom()}
+            aria-label="Scroll to bottom"
+            {...props}
+        >
+            <ChevronDown className="h-5 w-5" />
+        </Button>
+    )
 }
-
-const ScrollButton = React.forwardRef<HTMLButtonElement, ScrollButtonProps>(
-    ({ className, containerRef, scrollRef, ...props }, ref) => {
-        const [isVisible, setIsVisible] = React.useState(false)
-
-        React.useEffect(() => {
-            const container = containerRef?.current
-            if (!container) return
-
-            const handleScroll = () => {
-                const { scrollTop, scrollHeight, clientHeight } = container
-                const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
-                setIsVisible(!isNearBottom)
-            }
-
-            container.addEventListener("scroll", handleScroll)
-            handleScroll()
-
-            return () => container.removeEventListener("scroll", handleScroll)
-        }, [containerRef])
-
-        const handleClick = () => {
-            scrollRef?.current?.scrollIntoView({ behavior: "smooth" })
-        }
-
-        if (!isVisible) return null
-
-        return (
-            <Button
-                ref={ref}
-                variant="outline"
-                size="icon"
-                className={cn("rounded-full bg-background", className)}
-                onClick={handleClick}
-                {...props}
-            >
-                <ArrowDown className="size-4" />
-            </Button>
-        )
-    }
-)
-ScrollButton.displayName = "ScrollButton"
 
 export { ScrollButton }

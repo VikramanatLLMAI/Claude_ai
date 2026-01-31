@@ -1,79 +1,72 @@
-import { prisma } from "@/lib/db"
-import { NextResponse } from "next/server"
+import {
+  createConversation,
+  getAllConversations,
+  getConversationsBySolution,
+  toConversationResponse,
+} from '@/lib/storage';
 
 // GET /api/conversations - List all conversations
-export async function GET() {
+// Query params:
+//   - solutionType: Filter by solution type (e.g., 'manufacturing', 'maintenance')
+//   - all: If 'true', return all conversations regardless of solution type
+export async function GET(req: Request) {
   try {
-    const conversations = await prisma.conversation.findMany({
-      orderBy: [
-        { isPinned: "desc" },
-        { updatedAt: "desc" },
-      ],
-      include: {
-        messages: {
-          orderBy: { createdAt: "desc" },
-          take: 1, // Get only the last message for preview
-        },
-      },
-    })
+    const { searchParams } = new URL(req.url);
+    const solutionType = searchParams.get('solutionType');
+    const showAll = searchParams.get('all') === 'true';
 
-    // Transform to include lastMessage
-    const transformedConversations = conversations.map((conv) => ({
-      id: conv.id,
-      title: conv.title,
-      isPinned: conv.isPinned,
-      isShared: conv.isShared,
-      model: conv.model,
-      solutionType: conv.solutionType,
-      createdAt: conv.createdAt,
-      updatedAt: conv.updatedAt,
-      lastMessage: conv.messages[0]?.content || null,
-    }))
+    let conversations;
 
-    return NextResponse.json(transformedConversations)
+    if (showAll) {
+      // Return all conversations regardless of solution type
+      conversations = await getAllConversations();
+    } else if (solutionType !== null) {
+      // Filter by specific solution type (including empty string for general chat)
+      const filterType = solutionType === '' ? null : solutionType;
+      conversations = await getConversationsBySolution(filterType);
+    } else {
+      // Default: return all conversations (backward compatible)
+      conversations = await getAllConversations();
+    }
+
+    return Response.json(conversations.map(c => ({
+      id: c.id,
+      title: c.title,
+      isPinned: c.isPinned,
+      isShared: c.isShared,
+      model: c.model,
+      solutionType: c.solutionType,
+      createdAt: c.createdAt.toISOString(),
+      updatedAt: c.updatedAt.toISOString(),
+      lastMessage: null, // We don't have messages in the list query
+    })));
   } catch (error) {
-    console.error("Error fetching conversations:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch conversations" },
+    console.error('Error fetching conversations:', error);
+    return Response.json(
+      { error: 'Failed to fetch conversations' },
       { status: 500 }
-    )
+    );
   }
 }
 
 // POST /api/conversations - Create a new conversation
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { title, model, solutionType } = body
+    const body = await req.json();
+    const { title, model, solutionType } = body;
 
-    const conversation = await prisma.conversation.create({
-      data: {
-        title: title || "New Chat",
-        model: model || "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-        solutionType: solutionType || null,
-      },
-    })
+    const conversation = await createConversation({
+      title: title || 'New Chat',
+      model,
+      solutionType,
+    });
 
-    // Track analytics event
-    await prisma.analyticsEvent.create({
-      data: {
-        eventType: "conversation_created",
-        solutionType: solutionType || null,
-        conversationId: conversation.id,
-        model: conversation.model,
-        metadata: JSON.stringify({ title: conversation.title }),
-      },
-    }).catch((error) => {
-      // Don't fail the request if analytics fails
-      console.error("Error creating analytics event:", error)
-    })
-
-    return NextResponse.json(conversation, { status: 201 })
+    return Response.json(toConversationResponse(conversation), { status: 201 });
   } catch (error) {
-    console.error("Error creating conversation:", error)
-    return NextResponse.json(
-      { error: "Failed to create conversation" },
+    console.error('Error creating conversation:', error);
+    return Response.json(
+      { error: 'Failed to create conversation' },
       { status: 500 }
-    )
+    );
   }
 }

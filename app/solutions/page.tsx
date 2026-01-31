@@ -1,198 +1,391 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Card,
-    CardAction,
     CardContent,
     CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import {
+    BarChart3,
+    Wrench,
+    HeadphonesIcon,
+    GitBranch,
+    TrendingUp,
+    ClipboardList,
+    MessageSquare,
+    LogOut,
+    ChevronRight,
+} from "lucide-react"
+import { motion } from "motion/react"
 
 const AUTH_SESSION_KEY = "athena_auth_session"
+const AUTH_TOKEN_KEY = "athena_auth_token"
 
 type SolutionCard = {
     id: string
     title: string
-    subtitle: string
-    image: string
-    useCases: string[]
+    description: string
+    icon: React.ComponentType<{ className?: string }>
+    features: string[]
 }
 
 const SOLUTIONS: SolutionCard[] = [
     {
         id: "manufacturing",
-        title: "AI for Manufacturing Reports & Insights",
-        subtitle: "MES + Engineering",
-        image: "https://images.unsplash.com/photo-1565793298595-6a879b1d9492?w=800&h=400&fit=crop&q=80",
-        useCases: [
-            "📊 Real-time production visibility & traceability",
-            "💬 Natural Language Analytics with drill-down",
-            "📝 Automated reporting & distribution",
-            "🎯 Yield loss identification & trend analysis",
-            "🔮 Production forecasting & performance insights",
+        title: "Manufacturing",
+        description: "Production visibility, analytics, and reporting",
+        icon: BarChart3,
+        features: [
+            "Real-time production tracking",
+            "Natural language analytics",
+            "Automated reporting",
+            "Yield analysis",
         ],
     },
     {
         id: "maintenance",
-        title: "AI for Maintenance & Reliability",
-        subtitle: "MTBF / MTTR",
-        image: "https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=800&h=400&fit=crop&q=80",
-        useCases: [
-            "🧮 Automatic MTBF calculation",
-            "🧯 MTTR calculation",
-            "🚨 Failure prediction",
-            "🔁 Recurring failure detection",
-            "📊 Maintenance dashboards",
+        title: "Maintenance",
+        description: "Reliability metrics and failure prediction",
+        icon: Wrench,
+        features: [
+            "MTBF/MTTR calculation",
+            "Failure prediction",
+            "Recurring issue detection",
+            "Maintenance dashboards",
         ],
     },
     {
         id: "support",
-        title: "AI for Support & Incident Management",
-        subtitle: "Tickets + RCA + Ops",
-        image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&h=400&fit=crop&q=80",
-        useCases: [
-            "🎟 Intelligent ticket classification & assignment",
-            "🔍 Root cause analysis with past incident reference",
-            "🛠 AI troubleshooting & resolution prediction",
-            "📖 Self-learning knowledge base & training",
-            "🔌 MES integration actions with approvals",
+        title: "Support",
+        description: "Incident management and troubleshooting",
+        icon: HeadphonesIcon,
+        features: [
+            "Ticket classification",
+            "Root cause analysis",
+            "Resolution prediction",
+            "Knowledge base",
         ],
     },
     {
         id: "change-management",
-        title: "AI for Change Management",
-        subtitle: "ECOs + Process Changes",
-        image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop&q=80",
-        useCases: [
-            "🔄 Change impact tracking",
-            "📢 Change communication",
+        title: "Change Management",
+        description: "ECO tracking and process changes",
+        icon: GitBranch,
+        features: [
+            "Change impact tracking",
+            "Communication workflows",
         ],
     },
     {
         id: "impact-analysis",
-        title: "AI for Impact Analysis",
-        subtitle: "Yield + Cost + Delivery",
-        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop&q=80",
-        useCases: [
-            "📉 Operational impact analysis",
-            "🔗 Cross-functional insights",
+        title: "Impact Analysis",
+        description: "Operational insights across functions",
+        icon: TrendingUp,
+        features: [
+            "Operational impact analysis",
+            "Cross-functional insights",
         ],
     },
     {
         id: "requirements",
-        title: "AI for Requirements Management",
-        subtitle: "Engineering + IT",
-        image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=400&fit=crop&q=80",
-        useCases: [
-            "📋 Requirements analysis & validation",
-            "🔍 Gap and dependency detection",
+        title: "Requirements",
+        description: "Requirements validation and gap detection",
+        icon: ClipboardList,
+        features: [
+            "Requirements analysis",
+            "Gap and dependency detection",
         ],
     },
 ]
 
-function getSession() {
-    if (typeof window === "undefined") return null
-    return window.localStorage.getItem(AUTH_SESSION_KEY)
+function hasValidSession() {
+    if (typeof window === "undefined") return false
+    const session = window.localStorage.getItem(AUTH_SESSION_KEY)
+    const token = window.localStorage.getItem(AUTH_TOKEN_KEY)
+    return !!(session && token)
+}
+
+function getUserName() {
+    if (typeof window === "undefined") return "User"
+    try {
+        const sessionData = window.localStorage.getItem(AUTH_SESSION_KEY)
+        if (sessionData) {
+            const parsed = JSON.parse(sessionData)
+            // Get name from user object in session
+            if (parsed.user?.name) {
+                return parsed.user.name.split(' ')[0] || "User"
+            }
+        }
+    } catch {
+        // ignore
+    }
+    return "User"
+}
+
+// Animation variants
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.08,
+            delayChildren: 0.1,
+        },
+    },
+}
+
+const cardVariants = {
+    hidden: {
+        opacity: 0,
+        y: 20,
+        scale: 0.95,
+    },
+    visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: {
+            type: "spring" as const,
+            stiffness: 100,
+            damping: 15,
+        },
+    },
+}
+
+const headerVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.4,
+            ease: [0.25, 0.46, 0.45, 0.94] as const,
+        },
+    },
+}
+
+const titleVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+        opacity: 1,
+        x: 0,
+        transition: {
+            duration: 0.5,
+            ease: [0.25, 0.46, 0.45, 0.94] as const,
+        },
+    },
 }
 
 export default function SolutionsPage() {
     const router = useRouter()
-    const session = getSession()
+    const [session, setSession] = useState<string | null>(null)
+    const [userName, setUserName] = useState("User")
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (typeof window === "undefined") return
-        if (!window.localStorage.getItem(AUTH_SESSION_KEY)) {
+
+        const currentSession = window.localStorage.getItem(AUTH_SESSION_KEY)
+        const token = window.localStorage.getItem(AUTH_TOKEN_KEY)
+        if (!currentSession || !token) {
             router.replace("/")
+            return
         }
+
+        setSession(currentSession)
+        setUserName(getUserName())
+        setIsLoading(false)
     }, [router])
 
-    if (!session) {
+    const handleSignOut = () => {
+        window.localStorage.removeItem(AUTH_SESSION_KEY)
+        window.localStorage.removeItem(AUTH_TOKEN_KEY)
+        router.push("/")
+    }
+
+    if (isLoading || !session) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-background">
-                <p className="text-sm text-muted-foreground">Checking session...</p>
+            <div className="flex h-screen items-center justify-center bg-background">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                </motion.div>
             </div>
         )
     }
 
     return (
-        <main className="min-h-screen bg-background px-6 py-12">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-10">
-                <div className="flex flex-col gap-3">
-                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">
-                        Athena Solutions
-                    </p>
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-                        Choose what you want AI to accelerate.
-                    </h1>
-                    <p className="max-w-3xl text-lg text-muted-foreground">
-                        Each solution is tailored for manufacturing operations. Start with one and jump into the
-                        chatbot to explore deeper insights.
-                    </p>
+        <div className="h-screen overflow-y-auto bg-background">
+            {/* Header */}
+            <motion.header
+                variants={headerVariants}
+                initial="hidden"
+                animate="visible"
+                className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur"
+            >
+                <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold">Athena</span>
+                        <span className="text-muted-foreground">/</span>
+                        <span className="text-sm text-muted-foreground">Solutions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => router.push("/chat")}
+                                className="gap-2"
+                            >
+                                <MessageSquare className="size-4" />
+                                <span className="hidden sm:inline">General Chat</span>
+                            </Button>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleSignOut}
+                                className="gap-2 text-muted-foreground"
+                            >
+                                <LogOut className="size-4" />
+                                <span className="hidden sm:inline">Sign out</span>
+                            </Button>
+                        </motion.div>
+                    </div>
                 </div>
+            </motion.header>
 
-                <section className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-                    {SOLUTIONS.map((solution) => (
-                        <Card
-                            key={solution.id}
-                            className="group relative flex h-full flex-col overflow-hidden bg-card shadow-lg card-hover"
-                        >
-                            {/* Image Header */}
-                            <div className="relative h-48 w-full overflow-hidden">
-                                <img
-                                    src={solution.image}
-                                    alt={solution.title}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            {/* Main Content */}
+            <main className="mx-auto max-w-6xl px-4 py-8">
+                <motion.div
+                    variants={titleVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="mb-8"
+                >
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        Welcome back, {userName}
+                    </h1>
+                    <p className="mt-1 text-muted-foreground">
+                        Select a solution to start a specialized conversation.
+                    </p>
+                </motion.div>
 
-                                {/* Badge on Image */}
-                                <div className="absolute left-4 top-4">
-                                    <Badge className="glass shadow-lg">
-                                        {solution.subtitle}
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            {/* Card Content */}
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-xl font-bold leading-tight text-card-foreground">
-                                    {solution.title}
-                                </CardTitle>
-                                <CardDescription className="text-sm font-medium">
-                                    Key Capabilities
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="flex-1">
-                                <ul className="space-y-2.5 text-sm text-muted-foreground">
-                                    {solution.useCases.map((useCase) => (
-                                        <li key={useCase} className="flex items-start gap-2.5 leading-relaxed">
-                                            <span className="mt-0.5 text-base text-primary">•</span>
-                                            <span>{useCase}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-
-                            <CardFooter className="pt-4">
-                                <Button
-                                    className="w-full shadow-md"
-                                    onClick={() => router.push(`/chat?solution=${solution.id}`)}
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                    {SOLUTIONS.map((solution) => {
+                        const Icon = solution.icon
+                        return (
+                            <motion.div
+                                key={solution.id}
+                                variants={cardVariants}
+                                whileHover={{
+                                    y: -4,
+                                    transition: { duration: 0.2 }
+                                }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <Card
+                                    className="group flex h-full flex-col cursor-pointer border-border/50 transition-colors hover:border-border hover:shadow-md"
+                                    onClick={() => router.push(`/solutions/${solution.id}`)}
                                 >
-                                    Open in Chatbot
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </section>
-            </div>
-        </main>
+                                    <CardHeader className="pb-2 pt-4 px-4">
+                                        <div className="flex items-start justify-between">
+                                            <motion.div
+                                                className="flex size-8 items-center justify-center rounded-md bg-primary/10"
+                                                whileHover={{
+                                                    scale: 1.1,
+                                                    rotate: 5,
+                                                    transition: { type: "spring" as const, stiffness: 400 }
+                                                }}
+                                            >
+                                                <Icon className="size-4 text-primary" />
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, x: -5 }}
+                                                whileHover={{ opacity: 1, x: 0 }}
+                                                className="opacity-0 group-hover:opacity-100"
+                                            >
+                                                <ChevronRight className="size-3.5 text-muted-foreground" />
+                                            </motion.div>
+                                        </div>
+                                        <CardTitle className="mt-2 text-sm font-semibold">
+                                            {solution.title}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs">
+                                            {solution.description}
+                                        </CardDescription>
+                                    </CardHeader>
+
+                                    <CardContent className="flex-1 pt-0 px-4 pb-2">
+                                        <ul className="space-y-1 text-xs text-muted-foreground">
+                                            {solution.features.map((feature, index) => (
+                                                <motion.li
+                                                    key={feature}
+                                                    className="flex items-center gap-1.5"
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    whileInView={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    viewport={{ once: true }}
+                                                >
+                                                    <span className="size-1 rounded-full bg-muted-foreground/50" />
+                                                    {feature}
+                                                </motion.li>
+                                            ))}
+                                        </ul>
+                                    </CardContent>
+
+                                    <CardFooter className="pt-2 pb-4 px-4">
+                                        <motion.div
+                                            className="w-full"
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                        >
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                className="w-full h-8 text-xs"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    router.push(`/solutions/${solution.id}`)
+                                                }}
+                                            >
+                                                Start Chat
+                                            </Button>
+                                        </motion.div>
+                                    </CardFooter>
+                                </Card>
+                            </motion.div>
+                        )
+                    })}
+                </motion.div>
+
+                {/* Copyright Footer */}
+                <motion.footer
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                    className="mt-12 border-t pt-6 text-center"
+                >
+                    <p className="text-xs text-muted-foreground">
+                        © 2026 LLM at Scale.AI. All Rights Reserved. Confidential and Proprietary Information. Version 1.0
+                    </p>
+                </motion.footer>
+            </main>
+        </div>
     )
 }
-

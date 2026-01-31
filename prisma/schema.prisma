@@ -1,57 +1,148 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema for Athena MCP - Claude Chat Platform
+// Based on PRD specification for simplified edition
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
-model Conversation {
-  id           String    @id @default(cuid())
-  title        String
-  isPinned     Boolean   @default(false)
-  isShared     Boolean   @default(false)
-  model        String    @default("us.anthropic.claude-sonnet-4-5-20250929-v1:0")
-  solutionType String?   // Solution type: manufacturing, maintenance, support, etc.
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  messages     Message[]
+// Users table - authentication and preferences
+model User {
+  id                     String    @id @default(uuid())
+  email                  String    @unique
+  passwordHash           String    @map("password_hash")
+  name                   String?
+  avatarUrl              String?   @map("avatar_url")
+  awsAccessKeyEncrypted  String?   @map("aws_access_key_encrypted")
+  awsSecretKeyEncrypted  String?   @map("aws_secret_key_encrypted")
+  awsRegion              String    @default("us-east-1") @map("aws_region")
+  preferences            Json      @default("{\"theme\": \"system\", \"fontSize\": 16, \"codeTheme\": \"github-dark\", \"messageDensity\": \"comfortable\"}")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  lastLogin              DateTime? @map("last_login")
+  emailVerified          Boolean   @default(false) @map("email_verified")
 
-  @@index([solutionType])
+  conversations  Conversation[]
+  artifacts      Artifact[]
+  mcpConnections McpConnection[]
+  sessions       Session[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// Sessions table - for session management
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+// Conversations table - chat conversation metadata
+model Conversation {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  title        String    @default("New Conversation")
+  model        String
+  activeMcpIds Json      @default("[]") @map("active_mcp_ids")
+  isPinned     Boolean   @default(false) @map("is_pinned")
+  isShared     Boolean   @default(false) @map("is_shared")
+  solutionType String?   @map("solution_type")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  lastMessageAt DateTime? @map("last_message_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  artifacts Artifact[]
+
+  @@index([userId])
+  @@index([userId, updatedAt(sort: Desc)])
   @@map("conversations")
 }
 
+// Messages table - individual chat messages
 model Message {
-  id             String       @id @default(cuid())
-  role           String       // "user" or "assistant"
-  content        String
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
+  id             String    @id @default(uuid())
+  conversationId String    @map("conversation_id")
+  role           String    // 'user' | 'assistant' | 'tool'
+  content        String    // Text content
+  parts          Json?     // UIMessage parts array
+  metadata       Json      @default("{}") // { reasoning, tool_calls, sources, finish_reason }
+  createdAt      DateTime  @default(now()) @map("created_at")
+  editedAt       DateTime? @map("edited_at")
 
-  @@index([conversationId])
-  @@index([createdAt])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  artifacts    Artifact[]
+
+  @@index([conversationId, createdAt])
   @@map("messages")
 }
 
-// Analytics and event tracking for scale-level products
-model AnalyticsEvent {
-  id           String   @id @default(cuid())
-  eventType    String   // "api_call", "conversation_created", "message_sent", "model_switched", "error"
-  solutionType String?  // manufacturing, maintenance, support, etc.
-  userId       String?  // Future: link to user when auth is implemented
-  conversationId String? // Optional: link to conversation
-  model        String?  // Claude model used
-  metadata     String?  // JSON string for additional data (error details, performance metrics, etc.)
-  timestamp    DateTime @default(now())
+// Artifacts table - HTML artifacts generated by Claude
+model Artifact {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  messageId      String   @map("message_id")
+  userId         String   @map("user_id")
+  type           String   @default("html") // Currently only 'html' supported
+  title          String
+  content        String   // Full HTML content
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  @@index([eventType])
-  @@index([solutionType])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([messageId])
+  @@map("artifacts")
+}
+
+// MCP Connections table - Model Context Protocol server connections
+model McpConnection {
+  id                        String    @id @default(uuid())
+  userId                    String    @map("user_id")
+  name                      String
+  serverUrl                 String    @map("server_url")
+  authType                  String    @default("none") @map("auth_type") // 'none' | 'api_key' | 'oauth'
+  authCredentialsEncrypted  String?   @map("auth_credentials_encrypted")
+  availableTools            Json      @default("[]") @map("available_tools")
+  isActive                  Boolean   @default(true) @map("is_active")
+  status                    String    @default("disconnected") // 'connected' | 'disconnected' | 'error'
+  lastError                 String?   @map("last_error")
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+  lastConnectedAt           DateTime? @map("last_connected_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([timestamp])
-  @@map("analytics_events")
+  @@map("mcp_connections")
+}
+
+// Password reset tokens
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([email])
+  @@map("password_reset_tokens")
 }

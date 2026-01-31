@@ -1,0 +1,419 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { cn } from "@/lib/utils"
+import {
+  CheckCircle,
+  ChevronDown,
+  Loader2,
+  Settings,
+  XCircle,
+} from "lucide-react"
+import { useState } from "react"
+
+// PromptKit-aligned tool states
+export type ToolState =
+  | "input-streaming"   // Tool input is being streamed
+  | "input-available"   // Tool input ready, waiting for execution
+  | "output-available"  // Tool executed successfully
+  | "output-error"      // Tool execution failed
+
+// PromptKit ToolPart interface
+export type ToolPart = {
+  type: string
+  state: ToolState
+  input?: Record<string, unknown>
+  output?: Record<string, unknown>
+  toolCallId?: string
+  errorText?: string
+}
+
+export type ToolProps = {
+  toolPart: ToolPart
+  defaultOpen?: boolean
+  className?: string
+}
+
+const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
+  // Default to closed, only open if explicitly requested or still streaming
+  const [isOpen, setIsOpen] = useState(defaultOpen && toolPart.state === "input-streaming")
+
+  const { state, input, output, toolCallId } = toolPart
+
+  const getStateIcon = () => {
+    switch (state) {
+      case "input-streaming":
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+      case "input-available":
+        return <Settings className="h-4 w-4 text-orange-500" />
+      case "output-available":
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "output-error":
+        return <XCircle className="h-4 w-4 text-red-500" />
+      default:
+        return <Settings className="text-muted-foreground h-4 w-4" />
+    }
+  }
+
+  const getStateBadge = () => {
+    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium"
+    switch (state) {
+      case "input-streaming":
+        return (
+          <span
+            className={cn(
+              baseClasses,
+              "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+            )}
+          >
+            Processing
+          </span>
+        )
+      case "input-available":
+        return (
+          <span
+            className={cn(
+              baseClasses,
+              "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+            )}
+          >
+            Ready
+          </span>
+        )
+      case "output-available":
+        return (
+          <span
+            className={cn(
+              baseClasses,
+              "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+            )}
+          >
+            Completed
+          </span>
+        )
+      case "output-error":
+        return (
+          <span
+            className={cn(
+              baseClasses,
+              "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+            )}
+          >
+            Error
+          </span>
+        )
+      default:
+        return (
+          <span
+            className={cn(
+              baseClasses,
+              "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+            )}
+          >
+            Pending
+          </span>
+        )
+    }
+  }
+
+  const formatToolName = (name: string) => {
+    // Convert snake_case or camelCase to Title Case
+    return name
+      .replace(/^mcp_/, "") // Remove mcp_ prefix
+      .replace(/_/g, " ")
+      .replace(/([A-Z])/g, " $1")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim()
+  }
+
+  const formatValue = (value: unknown): string => {
+    if (value === null) return "null"
+    if (value === undefined) return "undefined"
+    if (typeof value === "string") return value
+    if (typeof value === "object") {
+      return JSON.stringify(value, null, 2)
+    }
+    return String(value)
+  }
+
+  return (
+    <div
+      className={cn(
+        "border-border my-3 w-full overflow-hidden rounded-lg border",
+        className
+      )}
+    >
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className="bg-background h-auto w-full justify-between rounded-b-none px-3 py-2 font-normal"
+          >
+            <div className="flex items-center gap-2">
+              {getStateIcon()}
+              <span className="font-mono text-sm font-medium">
+                {formatToolName(toolPart.type)}
+              </span>
+              {getStateBadge()}
+            </div>
+            <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent
+          className={cn(
+            "border-border border-t",
+            "data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden"
+          )}
+        >
+          <div className="bg-background space-y-3 p-3">
+            {input && Object.keys(input).length > 0 && (
+              <div>
+                <h4 className="text-muted-foreground mb-2 text-sm font-medium">
+                  Input
+                </h4>
+                <div className="bg-muted/50 rounded border p-2 font-mono text-sm">
+                  {Object.entries(input).map(([key, value]) => (
+                    <div key={key} className="mb-1 last:mb-0">
+                      <span className="text-blue-600 dark:text-blue-400">{key}:</span>{" "}
+                      <span className="text-foreground break-all">
+                        {typeof value === "string" && value.length > 200
+                          ? `"${value.substring(0, 200)}..."`
+                          : formatValue(value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {output && (
+              <div>
+                <h4 className="text-muted-foreground mb-2 text-sm font-medium">
+                  Output
+                </h4>
+                <div className="bg-muted/50 max-h-60 overflow-auto rounded border p-2 font-mono text-sm">
+                  <pre className="whitespace-pre-wrap break-all">
+                    {formatValue(output)}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {state === "output-error" && toolPart.errorText && (
+              <div>
+                <h4 className="mb-2 text-sm font-medium text-red-500">Error</h4>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 p-2 text-sm text-red-800 dark:text-red-300">
+                  {toolPart.errorText}
+                </div>
+              </div>
+            )}
+
+            {state === "input-streaming" && (
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Processing tool call...
+              </div>
+            )}
+
+            {state === "input-available" && (
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Executing tool...
+              </div>
+            )}
+
+            {toolCallId && (
+              <div className="text-muted-foreground border-t border-border pt-2 text-xs">
+                <span className="font-mono">Call ID: {toolCallId.substring(0, 16)}...</span>
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  )
+}
+
+/**
+ * Convert AI SDK tool-invocation part to PromptKit ToolPart
+ */
+export function convertToToolPart(part: {
+  type: "tool-invocation"
+  toolInvocationId: string
+  toolName: string
+  args: Record<string, unknown>
+  state: "partial-call" | "call" | "result"
+  result?: unknown
+}): ToolPart {
+  // Map AI SDK states to PromptKit states
+  let state: ToolState
+  let errorText: string | undefined
+  let output: Record<string, unknown> | undefined
+
+  switch (part.state) {
+    case "partial-call":
+      state = "input-streaming"
+      break
+    case "call":
+      state = "input-available"
+      break
+    case "result":
+      // Check if result is an error
+      if (part.result && typeof part.result === "object" && "error" in part.result) {
+        state = "output-error"
+        errorText = String((part.result as { error: unknown }).error)
+      } else if (part.result && typeof part.result === "string") {
+        try {
+          const parsed = JSON.parse(part.result)
+          if (parsed.error) {
+            state = "output-error"
+            errorText = parsed.error
+          } else {
+            state = "output-available"
+            output = parsed
+          }
+        } catch {
+          state = "output-available"
+          output = { result: part.result }
+        }
+      } else {
+        state = "output-available"
+        output = part.result as Record<string, unknown>
+      }
+      break
+    default:
+      state = "input-streaming"
+  }
+
+  return {
+    type: part.toolName,
+    state,
+    input: part.args,
+    output,
+    toolCallId: part.toolInvocationId,
+    errorText,
+  }
+}
+
+/**
+ * Extract tool invocations from message parts and convert to ToolPart format
+ * Handles AI SDK v3 format where tool parts have:
+ * - type: "tool-<toolName>" (e.g., "tool-getWeather") OR "tool-invocation"
+ * - state: "input-streaming" | "input-available" | "output-available" | "output-error"
+ * - toolCallId: string
+ * - input: object (for input states)
+ * - output: unknown (for output states)
+ */
+export function extractToolParts(parts: unknown[]): ToolPart[] {
+  if (!Array.isArray(parts)) {
+    return []
+  }
+
+  const toolParts: ToolPart[] = []
+
+  for (const part of parts) {
+    if (typeof part !== "object" || part === null) continue
+
+    const p = part as Record<string, unknown>
+    const partType = p.type as string
+
+    // Skip non-tool parts
+    if (!partType) continue
+
+    // AI SDK v3 format: type starts with "tool-" OR is "tool-invocation"
+    const isToolPart = partType.startsWith("tool-") ||
+                       partType === "tool-invocation" ||
+                       partType === "tool-call" ||
+                       partType === "tool-result"
+
+    if (isToolPart) {
+      // Extract tool name from type (remove "tool-" prefix if present)
+      let toolName: string
+      if (partType.startsWith("tool-") && partType !== "tool-invocation" && partType !== "tool-call" && partType !== "tool-result") {
+        toolName = partType.substring(5) // Remove "tool-" prefix
+      } else {
+        toolName = (p.toolName as string) || (p.name as string) || 'unknown_tool'
+      }
+
+      // Extract properties - AI SDK v3 uses input/output directly, not args/result
+      const toolCallId = (p.toolCallId as string) || (p.toolInvocationId as string) || (p.id as string) || ''
+      const input = (p.input as Record<string, unknown>) || (p.args as Record<string, unknown>) || {}
+      const rawOutput = p.output !== undefined ? p.output : p.result
+
+      // AI SDK v3 state values are already in PromptKit format
+      const sdkState = (p.state as string) || 'input-available'
+
+      // Convert state
+      let promptKitState: ToolState
+      let errorText: string | undefined
+      let output: Record<string, unknown> | undefined
+
+      switch (sdkState) {
+        case "input-streaming":
+        case "partial-call":
+          promptKitState = "input-streaming"
+          break
+        case "input-available":
+        case "call":
+          promptKitState = "input-available"
+          break
+        case "output-available":
+        case "result":
+          // Check if output is an error
+          if (rawOutput && typeof rawOutput === "object" && "error" in (rawOutput as object)) {
+            promptKitState = "output-error"
+            errorText = String((rawOutput as { error: unknown }).error)
+          } else if (rawOutput && typeof rawOutput === "object" && "isError" in (rawOutput as object) && (rawOutput as { isError: boolean }).isError) {
+            promptKitState = "output-error"
+            const content = (rawOutput as { content?: Array<{ text?: string }> }).content
+            errorText = content?.[0]?.text || 'Tool execution failed'
+          } else if (rawOutput && typeof rawOutput === "string") {
+            try {
+              const parsed = JSON.parse(rawOutput)
+              if (parsed.error) {
+                promptKitState = "output-error"
+                errorText = parsed.error
+              } else {
+                promptKitState = "output-available"
+                output = parsed
+              }
+            } catch {
+              promptKitState = "output-available"
+              output = { result: rawOutput }
+            }
+          } else if (rawOutput !== undefined) {
+            promptKitState = "output-available"
+            output = typeof rawOutput === "object" ? rawOutput as Record<string, unknown> : { result: rawOutput }
+          } else {
+            promptKitState = "output-available"
+            output = undefined
+          }
+          break
+        case "output-error":
+          promptKitState = "output-error"
+          errorText = (p.errorText as string) || 'Tool execution failed'
+          break
+        default:
+          promptKitState = "input-streaming"
+      }
+
+      toolParts.push({
+        type: toolName,
+        state: promptKitState,
+        input: Object.keys(input).length > 0 ? input : undefined,
+        output,
+        toolCallId,
+        errorText,
+      })
+    }
+  }
+
+  return toolParts
+}
+
+export { Tool }

@@ -10,10 +10,10 @@
    ============================================================================ */
 
 :root {
-  /* Core Colors */
-  --background: oklch(0.9818 0.0054 95.0986);
+  /* Core Colors - Chat UI background #FAF9F5 */
+  --background: #FAF9F5;
   --foreground: oklch(0.3438 0.0269 95.7226);
-  --card: oklch(0.9818 0.0054 95.0986);
+  --card: #FAF9F5;
   --card-foreground: oklch(0.1908 0.0020 106.5859);
   --popover: oklch(1.0000 0 0);
   --popover-foreground: oklch(0.2671 0.0196 98.9390);
@@ -44,8 +44,8 @@
   --chart-4: oklch(0.8822 0.0403 298.1792);
   --chart-5: oklch(0.5608 0.1348 42.0584);
 
-  /* Sidebar Colors */
-  --sidebar: oklch(0.9663 0.0080 98.8792);
+  /* Sidebar Colors - Sidebar background #F9F8F3 */
+  --sidebar: #F9F8F3;
   --sidebar-foreground: oklch(0.3590 0.0051 106.6524);
   --sidebar-primary: oklch(0.6171 0.1375 39.0427);
   --sidebar-primary-foreground: oklch(0.9881 0 0);
@@ -84,23 +84,23 @@
 }
 
 .dark {
-  /* Core Colors */
-  --background: oklch(0.2679 0.0036 106.6427);
-  --foreground: oklch(0.8074 0.0142 93.0137);
-  --card: oklch(0.2679 0.0036 106.6427);
-  --card-foreground: oklch(0.9818 0.0054 95.0986);
-  --popover: oklch(0.3085 0.0035 106.6039);
-  --popover-foreground: oklch(0.9211 0.0040 106.4781);
+  /* Core Colors - Chat UI background #262624 */
+  --background: #262624;
+  --foreground: #e8e6e3;
+  --card: #262624;
+  --card-foreground: #e8e6e3;
+  --popover: #2a2a28;
+  --popover-foreground: #e8e6e3;
 
   /* Brand Colors */
   --primary: oklch(0.6724 0.1308 38.7559);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.9818 0.0054 95.0986);
-  --secondary-foreground: oklch(0.3085 0.0035 106.6039);
+  --primary-foreground: #ffffff;
+  --secondary: #2a2a28;
+  --secondary-foreground: #e8e6e3;
 
   /* UI Element Colors */
-  --muted: oklch(0.2213 0.0038 106.7070);
-  --muted-foreground: oklch(0.7713 0.0169 99.0657);
+  --muted: #1e1e1d;
+  --muted-foreground: #a0a0a0;
   --accent: oklch(0.2130 0.0078 95.4245);
   --accent-foreground: oklch(0.9663 0.0080 98.8792);
   --destructive: oklch(0.6368 0.2078 25.3313);
@@ -118,15 +118,15 @@
   --chart-4: oklch(0.3074 0.0516 289.3230);
   --chart-5: oklch(0.5608 0.1348 42.0584);
 
-  /* Sidebar Colors */
-  --sidebar: oklch(0.2357 0.0024 67.7077);
-  --sidebar-foreground: oklch(0.8074 0.0142 93.0137);
-  --sidebar-primary: oklch(0.3250 0 0);
-  --sidebar-primary-foreground: oklch(0.9881 0 0);
-  --sidebar-accent: oklch(0.1680 0.0020 106.6177);
-  --sidebar-accent-foreground: oklch(0.8074 0.0142 93.0137);
-  --sidebar-border: oklch(0.9401 0 0);
-  --sidebar-ring: oklch(0.7731 0 0);
+  /* Sidebar Colors - #242423 */
+  --sidebar: #242423;
+  --sidebar-foreground: #e8e6e3;
+  --sidebar-primary: oklch(0.6724 0.1308 38.7559);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2e2e2c;
+  --sidebar-accent-foreground: #e8e6e3;
+  --sidebar-border: #363634;
+  --sidebar-ring: oklch(0.6724 0.1308 38.7559);
 
   /* Typography */
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -227,6 +227,17 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden !important;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -236,6 +247,24 @@ body {
   line-height: 1.6;
   font-feature-settings: "rlig" 1, "calt" 1;
   transition: background-color 0.2s ease, color 0.2s ease;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden !important;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
+/* Prevent any scrollbar on the main app wrapper */
+#__next,
+[data-slot="sidebar-wrapper"] {
+  overflow: hidden !important;
+  max-height: 100vh;
 }
 
 /* ============================================================================
@@ -317,7 +346,7 @@ textarea:focus-visible {
 }
 
 /* ============================================================================
-   ANIMATION UTILITIES
+   ANIMATION UTILITIES - Enhanced with Delight
    ============================================================================ */
 
 .transition-base {
@@ -357,6 +386,101 @@ textarea:focus-visible {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+/* Delightful entrance animations */
+.animate-slide-up-fade {
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop {
+  animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Subtle float animation for icons */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Gentle pulse for attention */
+.animate-gentle-pulse {
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Success celebration */
+.animate-success {
+  animation: success 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes success {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -403,16 +527,31 @@ textarea:focus-visible {
 }
 
 /* ============================================================================
-   CARD VARIANTS - Consistent Design System
+   CARD VARIANTS - Consistent Design System with Hover Delight
    ============================================================================ */
 
 .card-hover {
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
+}
+
+.card-interactive {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.card-interactive:active {
+  transform: translateY(0) scale(0.99);
 }
 
 /* ============================================================================
@@ -436,6 +575,31 @@ textarea:focus-visible {
 
 .gradient-accent {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-secondary) 100%);
+}
+
+/* Animated gradient background */
+.gradient-animated {
+  background: linear-gradient(
+    -45deg,
+    var(--color-primary),
+    var(--color-chart-2),
+    var(--color-primary),
+    var(--color-chart-1)
+  );
+  background-size: 400% 400%;
+  animation: gradientFlow 15s ease infinite;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* ============================================================================
@@ -498,7 +662,7 @@ textarea:focus-visible {
 }
 
 /* ============================================================================
-   LOADING STATES
+   LOADING STATES - Enhanced with Personality
    ============================================================================ */
 
 .loading-spinner {
@@ -516,7 +680,7 @@ textarea:focus-visible {
 }
 
 /* ============================================================================
-   SKELETON LOADER
+   SKELETON LOADER - With Shimmer Delight
    ============================================================================ */
 
 .skeleton {
@@ -536,5 +700,736 @@ textarea:focus-visible {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* Premium skeleton with glow effect */
+.skeleton-glow {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-muted);
+}
+
+.skeleton-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--color-primary) 15%, transparent),
+    transparent
+  );
+  animation: skeleton-glow 2s ease-in-out infinite;
+}
+
+@keyframes skeleton-glow {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ============================================================================
+   KATEX MATH RENDERING STYLES
+   ============================================================================ */
+
+/* Display math (block equations) */
+.katex-display {
+  margin: 1rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.katex {
+  font-size: 1.05em;
+}
+
+/* Math in prose context */
+.prose .katex-display {
+  margin: 1.25rem 0;
+}
+
+.prose .katex {
+  color: var(--color-foreground);
+}
+
+/* Dark mode adjustments for KaTeX */
+.dark .katex {
+  color: var(--color-foreground);
+}
+
+/* Mobile responsiveness for math */
+@media (max-width: 640px) {
+  .katex-display {
+    font-size: 0.95em;
+  }
+}
+
+/* ============================================================================
+   SYNTAX HIGHLIGHTER OVERRIDES
+   ============================================================================ */
+
+/* Code block container styling */
+.not-prose pre {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* Line numbers styling */
+.linenumber {
+  min-width: 2.5em !important;
+  padding-right: 1em !important;
+  text-align: right;
+  user-select: none;
+  opacity: 0.5;
+}
+
+/* Code block horizontal scrollbar */
+.code-block-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.code-block-wrapper::-webkit-scrollbar-track {
+  background: var(--color-muted);
+  border-radius: 3px;
+}
+
+.code-block-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-muted-foreground);
+  border-radius: 3px;
+}
+
+/* ============================================================================
+   MESSAGE CONTENT IMPROVEMENTS
+   ============================================================================ */
+
+/* Dark mode prose text colors - ensure good contrast */
+.dark .prose {
+  --tw-prose-body: var(--color-foreground);
+  --tw-prose-headings: var(--color-foreground);
+  --tw-prose-lead: var(--color-foreground);
+  --tw-prose-bold: var(--color-foreground);
+  --tw-prose-counters: var(--color-muted-foreground);
+  --tw-prose-bullets: var(--color-muted-foreground);
+  --tw-prose-quotes: var(--color-foreground);
+  --tw-prose-code: var(--color-foreground);
+  color: var(--color-foreground);
+}
+
+.dark .prose p,
+.dark .prose li,
+.dark .prose span,
+.dark .prose strong,
+.dark .prose em {
+  color: var(--color-foreground);
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+  color: var(--color-foreground);
+}
+
+/* ============================================================================
+   CHAT MESSAGE STYLES - Light & Dark Mode
+   ============================================================================ */
+
+/* User message - Light mode #F0EEE6 */
+.message-user {
+  background-color: #F0EEE6;
+  color: var(--color-foreground);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Assistant message - Light mode #FAF9F5 (same as chat UI) */
+.message-assistant {
+  background-color: #FAF9F5;
+  color: var(--color-foreground);
+}
+
+/* System message - Light mode */
+.message-system {
+  background-color: var(--color-muted);
+  color: var(--color-muted-foreground);
+  font-style: italic;
+  border: 1px solid var(--color-border);
+}
+
+/* Dark mode message styles */
+.dark .message-user {
+  background-color: #141413;
+  color: #e8e6e3;
+}
+
+.dark .message-assistant {
+  background-color: transparent;  /* Same as chat UI background #262624 */
+  color: #e8e6e3;
+}
+
+.dark .message-system {
+  background-color: #1e1e1d;
+  color: #a0a0a0;
+  border-color: #363634;
+}
+
+/* Prompt Input - Dark mode #30302E */
+.dark .prompt-input {
+  background-color: #30302E !important;
+}
+
+/* Light mode prompt input - #FFFFFF */
+.prompt-input {
+  background-color: #FFFFFF !important;
+  border: 1.5px solid #c5c5c5 !important;
+}
+
+/* ============================================================================
+   ARTIFACT TILE STYLES - Light & Dark Mode
+   ============================================================================ */
+
+/* Artifact tile - Light mode */
+.artifact-tile {
+  background-color: var(--color-card);
+  border-color: var(--color-border);
+}
+
+.artifact-tile:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.artifact-tile-streaming {
+  border-color: color-mix(in oklch, var(--color-primary) 50%, transparent);
+  background: linear-gradient(to right, color-mix(in oklch, var(--color-primary) 5%, transparent), color-mix(in oklch, var(--color-primary) 10%, transparent));
+}
+
+.artifact-tile-active {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px color-mix(in oklch, var(--color-primary) 10%, transparent);
+  ring: 1px solid color-mix(in oklch, var(--color-primary) 20%, transparent);
+}
+
+/* Artifact tile - Dark mode */
+.dark .artifact-tile {
+  background-color: #2e2e2c;
+  border-color: #363634;
+}
+
+.dark .artifact-tile:hover {
+  background-color: #343432;
+  border-color: #444442;
+}
+
+.dark .artifact-tile-streaming {
+  border-color: color-mix(in oklch, var(--color-primary) 50%, transparent);
+  background: linear-gradient(to right, rgba(103, 78, 54, 0.1), rgba(103, 78, 54, 0.15));
+}
+
+.dark .artifact-tile-active {
+  border-color: color-mix(in oklch, var(--color-primary) 50%, transparent);
+}
+
+/* Better spacing for message content */
+.prose > :first-child {
+  margin-top: 0 !important;
+}
+
+.prose > :last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Inline code in prose */
+.prose code:not(pre code) {
+  background: var(--color-muted);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+
+/* Blockquote styling */
+.prose blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--color-muted-foreground);
+}
+
+/* Table styling in prose */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose th {
+  background: var(--color-muted);
+  font-weight: 600;
+}
+
+.prose tr:nth-child(even) {
+  background: color-mix(in oklch, var(--color-muted) 30%, transparent);
+}
+
+/* Horizontal rule styling */
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.5rem 0;
+}
+
+/* Link styling in prose */
+.prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: text-decoration-thickness 0.15s ease;
+}
+
+.prose a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* List styling improvements */
+.prose ul,
+.prose ol {
+  padding-left: 1.25rem;
+}
+
+.prose li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.prose li::marker {
+  color: var(--color-muted-foreground);
+}
+
+/* ============================================================================
+   LOADER ANIMATIONS - PromptKit Components
+   ============================================================================ */
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+@keyframes typing {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes bars {
+  0%, 100% {
+    transform: scaleY(0.4);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+/* Typing cursor animation for smooth streaming */
+@keyframes typing-cursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-typing-cursor {
+  animation: typing-cursor 1s ease-in-out infinite;
+}
+
+/* Smooth text reveal animation */
+@keyframes text-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-text-reveal {
+  animation: text-reveal 0.15s ease-out forwards;
+}
+
+/* ============================================================================
+   STREAMING TEXT ANIMATIONS - Smooth & Delightful
+   ============================================================================ */
+
+/* Smooth character reveal for streaming */
+@keyframes char-reveal {
+  0% {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.animate-char-reveal {
+  animation: char-reveal 0.1s ease-out forwards;
+}
+
+/* Word-by-word fade in */
+@keyframes word-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-word-fade {
+  animation: word-fade 0.2s ease-out forwards;
+}
+
+/* Blinking cursor */
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Smooth cursor */
+@keyframes smooth-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-smooth-blink {
+  animation: smooth-blink 1.2s ease-in-out infinite;
+}
+
+/* ============================================================================
+   BUTTON MICRO-INTERACTIONS
+   ============================================================================ */
+
+.btn-bounce:active {
+  animation: btnBounce 0.15s ease-out;
+}
+
+@keyframes btnBounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Ripple effect for buttons */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--color-primary-foreground) 10%, transparent 10.01%);
+  background-position: center;
+  background-size: 10000%;
+  opacity: 0;
+  transition: background-size 0.3s, opacity 0.3s;
+}
+
+.btn-ripple:active::after {
+  background-size: 100%;
+  opacity: 0.2;
+  transition: 0s;
+}
+
+/* ============================================================================
+   MESSAGE BUBBLE ANIMATIONS
+   ============================================================================ */
+
+@keyframes message-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-message-appear {
+  animation: message-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* User message slide from right */
+@keyframes slide-from-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-from-right {
+  animation: slide-from-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Assistant message slide from left */
+@keyframes slide-from-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-from-left {
+  animation: slide-from-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================================
+   ARTIFACT PREVIEW ANIMATIONS
+   ============================================================================ */
+
+@keyframes panel-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-panel-slide-in {
+  animation: panel-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes panel-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.animate-panel-slide-out {
+  animation: panel-slide-out 0.25s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Code streaming effect */
+@keyframes code-stream {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
+
+.animate-code-stream {
+  background: linear-gradient(
+    180deg,
+    var(--color-foreground) 0%,
+    var(--color-foreground) 50%,
+    transparent 50%,
+    transparent 100%
+  );
+  background-size: 100% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: code-stream 0.5s linear infinite;
+}
+
+/* ============================================================================
+   TOAST & NOTIFICATION ANIMATIONS
+   ============================================================================ */
+
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(100%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-enter {
+  animation: toast-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+.animate-toast-exit {
+  animation: toast-exit 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ============================================================================
+   COPY BUTTON SUCCESS ANIMATION
+   ============================================================================ */
+
+@keyframes copy-success {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  75% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-copy-success {
+  animation: copy-success 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================================
+   HOVER EFFECTS - Micro-Interactions
+   ============================================================================ */
+
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px color-mix(in oklch, var(--color-foreground) 10%, transparent);
+}
+
+.hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px color-mix(in oklch, var(--color-primary) 30%, transparent);
+}
+
+.hover-scale {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+
+.hover-scale:active {
+  transform: scale(0.98);
+}
+
+/* ============================================================================
+   REDUCED MOTION - Accessibility
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
