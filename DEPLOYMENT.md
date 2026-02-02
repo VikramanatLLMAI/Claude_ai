@@ -12,7 +12,7 @@ This document captures all steps taken to deploy the Athena MCP Next.js applicat
                                                                                │
                                                                                ▼
 ┌─────────────────┐    ┌─────────────────┐                          ┌─────────────────┐
-│   Neon DB       │◀───│   App Runner    │◀─────────────────────────│   App Runner    │
+│   AWS RDS       │◀───│   App Runner    │◀─────────────────────────│   App Runner    │
 │  (PostgreSQL)   │    │   (Running)     │                          │  (Pull Image)   │
 └─────────────────┘    └─────────────────┘                          └─────────────────┘
 ```
@@ -21,7 +21,7 @@ This document captures all steps taken to deploy the Athena MCP Next.js applicat
 
 - AWS CLI installed and configured
 - AWS Account with appropriate permissions
-- Neon PostgreSQL database (or other PostgreSQL)
+- AWS RDS PostgreSQL database (or other PostgreSQL)
 
 ## AWS Resources Created
 
@@ -493,7 +493,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/lib/generated ./lib/generated
 
 - **URL:** https://nbi29huvfv.us-west-2.awsapprunner.com
 - **Region:** us-west-2
-- **Database:** Neon PostgreSQL (us-east-1)
+- **Database:** AWS RDS PostgreSQL (athena-poc-db, us-west-2, db.t4g.micro)
 - **Status:** RUNNING
 
 ## Clean Up
