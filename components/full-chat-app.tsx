@@ -588,6 +588,8 @@ function ChatContent({
   const userClosedArtifactRef = useRef<boolean>(false) // Track if user manually closed
   const lastDetectedArtifactIdRef = useRef<string | null>(null) // Track last detected artifact to prevent re-opening
   const showArtifactPreviewRef = useRef<boolean>(false) // Ref version to avoid callback recreation
+  const artifactMessageIdRef = useRef<string | null>(null) // Track which message owns the current artifacts
+  const manuallySelectedArtifactRef = useRef<boolean>(false) // Track if artifact was manually clicked (not auto-detected)
 
   const [modelJustChanged, setModelJustChanged] = useState(false)
   const prevModelRef = useRef<string>(selectedModel)
@@ -688,10 +690,11 @@ function ChatContent({
 
   // Open artifact and collapse sidebar - memoized to prevent re-renders
   // Uses refs instead of state in dependencies to prevent recreation and infinite loops
-  const openArtifactPanel = useCallback((artifact: Artifact, artifacts: Artifact[] = [], streaming: boolean = false) => {
+  // manualSelection: true when user clicks an artifact tile (not auto-detected during streaming)
+  const openArtifactPanel = useCallback((artifact: Artifact, artifacts: Artifact[] = [], streaming: boolean = false, manualSelection: boolean = false) => {
     // Check if this artifact was already opened (to prevent infinite loops)
     // Use ref version of showArtifactPreview to avoid dependency
-    if (artifact.id === lastDetectedArtifactIdRef.current && showArtifactPreviewRef.current) {
+    if (artifact.id === lastDetectedArtifactIdRef.current && showArtifactPreviewRef.current && !manualSelection) {
       // Just update the content without re-triggering
       setActiveArtifact(artifact)
       setAllArtifacts(artifacts.length > 0 ? artifacts : [artifact])
@@ -699,6 +702,9 @@ function ChatContent({
       setIsStreamingArtifact(streaming)
       return
     }
+
+    // Track if this was a manual selection (prevents auto-detection from overwriting)
+    manuallySelectedArtifactRef.current = manualSelection
 
     lastDetectedArtifactIdRef.current = artifact.id
     sidebarStateBeforeArtifact.current = true // Save current state (assume open)
@@ -723,6 +729,7 @@ function ChatContent({
   const closeArtifactPanel = useCallback(() => {
     userClosedArtifactRef.current = true // Mark as manually closed by user
     lastDetectedArtifactIdRef.current = null // Reset tracking
+    manuallySelectedArtifactRef.current = false // Reset manual selection flag
     setShowArtifactPreview(false)
     setActiveArtifact(null)
     setIsStreamingArtifact(false)
@@ -942,9 +949,12 @@ function ChatContent({
     }
   }, [conversationId, setMessages])
 
+  // Throttle ref for artifact detection (100ms minimum between updates)
+  const lastArtifactUpdateRef = useRef<number>(0)
+  const artifactUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Auto-detect artifacts during streaming and open preview
-  // Only depends on messages and isLoading to prevent infinite loops
-  // Uses refs for showArtifactPreview and openArtifactPanel to avoid recreation issues
+  // Throttled to reduce performance impact during fast streaming
   useEffect(() => {
     if (messages.length === 0) return
     // Don't auto-open if user manually closed
@@ -953,40 +963,86 @@ function ChatContent({
     const lastMessage = messages[messages.length - 1]
     if (lastMessage.role !== 'assistant') return
 
+    // If this is a DIFFERENT assistant message than before, reset artifacts immediately
+    if (artifactMessageIdRef.current !== lastMessage.id) {
+      artifactMessageIdRef.current = lastMessage.id
+      setActiveArtifact(null)
+      setAllArtifacts([])
+      lastDetectedArtifactIdRef.current = null
+      manuallySelectedArtifactRef.current = false // Reset manual selection for new message
+      setIsStreamingArtifact(isLoading)
+      lastArtifactUpdateRef.current = 0 // Allow immediate update for new message
+    }
+
     const messageText = getMessageText(lastMessage)
     if (!messageText) return
 
-    // Check for BOTH complete and streaming artifacts
-    const hasCompleteArtifact = hasArtifacts(messageText)
-    const hasStreamingArtifactFlag = isArtifactStreaming(messageText)
+    // Throttle artifact detection during streaming (100ms minimum)
+    const now = Date.now()
+    const timeSinceLastUpdate = now - lastArtifactUpdateRef.current
+    const THROTTLE_MS = 100
 
-    if (hasCompleteArtifact || hasStreamingArtifactFlag) {
-      // Get artifacts - either complete or streaming
-      let artifacts: Artifact[] = []
-      if (hasCompleteArtifact) {
-        artifacts = extractArtifacts(messageText)
-      } else if (hasStreamingArtifactFlag) {
-        const { artifact } = getStreamingArtifact(messageText)
-        if (artifact) artifacts = [artifact]
-      }
+    const processArtifacts = () => {
+      lastArtifactUpdateRef.current = Date.now()
 
-      if (artifacts.length > 0) {
-        const latestArtifact = artifacts[artifacts.length - 1]
+      // Check for BOTH complete and streaming artifacts
+      const hasCompleteArtifact = hasArtifacts(messageText)
+      const hasStreamingArtifactFlag = isArtifactStreaming(messageText)
 
-        // Only auto-open during active streaming, not for existing messages
-        // Use ref to check showArtifactPreview to avoid dependency issues
-        if (!showArtifactPreviewRef.current && isLoading) {
-          openArtifactPanel(latestArtifact, artifacts, isLoading)
-        } else if (showArtifactPreviewRef.current) {
-          // Just update artifact content without triggering full re-open
-          setActiveArtifact(latestArtifact)
-          setAllArtifacts(artifacts)
-          setActiveArtifactIndex(artifacts.length - 1)
-          setIsStreamingArtifact(isLoading)
+      if (hasCompleteArtifact || hasStreamingArtifactFlag) {
+        let artifacts: Artifact[] = []
+        if (hasCompleteArtifact) {
+          artifacts = extractArtifacts(messageText)
+        } else if (hasStreamingArtifactFlag) {
+          const { artifact } = getStreamingArtifact(messageText)
+          if (artifact) artifacts = [artifact]
+        }
+
+        if (artifacts.length > 0) {
+          const latestArtifact = artifacts[artifacts.length - 1]
+
+          if (!showArtifactPreviewRef.current && isLoading) {
+            // Auto-open artifact panel during streaming (reset manual selection flag)
+            manuallySelectedArtifactRef.current = false
+            openArtifactPanel(latestArtifact, artifacts, isLoading)
+          } else if (showArtifactPreviewRef.current && !manuallySelectedArtifactRef.current) {
+            // Only update if NOT manually selected (prevents overwriting user's artifact choice)
+            setActiveArtifact(latestArtifact)
+            setAllArtifacts(artifacts)
+            setActiveArtifactIndex(artifacts.length - 1)
+            setIsStreamingArtifact(isLoading)
+          }
         }
       }
     }
-  }, [messages, isLoading, openArtifactPanel]) // Removed showArtifactPreview and activeArtifact - using refs
+
+    // If not loading (streaming complete), process immediately
+    if (!isLoading) {
+      if (artifactUpdateTimeoutRef.current) {
+        clearTimeout(artifactUpdateTimeoutRef.current)
+        artifactUpdateTimeoutRef.current = null
+      }
+      processArtifacts()
+      return
+    }
+
+    // Throttle during streaming
+    if (timeSinceLastUpdate >= THROTTLE_MS) {
+      processArtifacts()
+    } else {
+      // Schedule update after throttle period
+      if (artifactUpdateTimeoutRef.current) {
+        clearTimeout(artifactUpdateTimeoutRef.current)
+      }
+      artifactUpdateTimeoutRef.current = setTimeout(processArtifacts, THROTTLE_MS - timeSinceLastUpdate)
+    }
+
+    return () => {
+      if (artifactUpdateTimeoutRef.current) {
+        clearTimeout(artifactUpdateTimeoutRef.current)
+      }
+    }
+  }, [messages, isLoading, openArtifactPanel])
 
   // When streaming stops, keep artifact open but mark as complete
   useEffect(() => {
@@ -1265,19 +1321,27 @@ function ChatContent({
                       const isStreaming = isLoading && isLastMessage && isAssistant
                       const messageText = getMessageText(message)
 
-                      // Detect artifacts in message (both complete and streaming)
-                      const hasCompleteArtifacts = hasArtifacts(messageText)
-                      const hasStreamingArtifactFlag = isArtifactStreaming(messageText)
-                      const messageHasArtifacts = hasCompleteArtifacts || hasStreamingArtifactFlag
-
-                      // Extract artifacts - for streaming, get partial artifact
+                      // Detect artifacts in message - optimized to avoid expensive ops for non-streaming messages
+                      // For non-last messages, use simple string check first
+                      const hasArtifactTag = messageText.includes('<artifact ')
+                      let messageHasArtifacts = false
+                      let hasStreamingArtifactFlag = false
                       let artifacts: Artifact[] = []
-                      if (hasCompleteArtifacts) {
-                        artifacts = extractArtifacts(messageText)
-                      } else if (hasStreamingArtifactFlag) {
-                        const { artifact: streamingArtifact } = getStreamingArtifact(messageText)
-                        if (streamingArtifact) {
-                          artifacts = [streamingArtifact]
+
+                      if (hasArtifactTag || (isStreaming && messageText.includes('<'))) {
+                        // Only do expensive detection if there might be artifacts
+                        const hasCompleteArtifacts = hasArtifacts(messageText)
+                        hasStreamingArtifactFlag = isStreaming && isArtifactStreaming(messageText)
+                        messageHasArtifacts = hasCompleteArtifacts || hasStreamingArtifactFlag
+
+                        // Extract artifacts - for streaming, get partial artifact
+                        if (hasCompleteArtifacts) {
+                          artifacts = extractArtifacts(messageText)
+                        } else if (hasStreamingArtifactFlag) {
+                          const { artifact: streamingArtifact } = getStreamingArtifact(messageText)
+                          if (streamingArtifact) {
+                            artifacts = [streamingArtifact]
+                          }
                         }
                       }
 
@@ -1382,7 +1446,7 @@ function ChatContent({
                                           isActive={activeArtifact?.id === artifact.id && showArtifactPreview}
                                           isStreaming={isStreaming && hasStreamingArtifactFlag}
                                           onClick={() => {
-                                            openArtifactPanel(artifact, artifacts, isStreaming && hasStreamingArtifactFlag)
+                                            openArtifactPanel(artifact, artifacts, isStreaming && hasStreamingArtifactFlag, true)
                                           }}
                                         />
                                       ))}
@@ -1405,7 +1469,7 @@ function ChatContent({
                                           isActive={activeArtifact?.id === artifact.id && showArtifactPreview}
                                           isStreaming={isStreaming && hasStreamingArtifactFlag}
                                           onClick={() => {
-                                            openArtifactPanel(artifact, artifacts, isStreaming && hasStreamingArtifactFlag)
+                                            openArtifactPanel(artifact, artifacts, isStreaming && hasStreamingArtifactFlag, true)
                                           }}
                                         />
                                       ))}
@@ -1483,14 +1547,11 @@ function ChatContent({
 
                                   {/* FeedbackBar - shown every 3rd assistant message */}
                                   {!isStreaming && shouldShowFeedbackBar(index, message.role) && (
-                                    <div className="mt-3">
+                                    <div className="mt-3 flex justify-center">
                                       <FeedbackBar
-                                        onFeedback={(feedback, comment) => {
-                                          if (feedback) {
-                                            saveFeedback(message.id, feedback, comment)
-                                          }
-                                        }}
-                                        showCommentPrompt={true}
+                                        title="Was this response helpful?"
+                                        onHelpful={() => saveFeedback(message.id, 'positive')}
+                                        onNotHelpful={() => saveFeedback(message.id, 'negative')}
                                       />
                                     </div>
                                   )}

@@ -215,22 +215,22 @@ export async function addMessage(
   data: MessageInput
 ): Promise<Message | null> {
   try {
-    // Create message and update conversation's lastMessageAt
-    const [message] = await prisma.$transaction([
-      prisma.message.create({
-        data: {
-          conversationId,
-          role: data.role,
-          content: data.content,
-          parts: data.parts as object ?? null,
-          metadata: data.metadata as object ?? {},
-        },
-      }),
-      prisma.conversation.update({
-        where: { id: conversationId },
-        data: { lastMessageAt: new Date() },
-      }),
-    ]);
+    // Create message
+    const message = await prisma.message.create({
+      data: {
+        conversationId,
+        role: data.role,
+        content: data.content,
+        parts: data.parts as object ?? null,
+        metadata: data.metadata as object ?? {},
+      },
+    });
+
+    // Update conversation's lastMessageAt (non-blocking)
+    prisma.conversation.update({
+      where: { id: conversationId },
+      data: { lastMessageAt: new Date() },
+    }).catch(err => console.error('Error updating lastMessageAt:', err));
 
     return message;
   } catch (error) {

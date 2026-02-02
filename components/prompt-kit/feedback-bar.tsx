@@ -2,159 +2,104 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react"
-import { motion, AnimatePresence } from "motion/react"
+import { ThumbsDown, ThumbsUp, X } from "lucide-react"
 
-type FeedbackType = "positive" | "negative" | null
-
-interface FeedbackBarProps {
+type FeedbackBarProps = {
   className?: string
-  onFeedback?: (feedback: FeedbackType, comment?: string) => void
-  onPositive?: () => void
-  onNegative?: () => void
-  showCommentPrompt?: boolean
-  initialFeedback?: FeedbackType
+  title?: string
+  icon?: React.ReactNode
+  onHelpful?: () => void
+  onNotHelpful?: () => void
+  onClose?: () => void
 }
 
-const FeedbackBar = React.forwardRef<HTMLDivElement, FeedbackBarProps>(
-  (
-    {
-      className,
-      onFeedback,
-      onPositive,
-      onNegative,
-      showCommentPrompt = true,
-      initialFeedback = null,
-    },
-    ref
-  ) => {
-    const [feedback, setFeedback] = React.useState<FeedbackType>(initialFeedback)
-    const [showComment, setShowComment] = React.useState(false)
-    const [comment, setComment] = React.useState("")
-    const [submitted, setSubmitted] = React.useState(false)
+export function FeedbackBar({
+  className,
+  title = "Was this response helpful?",
+  icon,
+  onHelpful,
+  onNotHelpful,
+  onClose,
+}: FeedbackBarProps) {
+  const [feedback, setFeedback] = React.useState<"helpful" | "not-helpful" | null>(null)
+  const [dismissed, setDismissed] = React.useState(false)
 
-    const handleFeedback = (type: FeedbackType) => {
-      setFeedback(type)
+  if (dismissed) return null
 
-      if (type === "positive") {
-        onPositive?.()
-        onFeedback?.(type)
-        setSubmitted(true)
-      } else if (type === "negative") {
-        onNegative?.()
-        if (showCommentPrompt) {
-          setShowComment(true)
-        } else {
-          onFeedback?.(type)
-          setSubmitted(true)
-        }
-      }
-    }
-
-    const handleSubmitComment = () => {
-      onFeedback?.(feedback, comment)
-      setSubmitted(true)
-      setShowComment(false)
-    }
-
-    if (submitted) {
-      return (
-        <motion.div
-          ref={ref}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground",
-            className
-          )}
-        >
-          <span>Thanks for your feedback!</span>
-        </motion.div>
-      )
-    }
-
+  if (feedback) {
     return (
       <div
-        ref={ref}
-        className={cn("space-y-2", className)}
+        className={cn(
+          "bg-background border-border inline-flex rounded-[12px] border text-sm",
+          className
+        )}
       >
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 px-3 py-2"
-        >
-          <span className="text-sm text-muted-foreground">Was this helpful?</span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant={feedback === "positive" ? "default" : "ghost"}
-              size="sm"
-              className={cn(
-                "h-7 px-2",
-                feedback === "positive" && "bg-green-500 hover:bg-green-600"
-              )}
-              onClick={() => handleFeedback("positive")}
-            >
-              <ThumbsUp className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={feedback === "negative" ? "default" : "ghost"}
-              size="sm"
-              className={cn(
-                "h-7 px-2",
-                feedback === "negative" && "bg-red-500 hover:bg-red-600"
-              )}
-              onClick={() => handleFeedback("negative")}
-            >
-              <ThumbsDown className="h-4 w-4" />
-            </Button>
+        <div className="flex w-full items-center justify-between">
+          <div className="flex flex-1 items-center justify-start gap-4 py-3 pl-4 pr-4">
+            {feedback === "helpful" ? (
+              <ThumbsUp className="size-4 text-green-500" />
+            ) : (
+              <ThumbsDown className="size-4 text-red-500" />
+            )}
+            <span className="text-foreground font-medium">Thanks for your feedback!</span>
           </div>
-        </motion.div>
-
-        <AnimatePresence>
-          {showComment && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>What could be improved?</span>
-                </div>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Optional: Tell us what went wrong..."
-                  className="min-h-[80px] w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowComment(false)
-                      onFeedback?.("negative")
-                      setSubmitted(true)
-                    }}
-                  >
-                    Skip
-                  </Button>
-                  <Button size="sm" onClick={handleSubmitComment}>
-                    Submit
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
       </div>
     )
   }
-)
 
-FeedbackBar.displayName = "FeedbackBar"
-
-export { FeedbackBar, type FeedbackType }
+  return (
+    <div
+      className={cn(
+        "bg-background border-border inline-flex rounded-[12px] border text-sm",
+        className
+      )}
+    >
+      <div className="flex w-full items-center justify-between">
+        <div className="flex flex-1 items-center justify-start gap-4 py-3 pl-4">
+          {icon}
+          <span className="text-foreground font-medium">{title}</span>
+        </div>
+        <div className="flex items-center justify-center gap-0.5 px-3 py-0">
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-green-500 flex size-8 items-center justify-center rounded-md transition-colors"
+            aria-label="Helpful"
+            onClick={() => {
+              setFeedback("helpful")
+              onHelpful?.()
+            }}
+          >
+            <ThumbsUp className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-red-500 flex size-8 items-center justify-center rounded-md transition-colors"
+            aria-label="Not helpful"
+            onClick={() => {
+              setFeedback("not-helpful")
+              onNotHelpful?.()
+            }}
+          >
+            <ThumbsDown className="size-4" />
+          </button>
+        </div>
+        {onClose && (
+          <div className="border-border flex items-center justify-center border-l">
+            <button
+              type="button"
+              onClick={() => {
+                setDismissed(true)
+                onClose?.()
+              }}
+              className="text-muted-foreground hover:text-foreground flex items-center justify-center rounded-md p-3"
+              aria-label="Close"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

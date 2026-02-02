@@ -207,29 +207,51 @@ export function getMessageWithoutArtifacts(content: string): string {
 }
 
 // Check if content ends with a partial artifact tag (e.g., "<a", "<art", "<artifact", "<artifact ")
+// Optimized: Use string operations instead of regex for better performance during streaming
 export function hasPartialArtifactTag(content: string): boolean {
-  if (!content) return false;
+  if (!content || content.length < 2) return false;
 
-  // Check for partial opening tag at the end - must start with "<a" at minimum to be considered artifact-related
-  // Matches: <a, <ar, <art, <arti, <artif, <artifa, <artifac, <artifact, <artifact id=...
-  const partialTagPattern = /<a(?:r(?:t(?:i(?:f(?:a(?:c(?:t)?)?)?)?)?)?)?(?:\s[^>]*)?$/i;
-  return partialTagPattern.test(content);
+  // Find last '<' character
+  const lastOpenBracket = content.lastIndexOf('<');
+  if (lastOpenBracket === -1) return false;
+
+  // Get the partial tag
+  const partialTag = content.substring(lastOpenBracket).toLowerCase();
+
+  // Check if it's the start of an artifact tag
+  const artifactPrefix = '<artifact';
+  if (partialTag.length > artifactPrefix.length) {
+    // If longer than '<artifact', check if it starts with '<artifact' and has no '>'
+    return partialTag.startsWith(artifactPrefix) && !partialTag.includes('>');
+  }
+
+  // Check if '<artifact' starts with our partial tag
+  return artifactPrefix.startsWith(partialTag);
 }
 
 // Get text that appears BEFORE the first artifact tag (handles partial tags too)
+// Optimized: Use indexOf instead of regex search
 export function getTextBeforeArtifact(content: string): string {
   if (!content) return '';
 
-  // First check for complete artifact tag
-  const artifactStart = content.search(/<artifact\s+/i);
+  // First check for complete artifact tag using indexOf (faster than regex)
+  const artifactStart = content.indexOf('<artifact ');
   if (artifactStart !== -1) {
     return content.substring(0, artifactStart).trim();
   }
 
   // Check for partial artifact tag at the end (during streaming)
-  // Remove any trailing partial tag like "<a", "<art", "<artifact"
-  const cleaned = content.replace(/<a(?:r(?:t(?:i(?:f(?:a(?:c(?:t)?)?)?)?)?)?)?(?:\s[^>]*)?$/i, '');
-  return cleaned.trim();
+  const lastOpenBracket = content.lastIndexOf('<');
+  if (lastOpenBracket !== -1) {
+    const partialTag = content.substring(lastOpenBracket).toLowerCase();
+    const artifactPrefix = '<artifact';
+    // If it looks like a partial artifact tag, remove it
+    if (artifactPrefix.startsWith(partialTag) || partialTag.startsWith(artifactPrefix)) {
+      return content.substring(0, lastOpenBracket).trim();
+    }
+  }
+
+  return content.trim();
 }
 
 // Get text that appears AFTER the last artifact closing tag
@@ -243,20 +265,39 @@ export function getTextAfterArtifact(content: string): string {
 }
 
 // Check if an artifact is currently streaming (has open tag but no close tag, OR has partial tag)
+// Optimized: Count tags using indexOf loop instead of regex match()
 export function isArtifactStreaming(content: string): boolean {
   if (!content) return false;
 
-  // Check for complete open tags vs close tags
-  const openMatches = content.match(/<artifact\s+[^>]*>/gi) || [];
-  const closeMatches = content.match(/<\/artifact>/gi) || [];
-
-  // If there are more open tags than close tags, artifact is streaming
-  if (openMatches.length > closeMatches.length) {
+  // Fast check for partial tag first (most common during streaming)
+  if (hasPartialArtifactTag(content)) {
     return true;
   }
 
-  // Also check for partial artifact tag at the end (tag still being written)
-  return hasPartialArtifactTag(content);
+  // Count open tags using indexOf (faster than regex)
+  let openCount = 0;
+  let pos = 0;
+  while ((pos = content.indexOf('<artifact ', pos)) !== -1) {
+    // Verify it has a closing '>'
+    const closePos = content.indexOf('>', pos);
+    if (closePos !== -1) {
+      openCount++;
+      pos = closePos + 1;
+    } else {
+      // Open tag without '>' - still streaming
+      return true;
+    }
+  }
+
+  // Count close tags
+  let closeCount = 0;
+  pos = 0;
+  while ((pos = content.indexOf('</artifact>', pos)) !== -1) {
+    closeCount++;
+    pos += 11; // length of '</artifact>'
+  }
+
+  return openCount > closeCount;
 }
 
 // Extract artifact IDs from content
