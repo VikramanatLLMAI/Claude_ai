@@ -108,8 +108,8 @@ const CLAUDE_MODELS = [
     description: "Fast and efficient for simple tasks",
   },
   {
-    id: "us.anthropic.claude-opus-4-5-20251101-v1:0",
-    name: "Claude 4.5 Opus",
+    id: "anthropic.claude-opus-4-1-20250805-v1:0",
+    name: "Claude 4.1 Opus",
     description: "Best for complex reasoning and analysis",
   },
   {
