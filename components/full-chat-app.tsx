@@ -612,58 +612,68 @@ function ChatContent({
 
   // Get personalized suggestions based on solution type
   const suggestions = useMemo((): Suggestion[] => {
-    const baseSuggestions: Suggestion[] = [
-      { label: "Explain a concept to me", description: "Get clear explanations on any topic" },
-    ]
-
     switch (solutionType) {
       case "manufacturing":
         return [
-          { label: "Show today's production metrics", description: "Real-time yield and throughput data", highlighted: true },
-          { label: "Analyze yield trends", description: "Identify patterns in yield data", highlighted: true },
-          { label: "Generate production report", description: "Daily/weekly summary" },
-          ...baseSuggestions,
+          { label: "Show defects by machine for last month", description: "Natural language MES query", highlighted: true },
+          { label: "Generate weekly production report", description: "Automated reporting with yield trends", highlighted: true },
+          { label: "Drill down from plant to operator level", description: "Plant → Line → Operation → Equipment" },
+          { label: "Predict output for next week", description: "AI forecasting based on current performance" },
+          { label: "Show operator performance trends", description: "Cycle time and error analysis" },
+          { label: "Trace product genealogy", description: "AI-assisted traceability mapping" },
         ]
       case "maintenance":
         return [
-          { label: "Calculate MTBF for equipment", description: "Mean time between failures analysis", highlighted: true },
-          { label: "Predict maintenance needs", description: "Preventive maintenance recommendations", highlighted: true },
-          { label: "Show equipment reliability", description: "Reliability metrics dashboard" },
-          ...baseSuggestions,
+          { label: "Calculate MTBF for all machines", description: "From MES downtime logs", highlighted: true },
+          { label: "Predict upcoming failure probabilities", description: "AI-based failure prediction", highlighted: true },
+          { label: "Show MTTR trends this month", description: "Mean time to repair analysis" },
+          { label: "Identify recurring failure modes", description: "Top failures impacting MTBF/MTTR" },
+          { label: "Create maintenance dashboard", description: "Daily/weekly/monthly trends" },
+          { label: "Evaluate supplier performance", description: "Recommendations based on failure patterns" },
         ]
       case "support":
         return [
-          { label: "Analyze recent incidents", description: "Root cause analysis of recent issues", highlighted: true },
-          { label: "Troubleshoot an issue", description: "Step-by-step troubleshooting guide", highlighted: true },
-          { label: "Check SLA status", description: "Service level compliance" },
-          ...baseSuggestions,
+          { label: "Suggest root cause for this issue", description: "With similar past ticket references", highlighted: true },
+          { label: "Recommend troubleshooting steps", description: "Step-by-step resolution guide", highlighted: true },
+          { label: "Predict resolution time for ticket", description: "AI severity and time prediction" },
+          { label: "Create RCA for incident", description: "Root cause analysis document" },
+          { label: "Recommend operator training needs", description: "Based on incident patterns" },
+          { label: "Prioritize alerts by impact", description: "Smart alert prioritization" },
         ]
       case "change-management":
         return [
-          { label: "Assess change impact", description: "Evaluate effects of proposed changes", highlighted: true },
-          { label: "Create change request", description: "Draft ECO documentation", highlighted: true },
-          { label: "Track change status", description: "Monitor approval workflows" },
-          ...baseSuggestions,
+          { label: "Show workflow for part number ABC123", description: "Natural language workflow query", highlighted: true },
+          { label: "Show objects mapped to current revision", description: "Object-to-revision mapping", highlighted: true },
+          { label: "Find specs shared between flows", description: "Spec overrides impact analysis" },
+          { label: "Which path expressions need updates?", description: "ECO change impact" },
+          { label: "Generate redline document", description: "For approval after edits" },
+          { label: "Show data collection parameters", description: "Shared across multiple processes" },
         ]
       case "impact-analysis":
         return [
-          { label: "Analyze yield impact", description: "Calculate yield effects of changes", highlighted: true },
-          { label: "Cost-benefit analysis", description: "ROI and TCO calculations", highlighted: true },
-          { label: "Delivery impact assessment", description: "Timeline and schedule analysis" },
-          ...baseSuggestions,
+          { label: "Show dependent objects for this part", description: "Dependency visualization", highlighted: true },
+          { label: "Where is this component used?", description: "Where-used natural language query", highlighted: true },
+          { label: "Show current WIP status", description: "Work-in-progress tracking" },
+          { label: "List affected work orders", description: "Orders impacted by this change" },
+          { label: "What path expressions are impacted?", description: "Routing and process path effects" },
+          { label: "Calculate ROI for this change", description: "Cost-benefit analysis" },
         ]
       case "requirements":
         return [
-          { label: "Validate requirements", description: "Check completeness and clarity", highlighted: true },
-          { label: "Identify dependencies", description: "Find cross-system dependencies", highlighted: true },
-          { label: "Generate requirements doc", description: "Create specification document" },
-          ...baseSuggestions,
+          { label: "Generate industry-specific template", description: "Default requirements for your industry", highlighted: true },
+          { label: "Create As-Is and To-Be process flows", description: "Document current vs desired state", highlighted: true },
+          { label: "Generate use cases from requirements", description: "With test cases and acceptance criteria" },
+          { label: "Map MES-ERP touchpoints", description: "Integration points and data flows" },
+          { label: "Identify customizations needed", description: "Beyond OOB modules" },
+          { label: "Map OOB modules to requirements", description: "Standard module recommendations" },
         ]
       default:
         return [
-          { label: "Help me with a task", description: "Get assistance with any project", highlighted: true },
-          { label: "Answer my questions", description: "Get clear explanations" },
-          ...baseSuggestions,
+          { label: "Help me analyze data", description: "Get insights from your connected systems", highlighted: true },
+          { label: "Answer my questions", description: "Get clear explanations on any topic", highlighted: true },
+          { label: "Create a report or dashboard", description: "Visualize your data" },
+          { label: "Explain a concept to me", description: "Learn about any topic" },
+          { label: "Summarize information", description: "Get concise summaries" },
         ]
     }
   }, [solutionType])
