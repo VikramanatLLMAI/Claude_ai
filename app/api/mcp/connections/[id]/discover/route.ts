@@ -46,8 +46,10 @@ export async function POST(
     }
 
     // Prepare headers for authentication
+    // MCP servers require Accept header for both JSON and SSE (Server-Sent Events)
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
     };
 
     if (connection.authCredentialsEncrypted) {
@@ -62,7 +64,46 @@ export async function POST(
       }
     }
 
+    // Helper function to parse SSE or JSON response
+    const parseResponse = async (response: Response): Promise<unknown> => {
+      const contentType = response.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        return response.json();
+      }
+
+      if (contentType.includes('text/event-stream')) {
+        const text = await response.text();
+        const lines = text.split('\n');
+        let lastData: unknown = null;
+
+        for (const line of lines) {
+          if (line.startsWith('data:')) {
+            const jsonStr = line.slice(5).trim();
+            if (jsonStr && jsonStr !== '[DONE]') {
+              try {
+                lastData = JSON.parse(jsonStr);
+              } catch {
+                // Skip non-JSON data lines
+              }
+            }
+          }
+        }
+
+        if (lastData) return lastData;
+        throw new Error('No valid JSON-RPC response in SSE stream');
+      }
+
+      return response.json();
+    };
+
     try {
+      // Add session ID to headers if available (required for stateful MCP servers)
+      if (connection.sessionId) {
+        headers['Mcp-Session-Id'] = connection.sessionId;
+        console.log('[MCP Discover] Using session ID:', connection.sessionId);
+      }
+
       // Send tools/list request via JSON-RPC
       const response = await fetch(connection.serverUrl, {
         method: 'POST',
@@ -83,7 +124,7 @@ export async function POST(
         });
       }
 
-      const result = await response.json();
+      const result = await parseResponse(response) as { error?: { message?: string }; result?: { tools?: McpTool[] } };
 
       if (result.error) {
         return NextResponse.json({

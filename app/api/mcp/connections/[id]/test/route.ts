@@ -33,8 +33,10 @@ export async function POST(
     }
 
     // Prepare headers for authentication
+    // MCP servers require Accept header for both JSON and SSE (Server-Sent Events)
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
     };
 
     if (connection.authCredentialsEncrypted) {
@@ -50,8 +52,66 @@ export async function POST(
       }
     }
 
+    // Helper function to parse SSE or JSON response
+    const parseResponse = async (response: Response): Promise<unknown> => {
+      const contentType = response.headers.get('content-type') || '';
+      console.log('[MCP Parse] Content-Type:', contentType);
+
+      if (contentType.includes('application/json')) {
+        const json = await response.json();
+        console.log('[MCP Parse] JSON response:', JSON.stringify(json).slice(0, 500));
+        return json;
+      }
+
+      if (contentType.includes('text/event-stream')) {
+        const text = await response.text();
+        console.log('[MCP Parse] SSE raw text:', text.slice(0, 1000));
+        const lines = text.split('\n');
+        let lastData: unknown = null;
+
+        for (const line of lines) {
+          // Handle both "data:" and "data: " formats
+          if (line.startsWith('data:')) {
+            const jsonStr = line.slice(5).trim();
+            console.log('[MCP Parse] SSE data line:', jsonStr.slice(0, 200));
+            if (jsonStr && jsonStr !== '[DONE]') {
+              try {
+                const parsed = JSON.parse(jsonStr);
+                lastData = parsed;
+                console.log('[MCP Parse] Parsed SSE JSON:', JSON.stringify(parsed).slice(0, 300));
+              } catch (parseErr) {
+                console.log('[MCP Parse] Failed to parse SSE line:', parseErr);
+              }
+            }
+          }
+        }
+
+        if (lastData) return lastData;
+
+        // If no data: lines found, try parsing the entire text as JSON
+        try {
+          const fallback = JSON.parse(text);
+          console.log('[MCP Parse] Fallback JSON parse succeeded');
+          return fallback;
+        } catch {
+          console.log('[MCP Parse] No valid JSON found in SSE stream');
+        }
+
+        throw new Error('No valid JSON-RPC response in SSE stream');
+      }
+
+      // Fallback: try to parse as JSON
+      const text = await response.text();
+      console.log('[MCP Parse] Unknown content-type, raw text:', text.slice(0, 500));
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error(`Unable to parse response: ${text.slice(0, 200)}`);
+      }
+    };
+
     // Attempt to connect to the MCP server
-    // MCP uses JSON-RPC 2.0 over HTTP - we'll send an initialize request
+    // MCP uses JSON-RPC 2.0 over HTTP with optional SSE streaming
     try {
       const response = await fetch(connection.serverUrl, {
         method: 'POST',
@@ -89,7 +149,11 @@ export async function POST(
         });
       }
 
-      const result = await response.json();
+      // Capture session ID from response headers (MCP session management)
+      const sessionId = response.headers.get('mcp-session-id') || response.headers.get('x-session-id');
+      console.log('[MCP Test] Session ID from headers:', sessionId);
+
+      const result = await parseResponse(response) as { error?: { message?: string }; result?: { serverInfo?: unknown } };
 
       // Check for JSON-RPC error
       if (result.error) {
@@ -106,20 +170,30 @@ export async function POST(
         });
       }
 
-      // Success - update connection status
+      // Success - update connection status and store session ID
       await updateMcpConnection(id, {
         status: 'connected',
         lastError: null,
         isActive: true,
         lastConnectedAt: new Date(),
+        ...(sessionId && { sessionId }),
       });
 
       // Auto-discover tools after successful connection
-      let discoveredTools: { name: string; description?: string }[] = [];
+      let discoveredTools: { name: string; description?: string; inputSchema?: Record<string, unknown> }[] = [];
       try {
+        console.log('[MCP Test] Discovering tools from:', connection.serverUrl);
+        console.log('[MCP Test] Using session ID:', sessionId);
+
+        // Build headers for tools/list request, including session ID if present
+        const toolsHeaders: Record<string, string> = { ...headers };
+        if (sessionId) {
+          toolsHeaders['Mcp-Session-Id'] = sessionId;
+        }
+
         const toolsResponse = await fetch(connection.serverUrl, {
           method: 'POST',
-          headers,
+          headers: toolsHeaders,
           body: JSON.stringify({
             jsonrpc: '2.0',
             id: 2,
@@ -129,10 +203,29 @@ export async function POST(
           signal: AbortSignal.timeout(10000),
         });
 
+        console.log('[MCP Test] tools/list response status:', toolsResponse.status);
+        console.log('[MCP Test] tools/list content-type:', toolsResponse.headers.get('content-type'));
+
         if (toolsResponse.ok) {
-          const toolsResult = await toolsResponse.json();
-          if (toolsResult.result?.tools) {
-            discoveredTools = toolsResult.result.tools.map((t: { name: string; description?: string; inputSchema?: Record<string, unknown> }) => ({
+          const toolsResult = await parseResponse(toolsResponse);
+          console.log('[MCP Test] Parsed tools result:', JSON.stringify(toolsResult, null, 2));
+
+          // Handle different response structures
+          const typedResult = toolsResult as { result?: { tools?: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> }; tools?: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> };
+
+          // Try result.tools first, then tools directly (some servers return tools at root level)
+          const tools = typedResult.result?.tools || typedResult.tools;
+
+          if (tools && Array.isArray(tools)) {
+            console.log('[MCP Test] Found', tools.length, 'tools');
+            // Log each tool's schema for debugging
+            tools.forEach((t, i) => {
+              console.log(`[MCP Test] Tool ${i + 1}: ${t.name}`);
+              console.log(`[MCP Test]   Description: ${t.description || '(none)'}`);
+              console.log(`[MCP Test]   InputSchema:`, JSON.stringify(t.inputSchema, null, 2));
+            });
+
+            discoveredTools = tools.map((t) => ({
               name: t.name,
               description: t.description || '',
               inputSchema: t.inputSchema || {},
@@ -142,10 +235,16 @@ export async function POST(
             await updateMcpConnection(id, {
               availableTools: discoveredTools,
             });
+            console.log('[MCP Test] Stored tools in database');
+          } else {
+            console.log('[MCP Test] No tools array found in response');
           }
+        } else {
+          const errorText = await toolsResponse.text();
+          console.log('[MCP Test] tools/list failed:', errorText);
         }
-      } catch {
-        // Tool discovery failed (non-critical) - continue without logging
+      } catch (toolError) {
+        console.error('[MCP Test] Tool discovery error:', toolError);
       }
 
       return NextResponse.json({

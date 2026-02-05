@@ -201,9 +201,11 @@ export async function POST(req: NextRequest) {
           console.log(`[Chat] Tool results received:`);
           event.toolResults.forEach((tr, i) => {
             const trResult = (tr as Record<string, unknown>).result;
-            const resultStr = typeof trResult === 'string'
-              ? trResult.substring(0, 300)
-              : JSON.stringify(trResult).substring(0, 300);
+            const resultStr = trResult === undefined || trResult === null
+              ? '(no result)'
+              : typeof trResult === 'string'
+                ? trResult.substring(0, 300)
+                : JSON.stringify(trResult).substring(0, 300);
             console.log(`[Chat]   Result ${i + 1}:`, resultStr);
           });
         }
@@ -273,12 +275,15 @@ export async function POST(req: NextRequest) {
                 for (let i = 0; i < step.toolCalls.length; i++) {
                   const toolCall = step.toolCalls[i];
                   const toolResult = step.toolResults?.[i];
+                  const toolArgs = (toolCall as Record<string, unknown>).args ?? {};
+
+                  console.log(`[Chat] Storing tool part: ${toolCall.toolName}, args:`, JSON.stringify(toolArgs));
 
                   parts.push({
                     type: `tool-${toolCall.toolName}`,
                     toolCallId: toolCall.toolCallId,
                     toolName: toolCall.toolName,
-                    input: (toolCall as Record<string, unknown>).args ?? {},
+                    input: toolArgs,
                     state: toolResult ? 'output-available' : 'input-available',
                     output: toolResult ? (toolResult as Record<string, unknown>).result : undefined,
                   });

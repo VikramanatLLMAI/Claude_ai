@@ -173,7 +173,7 @@ export function McpConnectionCard({
               {showTools ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
             {showTools && (
-              <div className="space-y-1.5 rounded-md bg-muted/50 p-2">
+              <div className="max-h-48 overflow-y-auto space-y-1.5 rounded-md bg-muted/50 p-2">
                 {connection.availableTools.map((tool) => (
                   <div key={tool.name} className="text-xs">
                     <span className="font-medium">{tool.name}</span>

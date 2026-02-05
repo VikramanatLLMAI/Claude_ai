@@ -248,19 +248,20 @@ function McpConnectionsSubmenu({
         return (
           <div
             key={connection.id}
-            className="flex items-center justify-between px-2 py-2"
+            className="grid grid-cols-[1fr_auto] items-center gap-2 px-2 py-2"
           >
-            <div className="flex flex-col">
+            <div className="flex flex-col overflow-hidden">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500" />
+                <div className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
                 <Label
                   htmlFor={`mcp-${connection.id}`}
-                  className="font-medium cursor-pointer"
+                  className="font-medium cursor-pointer truncate"
+                  title={connection.name}
                 >
                   {connection.name}
                 </Label>
               </div>
-              <span className="text-xs text-muted-foreground ml-4">
+              <span className="text-xs text-muted-foreground ml-4 truncate">
                 {toolCount} tool{toolCount !== 1 ? "s" : ""}
               </span>
             </div>
@@ -268,6 +269,7 @@ function McpConnectionsSubmenu({
               id={`mcp-${connection.id}`}
               checked={isActive}
               onCheckedChange={(checked) => onToggle(connection.id, checked)}
+              className="shrink-0"
             />
           </div>
         )

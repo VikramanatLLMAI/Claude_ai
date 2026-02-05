@@ -133,15 +133,17 @@ export function McpToggle({ activeMcpIds, onToggle, className }: McpToggleProps)
               return (
                 <div
                   key={connection.id}
-                  className="flex items-center justify-between px-2 py-2 hover:bg-accent rounded-sm"
+                  className="grid grid-cols-[1fr_auto] items-center gap-2 px-2 py-2 hover:bg-accent rounded-sm"
                 >
-                  <div className="flex flex-col">
+                  <div className="flex flex-col overflow-hidden">
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-sm font-medium">{connection.name}</span>
+                      <div className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
+                      <span className="text-sm font-medium truncate" title={connection.name}>
+                        {connection.name}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground ml-4">
-                      {toolCount} tool{toolCount !== 1 ? "s" : ""} available
+                    <span className="text-xs text-muted-foreground ml-4 truncate">
+                      {toolCount} tool{toolCount !== 1 ? "s" : ""}
                     </span>
                   </div>
                   <Switch

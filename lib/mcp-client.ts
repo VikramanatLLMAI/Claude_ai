@@ -36,7 +36,7 @@ export interface McpToolResult {
 /**
  * Get authentication headers for an MCP connection
  */
-async function getAuthHeaders(connectionId: string): Promise<Record<string, string>> {
+async function getAuthHeaders(connectionId: string): Promise<{ headers: Record<string, string>; sessionId?: string | null }> {
   const connection = await getMcpConnection(connectionId);
 
   if (!connection) {
@@ -45,7 +45,13 @@ async function getAuthHeaders(connectionId: string): Promise<Record<string, stri
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json, text/event-stream',
   };
+
+  // Add session ID for stateful MCP servers
+  if (connection.sessionId) {
+    headers['Mcp-Session-Id'] = connection.sessionId;
+  }
 
   if (connection.authCredentialsEncrypted) {
     try {
@@ -60,11 +66,136 @@ async function getAuthHeaders(connectionId: string): Promise<Record<string, stri
     }
   }
 
-  return headers;
+  return { headers, sessionId: connection.sessionId };
 }
 
 /**
- * Execute a tool on an MCP server
+ * Parse SSE (Server-Sent Events) response stream
+ * Returns the final JSON-RPC result from the event stream
+ */
+async function parseSSEResponse(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') || '';
+
+  // If it's regular JSON, parse directly
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  // If it's SSE, parse the event stream
+  if (contentType.includes('text/event-stream')) {
+    const text = await response.text();
+    const lines = text.split('\n');
+
+    let lastData: unknown = null;
+
+    for (const line of lines) {
+      // SSE format: "data: {json}"
+      if (line.startsWith('data:')) {
+        const jsonStr = line.slice(5).trim();
+        if (jsonStr && jsonStr !== '[DONE]') {
+          try {
+            lastData = JSON.parse(jsonStr);
+          } catch {
+            // Skip non-JSON data lines
+          }
+        }
+      }
+    }
+
+    if (lastData) {
+      return lastData;
+    }
+
+    throw new Error('No valid JSON-RPC response found in SSE stream');
+  }
+
+  // Fallback: try to parse as JSON anyway
+  return response.json();
+}
+
+/**
+ * Re-initialize MCP connection to get a new session ID
+ */
+async function refreshMcpSession(connectionId: string): Promise<string | null> {
+  const connection = await getMcpConnection(connectionId);
+  if (!connection) return null;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json, text/event-stream',
+  };
+
+  // Add auth if configured
+  if (connection.authCredentialsEncrypted) {
+    try {
+      const credentials = JSON.parse(decrypt(connection.authCredentialsEncrypted));
+      if (connection.authType === 'api_key' && credentials.apiKey) {
+        headers['Authorization'] = `Bearer ${credentials.apiKey}`;
+      }
+    } catch (error) {
+      console.error('[MCP] Error decrypting credentials for session refresh:', error);
+    }
+  }
+
+  try {
+    console.log('[MCP] Refreshing session for connection:', connectionId);
+    const response = await fetch(connection.serverUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: { tools: {} },
+          clientInfo: { name: 'athena-mcp', version: '1.0.0' },
+        },
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      console.error('[MCP] Session refresh failed:', response.status);
+      return null;
+    }
+
+    // Get new session ID from headers
+    const newSessionId = response.headers.get('mcp-session-id') || response.headers.get('x-session-id');
+
+    if (newSessionId) {
+      // Update session ID in database
+      const { updateMcpConnection } = await import('./storage');
+      await updateMcpConnection(connectionId, { sessionId: newSessionId });
+      console.log('[MCP] Session refreshed successfully:', newSessionId);
+      return newSessionId;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[MCP] Session refresh error:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if error indicates session expiry
+ */
+function isSessionExpiredError(error: string): boolean {
+  const sessionErrors = [
+    'missing session',
+    'invalid session',
+    'session expired',
+    'session not found',
+    'unauthorized',
+    'session id',
+  ];
+  const lowerError = error.toLowerCase();
+  return sessionErrors.some(se => lowerError.includes(se));
+}
+
+/**
+ * Execute a tool on an MCP server with automatic session refresh
  */
 export async function executeMcpTool(
   connectionId: string,
@@ -81,49 +212,84 @@ export async function executeMcpTool(
     throw new Error('MCP connection is not active');
   }
 
-  const headers = await getAuthHeaders(connectionId);
+  // Try to execute tool, with automatic session refresh on expiry
+  const executeWithRetry = async (retryCount: number = 0): Promise<McpToolResult> => {
+    const { headers } = await getAuthHeaders(connectionId);
 
-  try {
-    const response = await fetch(connection.serverUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: Date.now(),
-        method: 'tools/call',
-        params: {
-          name: toolName,
-          arguments: toolArguments,
-        },
-      }),
-      signal: AbortSignal.timeout(30000), // 30 second timeout for tool execution
-    });
+    try {
+      const response = await fetch(connection.serverUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: Date.now(),
+          method: 'tools/call',
+          params: {
+            name: toolName,
+            arguments: toolArguments,
+          },
+        }),
+        signal: AbortSignal.timeout(30000), // 30 second timeout for tool execution
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
+      if (!response.ok) {
+        const errorText = await response.text();
+
+        // Check if session expired and retry once
+        if (retryCount === 0 && isSessionExpiredError(errorText)) {
+          console.log('[MCP] Session expired, attempting refresh...');
+          const newSessionId = await refreshMcpSession(connectionId);
+          if (newSessionId) {
+            return executeWithRetry(1);
+          }
+        }
+
+        return {
+          content: [{ type: 'text', text: `HTTP Error ${response.status}: ${errorText}` }],
+          isError: true,
+        };
+      }
+
+      // Parse response (handles both JSON and SSE)
+      const result = await parseSSEResponse(response) as { error?: { message?: string; code?: number }; result?: McpToolResult };
+
+      if (result.error) {
+        // Check if session expired and retry once
+        if (retryCount === 0 && isSessionExpiredError(result.error.message || '')) {
+          console.log('[MCP] Session expired (from response), attempting refresh...');
+          const newSessionId = await refreshMcpSession(connectionId);
+          if (newSessionId) {
+            return executeWithRetry(1);
+          }
+        }
+
+        return {
+          content: [{ type: 'text', text: result.error.message || 'MCP tool execution failed' }],
+          isError: true,
+        };
+      }
+
+      return result.result || { content: [{ type: 'text', text: 'No result returned' }] };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Check if session expired and retry once
+      if (retryCount === 0 && isSessionExpiredError(errorMessage)) {
+        console.log('[MCP] Session expired (from exception), attempting refresh...');
+        const newSessionId = await refreshMcpSession(connectionId);
+        if (newSessionId) {
+          return executeWithRetry(1);
+        }
+      }
+
       return {
-        content: [{ type: 'text', text: `HTTP Error ${response.status}: ${errorText}` }],
+        content: [{ type: 'text', text: `Tool execution failed: ${errorMessage}` }],
         isError: true,
       };
     }
+  };
 
-    const result = await response.json();
-
-    if (result.error) {
-      return {
-        content: [{ type: 'text', text: result.error.message || 'MCP tool execution failed' }],
-        isError: true,
-      };
-    }
-
-    return result.result || { content: [{ type: 'text', text: 'No result returned' }] };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return {
-      content: [{ type: 'text', text: `Tool execution failed: ${errorMessage}` }],
-      isError: true,
-    };
-  }
+  return executeWithRetry(0);
 }
 
 /**

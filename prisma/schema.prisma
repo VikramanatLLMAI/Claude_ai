@@ -123,6 +123,7 @@ model McpConnection {
   isActive                  Boolean   @default(true) @map("is_active")
   status                    String    @default("disconnected") // 'connected' | 'disconnected' | 'error'
   lastError                 String?   @map("last_error")
+  sessionId                 String?   @map("session_id") // MCP session ID for stateful servers
   createdAt                 DateTime  @default(now()) @map("created_at")
   updatedAt                 DateTime  @updatedAt @map("updated_at")
   lastConnectedAt           DateTime? @map("last_connected_at")
