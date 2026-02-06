@@ -141,6 +141,78 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
     return String(value)
   }
 
+  // Detect if data is tabular (array of objects with consistent keys)
+  const isTabularData = (data: unknown): data is Record<string, unknown>[] => {
+    if (!Array.isArray(data) || data.length === 0) return false
+    if (typeof data[0] !== "object" || data[0] === null) return false
+    const firstKeys = Object.keys(data[0] as Record<string, unknown>)
+    if (firstKeys.length === 0) return false
+    // Check at least first few rows have the same structure
+    return data.slice(0, 3).every(
+      (row) => typeof row === "object" && row !== null && Object.keys(row as Record<string, unknown>).length > 0
+    )
+  }
+
+  // Extract tabular data from various output shapes
+  const getTabularData = (data: Record<string, unknown>): Record<string, unknown>[] | null => {
+    // Direct array (already tabular)
+    if (Array.isArray(data) && isTabularData(data)) return data
+    // Common wrapper keys: rows, data, results, records, items, content
+    for (const key of ["rows", "data", "results", "records", "items"]) {
+      if (data[key] && isTabularData(data[key])) return data[key] as Record<string, unknown>[]
+    }
+    // Single-key wrapper containing an array
+    const keys = Object.keys(data)
+    if (keys.length === 1 && isTabularData(data[keys[0]])) {
+      return data[keys[0]] as Record<string, unknown>[]
+    }
+    return null
+  }
+
+  const renderTable = (rows: Record<string, unknown>[]) => {
+    const columns = Object.keys(rows[0])
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              {columns.map((col) => (
+                <th
+                  key={col}
+                  className="bg-muted border-border whitespace-nowrap border px-3 py-1.5 text-left text-xs font-semibold"
+                >
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i} className={i % 2 === 0 ? "" : "bg-muted/30"}>
+                {columns.map((col) => (
+                  <td
+                    key={col}
+                    className="border-border max-w-xs truncate border px-3 py-1.5"
+                    title={String(row[col] ?? "")}
+                  >
+                    {row[col] === null ? (
+                      <span className="text-muted-foreground italic">null</span>
+                    ) : (
+                      String(row[col] ?? "")
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="text-muted-foreground mt-1 text-xs">
+          {rows.length} row{rows.length !== 1 ? "s" : ""}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(
@@ -167,7 +239,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
         <CollapsibleContent
           className={cn(
             "border-border border-t",
-            "data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden"
+            "overflow-hidden"
           )}
         >
           <div className="bg-background space-y-3 p-3">
@@ -196,11 +268,23 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
                 <h4 className="text-muted-foreground mb-2 text-sm font-medium">
                   Output
                 </h4>
-                <div className="bg-muted/50 max-h-60 overflow-auto rounded border p-2 font-mono text-sm">
-                  <pre className="whitespace-pre-wrap break-all">
-                    {formatValue(output)}
-                  </pre>
-                </div>
+                {(() => {
+                  const tableRows = getTabularData(output)
+                  if (tableRows) {
+                    return (
+                      <div className="bg-muted/50 max-h-80 overflow-auto rounded border p-2 text-sm">
+                        {renderTable(tableRows)}
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="bg-muted/50 max-h-60 overflow-auto rounded border p-2 font-mono text-sm">
+                      <pre className="whitespace-pre-wrap break-all">
+                        {formatValue(output)}
+                      </pre>
+                    </div>
+                  )
+                })()}
               </div>
             )}
 

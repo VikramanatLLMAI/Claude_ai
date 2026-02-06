@@ -22,6 +22,13 @@ function extractLanguage(className?: string): string {
 }
 
 const DEFAULT_COMPONENTS: Partial<Components> = {
+  table: function TableComponent({ children, ...props }) {
+    return (
+      <div className="table-wrapper">
+        <table {...props}>{children}</table>
+      </div>
+    )
+  },
   code: function CodeComponent({ className, children, node, ...props }) {
     const startLine = node?.position?.start?.line
     const endLine = node?.position?.end?.line

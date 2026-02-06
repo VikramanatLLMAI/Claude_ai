@@ -12,9 +12,9 @@ export const maxDuration = 60;
 
 // Models that support reasoning/extended thinking
 const REASONING_CAPABLE_MODELS = [
-  'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-  'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-  'us.anthropic.claude-opus-4-5-20251101-v1:0',
+  'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
+  'global.anthropic.claude-haiku-4-5-20251001-v1:0',
+  'global.anthropic.claude-opus-4-5-20251101-v1:0',
   'us.anthropic.claude-sonnet-4-20250514-v1:0',
   'us.anthropic.claude-opus-4-20250514-v1:0',
   'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     // Use the model ID directly (frontend sends full Bedrock model IDs)
-    const modelId = requestedModel || 'us.anthropic.claude-sonnet-4-5-20250929-v1:0';
+    const modelId = requestedModel || 'global.anthropic.claude-sonnet-4-5-20250929-v1:0';
 
     // Check if reasoning should be enabled for this model
     const useReasoning = enableReasoning && supportsReasoning(modelId);
@@ -173,16 +173,21 @@ export async function POST(req: NextRequest) {
                 }
               }
               if (step.toolCalls && step.toolCalls.length > 0) {
-                for (let i = 0; i < step.toolCalls.length; i++) {
-                  const toolCall = step.toolCalls[i];
-                  const toolResult = step.toolResults?.[i];
+                for (const toolCall of step.toolCalls) {
+                  // Match result by toolCallId (not index) for reliability
+                  const toolResult = step.toolResults?.find(
+                    (r: Record<string, unknown>) => r.toolCallId === toolCall.toolCallId
+                  );
+                  const toolOutput = toolResult
+                    ? (toolResult as Record<string, unknown>).output
+                    : undefined;
                   parts.push({
                     type: `tool-${toolCall.toolName}`,
                     toolCallId: toolCall.toolCallId,
                     toolName: toolCall.toolName,
-                    input: (toolCall as Record<string, unknown>).args ?? {},
+                    input: (toolCall as Record<string, unknown>).input ?? (toolCall as Record<string, unknown>).args ?? {},
                     state: toolResult ? 'output-available' : 'input-available',
-                    output: toolResult ? (toolResult as Record<string, unknown>).result : undefined,
+                    output: toolOutput,
                   });
                 }
               } else if (step.text && step.text.trim()) {

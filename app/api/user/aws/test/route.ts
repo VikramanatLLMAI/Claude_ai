@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // The actual test happens when we try to use it
     try {
       // Create a simple model reference - this validates the credentials
-      testBedrock('us.anthropic.claude-sonnet-4-5-20250929-v1:0');
+      testBedrock('global.anthropic.claude-sonnet-4-5-20250929-v1:0');
 
       // If we get here, credentials are valid enough to create the client
       // A full test would require making an actual API call, but that would incur costs

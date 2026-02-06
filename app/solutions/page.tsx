@@ -38,7 +38,7 @@ type SolutionCard = {
 const SOLUTIONS: SolutionCard[] = [
     {
         id: "manufacturing",
-        title: "Manufacturing",
+        title: "Manufacturing (Report & Insights)",
         description: "Production visibility, analytics, and reporting",
         icon: BarChart3,
         features: [
@@ -51,7 +51,7 @@ const SOLUTIONS: SolutionCard[] = [
     },
     {
         id: "maintenance",
-        title: "Maintenance",
+        title: "Maintenance (Report & Insights)",
         description: "Reliability metrics and failure prediction",
         icon: Wrench,
         features: [
@@ -376,7 +376,7 @@ export default function SolutionsPage() {
                                                     router.push(`/solutions/${solution.id}`)
                                                 }}
                                             >
-                                                Start Chat
+                                                Interact with Agent
                                             </Button>
                                         </motion.div>
                                     </CardFooter>

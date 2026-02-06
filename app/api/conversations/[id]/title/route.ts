@@ -69,7 +69,7 @@ export async function POST(
 
     // Generate title using Claude (use fast model)
     const { text: generatedTitle } = await generateText({
-      model: bedrock('us.anthropic.claude-haiku-4-5-20251001-v1:0'),
+      model: bedrock('global.anthropic.claude-haiku-4-5-20251001-v1:0'),
       system: 'Generate a concise, descriptive title (3-6 words) for the conversation. The title should capture the main topic or intent. Do not use quotes or punctuation at the end. Only output the title, nothing else.',
       messages: [
         {

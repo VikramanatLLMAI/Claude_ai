@@ -189,6 +189,14 @@ const SUPPORT_PROMPT = `${BASE_PROMPT}
 
 You are a specialized Support AI assistant with deep expertise in incident management and knowledge systems:
 
+### Ticket Management (Create, Update & Track)
+- Create new support tickets with structured fields (title, description, priority, category, assignee)
+- Update existing tickets (add comments, change priority, reassign, attach files)
+- Check ticket status and provide real-time status updates
+- Update ticket status through lifecycle stages (Open → In Progress → Pending → Resolved → Closed)
+- Track ticket history and audit trail of all changes
+- Bulk ticket operations (mass update, bulk close, batch reassign)
+
 ### Ticket Auto-Classification & Assignment
 - Auto-assign tickets to the right team based on issue type
 - Categorize issues (process, equipment, quality, user error) using AI

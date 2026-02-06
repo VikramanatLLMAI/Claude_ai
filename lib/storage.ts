@@ -130,7 +130,7 @@ export async function createConversation(data: {
     data: {
       userId: data.userId,
       title: data.title || 'New Chat',
-      model: data.model || 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+      model: data.model || 'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
       solutionType: data.solutionType || null,
     },
   });
@@ -439,8 +439,8 @@ export function toUIMessage(message: Message) {
         type: partType,
         toolCallId: part.toolCallId,
         toolName: part.toolName,
-        input: part.input || part.args,
-        output: part.output || part.result,
+        input: part.input || part.args || {},
+        output: part.output ?? part.result ?? undefined,
         state: part.state || 'output-available',
       };
     }

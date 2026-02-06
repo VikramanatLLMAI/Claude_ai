@@ -29,6 +29,12 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import {
@@ -53,11 +59,14 @@ import {
   ArrowUp,
   Bot,
   Check,
+  CheckCircle,
+  ChevronDown,
   ChevronUp,
   Copy,
   FolderOpen,
   Globe,
   Grid2X2,
+  Loader2,
   LogOut,
   MessageSquare,
   Mic,
@@ -74,6 +83,7 @@ import {
   ThumbsUp,
   Trash,
   User2,
+  XCircle,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -83,7 +93,12 @@ import { extractArtifacts, hasArtifacts, getTextBeforeArtifact, getTextAfterArti
 import { ArtifactTile } from "@/components/artifact-tile"
 import { ArtifactPreview } from "@/components/artifact-preview"
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels"
-import { Tool, extractToolParts, type ToolPart } from "@/components/prompt-kit/tool"
+import { extractToolParts, type ToolPart } from "@/components/prompt-kit/tool"
+import {
+  Disclosure,
+  DisclosureContent,
+  DisclosureTrigger,
+} from "@/components/ui/disclosure"
 import { Loader } from "@/components/prompt-kit/loader"
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/prompt-kit/reasoning"
 import { TextShimmer } from "@/components/prompt-kit/text-shimmer"
@@ -92,24 +107,25 @@ import { PromptSuggestion, type Suggestion } from "@/components/prompt-kit/promp
 import { SystemMessage } from "@/components/prompt-kit/system-message"
 import { StreamingText } from "@/components/prompt-kit/streaming-text"
 import { Markdown } from "@/components/prompt-kit/markdown"
+import { Steps, StepsTrigger, StepsContent } from "@/components/prompt-kit/steps"
 import Link from "next/link"
 import Image from "next/image"
 
 // Claude 4.5 series models
 const CLAUDE_MODELS = [
   {
-    id: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    id: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     name: "Claude 4.5 Sonnet",
     description: "Most intelligent model, best for complex tasks",
   },
   {
-    id: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    id: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
     name: "Claude 4.5 Haiku",
     description: "Fast and efficient for simple tasks",
   },
   {
-    id: "anthropic.claude-opus-4-1-20250805-v1:0",
-    name: "Claude 4.1 Opus",
+    id: "global.anthropic.claude-opus-4-5-20251101-v1:0",
+    name: "Claude 4.5 Opus",
     description: "Best for complex reasoning and analysis",
   },
   {
@@ -118,6 +134,46 @@ const CLAUDE_MODELS = [
     description: "Balanced performance and speed",
   },
 ] as const
+
+// Disabled models (frontend only - Coming soon)
+const DISABLED_MODELS = [
+  {
+    id: "gpt-5",
+    name: "GPT-5",
+    description: "Coming soon",
+    disabled: true,
+  },
+  {
+    id: "gpt-5.1",
+    name: "GPT-5.1",
+    description: "Coming soon",
+    disabled: true,
+  },
+  {
+    id: "gemini-3-pro",
+    name: "Gemini 3 Pro",
+    description: "Coming soon",
+    disabled: true,
+  },
+  {
+    id: "gemini-3-flash",
+    name: "Gemini 3 Flash",
+    description: "Coming soon",
+    disabled: true,
+  },
+] as const
+
+// Solution-specific welcome taglines
+const SOLUTION_TAGLINES: Record<string, string> = {
+  "manufacturing": "Start a conversation with your Manufacturing AI Agent to optimize production and maximize yield",
+  "maintenance": "Start a conversation with your Maintenance AI Agent to predict failures and minimize downtime",
+  "support": "Start a conversation with your Support AI Agent to resolve issues faster and smarter",
+  "change-management": "Start a conversation with your Change Management AI Agent to streamline workflows and compliance",
+  "impact-analysis": "Start a conversation with your Impact Analysis AI Agent to uncover insights and quantify ROI",
+  "requirements": "Start a conversation with your Requirements AI Agent to validate specs and identify gaps",
+}
+
+const DEFAULT_TAGLINE = "Start a conversation with your AI Agent for intelligent assistance"
 
 type ClaudeModelId = (typeof CLAUDE_MODELS)[number]["id"]
 
@@ -169,6 +225,119 @@ const SOLUTION_NAMES: Record<string, string> = {
   'change-management': 'Change Mgmt',
   'impact-analysis': 'Impact Analysis',
   'requirements': 'Requirements',
+}
+
+// Format tool name for display (e.g. "mcp_run_support_query" → "Run Support Query")
+function formatToolDisplayName(name: string): string {
+  return name
+    .replace(/^mcp_/, "")
+    .replace(/_/g, " ")
+    .replace(/([A-Z])/g, " $1")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim()
+}
+
+// Lightweight tool step item for inside Steps component
+function ToolStepItem({ toolPart }: { toolPart: ToolPart }) {
+  const [open, setOpen] = useState(false)
+  const { state, input, output, errorText } = toolPart
+  const isProcessing = state === "input-streaming" || state === "input-available"
+  const isError = state === "output-error"
+
+  const formatValue = (value: unknown): string => {
+    if (value === null) return "null"
+    if (value === undefined) return "undefined"
+    if (typeof value === "string") return value
+    if (typeof value === "object") return JSON.stringify(value, null, 2)
+    return String(value)
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {/* Avatar + tool name row */}
+      <div className="flex items-center gap-2">
+        <span className="bg-primary/10 text-primary flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+          A
+        </span>
+        <span className="text-foreground text-sm font-medium">
+          {formatToolDisplayName(toolPart.type)}
+        </span>
+        {isProcessing && (
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+            <Loader2 className="size-3 animate-spin" />
+            Processing...
+          </span>
+        )}
+      </div>
+
+      {/* Result badge / disclosure (only when output is available) */}
+      {!isProcessing && (state === "output-available" || isError) && (
+        <Disclosure
+          open={open}
+          onOpenChange={setOpen}
+          className="ml-7"
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <DisclosureTrigger>
+            <span
+              className={cn(
+                "inline-flex cursor-pointer select-none items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:bg-muted",
+                isError
+                  ? "border-red-300 text-red-600 dark:border-red-800 dark:text-red-400"
+                  : "border-border bg-muted/50 text-muted-foreground"
+              )}
+            >
+              {isError ? "Error" : "Result"}
+              <ChevronDown className={cn("size-3 transition-transform", open && "rotate-180")} />
+            </span>
+          </DisclosureTrigger>
+          <DisclosureContent>
+            <div className="bg-muted/60 border-border mt-1.5 overflow-hidden rounded-lg border dark:bg-zinc-900/50">
+              <div className="max-h-72 overflow-auto p-3 font-mono text-xs leading-relaxed">
+                {/* Request section */}
+                {input && Object.keys(input).length > 0 && (
+                  <div>
+                    <div className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wider">
+                      Request
+                    </div>
+                    <pre className="text-foreground/80 whitespace-pre-wrap break-words dark:text-emerald-300">
+                      {formatValue(input)}
+                    </pre>
+                  </div>
+                )}
+
+                {/* Divider */}
+                {input && Object.keys(input).length > 0 && (output || errorText) && (
+                  <div className="border-border my-3 border-t" />
+                )}
+
+                {/* Response / Error section */}
+                {isError && errorText ? (
+                  <div>
+                    <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
+                      Error
+                    </div>
+                    <pre className="whitespace-pre-wrap break-words text-red-700 dark:text-red-300">
+                      {errorText}
+                    </pre>
+                  </div>
+                ) : output ? (
+                  <div>
+                    <div className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wider">
+                      Response
+                    </div>
+                    <pre className="text-foreground/80 whitespace-pre-wrap break-words dark:text-emerald-300">
+                      {formatValue(output)}
+                    </pre>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </DisclosureContent>
+        </Disclosure>
+      )}
+    </div>
+  )
 }
 
 // MCP Connections Submenu Component
@@ -1112,6 +1281,7 @@ function ChatContent({
   type MessageSegment =
     | { type: 'text'; content: string }
     | { type: 'tool'; content: ToolPart }
+    | { type: 'tool-group'; content: ToolPart[] }
 
   const getOrderedMessageSegments = (message: UIMessage): MessageSegment[] => {
     const parts = Array.isArray(message.parts) ? message.parts : []
@@ -1156,6 +1326,30 @@ function ChatContent({
     }
 
     return segments
+  }
+
+  // Group consecutive tool segments into tool-group segments for compact rendering
+  const groupConsecutiveTools = (segments: MessageSegment[]): MessageSegment[] => {
+    const result: MessageSegment[] = []
+    let toolBuffer: ToolPart[] = []
+
+    const flushTools = () => {
+      if (toolBuffer.length > 0) {
+        result.push({ type: 'tool-group', content: [...toolBuffer] })
+      }
+      toolBuffer = []
+    }
+
+    for (const segment of segments) {
+      if (segment.type === 'tool') {
+        toolBuffer.push(segment.content as ToolPart)
+      } else {
+        flushTools()
+        result.push(segment)
+      }
+    }
+    flushTools()
+    return result
   }
 
   const onSubmit = async (e?: React.FormEvent) => {
@@ -1308,8 +1502,7 @@ function ChatContent({
                           transition={{ delay: 0.4 }}
                           className="mb-6 text-muted-foreground"
                         >
-                          Start a conversation with {selectedModelInfo?.name}
-                          {solutionType && ` - ${solutionType.replace("-", " ")} mode`}
+                          {solutionType ? SOLUTION_TAGLINES[solutionType] || DEFAULT_TAGLINE : DEFAULT_TAGLINE}
                         </motion.p>
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
@@ -1358,8 +1551,8 @@ function ChatContent({
                       }
 
                       // Get ordered message segments (text and tool parts in correct order)
-                      const messageSegments = isAssistant ? getOrderedMessageSegments(message) : []
-                      const hasToolParts = messageSegments.some(s => s.type === 'tool')
+                      const messageSegments = isAssistant ? groupConsecutiveTools(getOrderedMessageSegments(message)) : []
+                      const hasToolParts = messageSegments.some(s => s.type === 'tool-group')
 
                       return (
                         <motion.div
@@ -1413,15 +1606,56 @@ function ChatContent({
                                     // Message has tool parts - render segments in order, cleaning artifact content from text
                                     <>
                                       {messageSegments.map((segment, segIndex) => {
-                                        if (segment.type === 'tool') {
-                                          const toolPart = segment.content as ToolPart
+                                        if (segment.type === 'tool-group') {
+                                          const tools = segment.content as ToolPart[]
+                                          const allCompleted = tools.every(t => t.state === 'output-available')
+                                          const hasError = tools.some(t => t.state === 'output-error')
+                                          const completedCount = tools.filter(t => t.state === 'output-available' || t.state === 'output-error').length
+                                          const isRunning = !allCompleted && !hasError && isStreaming
+                                          const errorCount = tools.filter(t => t.state === 'output-error').length
+
                                           return (
-                                            <Tool
-                                              key={toolPart.toolCallId || `tool-${segIndex}`}
-                                              toolPart={toolPart}
-                                              className="max-w-none"
-                                              defaultOpen={false}
-                                            />
+                                            <Steps key={`steps-${segIndex}`} defaultOpen={false}>
+                                              <StepsTrigger
+                                                leftIcon={
+                                                  isRunning ? <Loader2 className="size-4 animate-spin text-blue-500" />
+                                                  : hasError ? <XCircle className="size-4 text-red-500" />
+                                                  : <CheckCircle className="size-4 text-green-500" />
+                                                }
+                                              >
+                                                {isRunning ? (
+                                                  <TextShimmer duration={2}>
+                                                    Running {completedCount} of {tools.length} tool {tools.length === 1 ? 'call' : 'calls'}...
+                                                  </TextShimmer>
+                                                ) : hasError ? (
+                                                  `Used ${tools.length} tool ${tools.length === 1 ? 'call' : 'calls'} (${errorCount} failed)`
+                                                ) : (
+                                                  `Used ${tools.length} tool ${tools.length === 1 ? 'call' : 'calls'}`
+                                                )}
+                                              </StepsTrigger>
+                                              <StepsContent>
+                                                {tools.map((toolPart, toolIdx) => (
+                                                  <ToolStepItem
+                                                    key={toolPart.toolCallId || `tool-${segIndex}-${toolIdx}`}
+                                                    toolPart={toolPart}
+                                                  />
+                                                ))}
+                                                {/* Done footer */}
+                                                <div className="text-muted-foreground flex items-center gap-1.5 pt-1 text-sm">
+                                                  {isRunning ? (
+                                                    <>
+                                                      <Loader2 className="size-3.5 animate-spin" />
+                                                      <span>Running...</span>
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <CheckCircle className="size-3.5 text-green-500" />
+                                                      <span>Done{errorCount > 0 ? ` (${errorCount} ${errorCount === 1 ? 'error' : 'errors'})` : ''}</span>
+                                                    </>
+                                                  )}
+                                                </div>
+                                              </StepsContent>
+                                            </Steps>
                                           )
                                         } else {
                                           // Text segment - clean artifact content if present
@@ -1668,24 +1902,46 @@ function ChatContent({
                                     {selectedModelInfo?.name.split(" ").slice(-2).join(" ")}
                                   </span>
                                 </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent className="w-64">
-                                  {CLAUDE_MODELS.map((model) => (
-                                    <DropdownMenuItem
-                                      key={model.id}
-                                      onClick={() => setSelectedModel(model.id)}
-                                      className="flex items-center justify-between"
-                                    >
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">{model.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                          {model.description}
-                                        </span>
-                                      </div>
-                                      {selectedModel === model.id && (
-                                        <Check className="size-4 text-primary" />
-                                      )}
-                                    </DropdownMenuItem>
-                                  ))}
+                                <DropdownMenuSubContent className="w-64 max-h-48 overflow-y-auto">
+                                  <TooltipProvider>
+                                    {CLAUDE_MODELS.map((model) => (
+                                      <DropdownMenuItem
+                                        key={model.id}
+                                        onClick={() => setSelectedModel(model.id)}
+                                        className="flex items-center justify-between"
+                                      >
+                                        <div className="flex flex-col">
+                                          <span className="font-medium">{model.name}</span>
+                                          <span className="text-xs text-muted-foreground">
+                                            {model.description}
+                                          </span>
+                                        </div>
+                                        {selectedModel === model.id && (
+                                          <Check className="size-4 text-primary" />
+                                        )}
+                                      </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator />
+                                    {DISABLED_MODELS.map((model) => (
+                                      <Tooltip key={model.id}>
+                                        <TooltipTrigger asChild>
+                                          <div
+                                            className="flex items-center justify-between px-2 py-1.5 opacity-50 cursor-not-allowed"
+                                          >
+                                            <div className="flex flex-col">
+                                              <span className="font-medium text-sm">{model.name}</span>
+                                              <span className="text-xs text-muted-foreground">
+                                                {model.description}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                          <p>Coming soon</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    ))}
+                                  </TooltipProvider>
                                 </DropdownMenuSubContent>
                               </DropdownMenuSub>
 
@@ -1796,31 +2052,6 @@ function ChatContent({
                     </div>
                   </PromptInput>
                 </form>
-
-                {/* Model indicator */}
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground"
-                >
-                  <Bot className="size-3" />
-                  <span>{selectedModelInfo?.name}</span>
-                  <AnimatePresence>
-                    {webSearchEnabled && (
-                      <motion.span
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        className="flex items-center gap-2"
-                      >
-                        <span>-</span>
-                        <Globe className="size-3" />
-                        <span>Web search enabled</span>
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
 
                 {/* Copyright */}
                 <p className="mt-2 text-center text-[10px] text-muted-foreground/50">

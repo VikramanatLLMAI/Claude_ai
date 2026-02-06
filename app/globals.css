@@ -212,6 +212,10 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+
+  /* Collapsible Animations */
+  --animate-collapsible-down: collapsible-down 0.2s ease-out;
+  --animate-collapsible-up: collapsible-up 0.2s ease-out;
 }
 
 /* ============================================================================
@@ -343,6 +347,20 @@ textarea:focus-visible {
 
 .text-pretty {
   text-wrap: pretty;
+}
+
+/* ============================================================================
+   COLLAPSIBLE ANIMATIONS - Radix UI Collapsible
+   ============================================================================ */
+
+@keyframes collapsible-down {
+  from { height: 0; }
+  to { height: var(--radix-collapsible-content-height); }
+}
+
+@keyframes collapsible-up {
+  from { height: var(--radix-collapsible-content-height); }
+  to { height: 0; }
 }
 
 /* ============================================================================
@@ -964,6 +982,13 @@ textarea:focus-visible {
   padding-left: 1rem;
   font-style: italic;
   color: var(--color-muted-foreground);
+}
+
+/* Table wrapper for horizontal scroll */
+.prose .table-wrapper {
+  overflow-x: auto;
+  margin: 1rem 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Table styling in prose */
