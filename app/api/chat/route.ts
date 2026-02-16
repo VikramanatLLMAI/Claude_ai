@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
     if (hasTools) {
       streamConfig.tools = tools;
       // Enable multi-step tool calls - model continues after tool results until done
-      streamConfig.stopWhen = stepCountIs(10);
+      streamConfig.stopWhen = stepCountIs(100);
       // Set toolChoice to auto so model can decide when to use tools
       streamConfig.toolChoice = 'auto';
       console.log(`[Chat] Tools attached to model config:`, Object.keys(tools));

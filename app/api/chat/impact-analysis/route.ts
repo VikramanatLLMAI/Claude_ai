@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     if (hasTools) {
       streamConfig.tools = tools;
       // Enable multi-step tool calls - model continues after tool results
-      streamConfig.stopWhen = stepCountIs(10);
+      streamConfig.stopWhen = stepCountIs(100);
       streamConfig.toolChoice = 'auto';
       console.log(`[${SOLUTION_TYPE}] Tools attached:`, Object.keys(tools));
     }
