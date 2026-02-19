@@ -300,7 +300,7 @@ export function ArtifactPreview({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="relative flex-1 min-h-0">
         <AnimatePresence mode="wait">
           {mode === "code" ? (
             <motion.div
@@ -310,7 +310,7 @@ export function ArtifactPreview({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               ref={codeContainerRef}
-              className="h-full overflow-auto bg-muted/30"
+              className="absolute inset-0 overflow-auto bg-muted/30"
             >
               <div className="p-4 font-mono text-sm leading-relaxed">
                 {isStreaming ? (
@@ -366,7 +366,7 @@ export function ArtifactPreview({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="flex h-full items-start justify-center overflow-auto bg-white"
+              className="absolute inset-0 flex items-center justify-center overflow-hidden bg-white"
             >
               <motion.div
                 className={cn(

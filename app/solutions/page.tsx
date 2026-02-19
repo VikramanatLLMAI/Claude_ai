@@ -359,6 +359,9 @@ export default function SolutionsPage() {
                                                 </motion.li>
                                             ))}
                                         </ul>
+                                        <p className="mt-1.5 text-xs text-primary/70 font-medium">
+                                            and more...
+                                        </p>
                                     </CardContent>
 
                                     <CardFooter className="pt-2 pb-4 px-4">

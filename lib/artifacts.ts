@@ -218,15 +218,18 @@ export function hasPartialArtifactTag(content: string): boolean {
   // Get the partial tag
   const partialTag = content.substring(lastOpenBracket).toLowerCase();
 
-  // Check if it's the start of an artifact tag
+  // Check if it's the start of an artifact opening tag
   const artifactPrefix = '<artifact';
+  // Check if it's the start of a closing tag (e.g., '</artif' during streaming)
+  const closePrefix = '</artifact';
+
   if (partialTag.length > artifactPrefix.length) {
     // If longer than '<artifact', check if it starts with '<artifact' and has no '>'
     return partialTag.startsWith(artifactPrefix) && !partialTag.includes('>');
   }
 
-  // Check if '<artifact' starts with our partial tag
-  return artifactPrefix.startsWith(partialTag);
+  // Check if '<artifact' or '</artifact' starts with our partial tag
+  return artifactPrefix.startsWith(partialTag) || closePrefix.startsWith(partialTag);
 }
 
 // Get text that appears BEFORE the first artifact tag (handles partial tags too)
@@ -234,10 +237,10 @@ export function hasPartialArtifactTag(content: string): boolean {
 export function getTextBeforeArtifact(content: string): string {
   if (!content) return '';
 
-  // First check for complete artifact tag using indexOf (faster than regex)
-  const artifactStart = content.indexOf('<artifact ');
-  if (artifactStart !== -1) {
-    return content.substring(0, artifactStart).trim();
+  // First check for complete artifact tag using regex (handles space, newline, tab after 'artifact')
+  const artifactMatch = content.match(/<artifact[\s>]/i);
+  if (artifactMatch && artifactMatch.index !== undefined) {
+    return content.substring(0, artifactMatch.index).trim();
   }
 
   // Check for partial artifact tag at the end (during streaming)
@@ -274,15 +277,15 @@ export function isArtifactStreaming(content: string): boolean {
     return true;
   }
 
-  // Count open tags using indexOf (faster than regex)
+  // Count open tags using regex (handles space, newline, tab after 'artifact')
   let openCount = 0;
-  let pos = 0;
-  while ((pos = content.indexOf('<artifact ', pos)) !== -1) {
-    // Verify it has a closing '>'
-    const closePos = content.indexOf('>', pos);
+  const openTagRegex = /<artifact\s/gi;
+  let openMatch;
+  while ((openMatch = openTagRegex.exec(content)) !== null) {
+    const closePos = content.indexOf('>', openMatch.index);
     if (closePos !== -1) {
       openCount++;
-      pos = closePos + 1;
+      openTagRegex.lastIndex = closePos + 1;
     } else {
       // Open tag without '>' - still streaming
       return true;
@@ -291,7 +294,7 @@ export function isArtifactStreaming(content: string): boolean {
 
   // Count close tags
   let closeCount = 0;
-  pos = 0;
+  let pos = 0;
   while ((pos = content.indexOf('</artifact>', pos)) !== -1) {
     closeCount++;
     pos += 11; // length of '</artifact>'
@@ -325,8 +328,16 @@ Guidelines:
 - HTML artifacts can include inline CSS and JavaScript for full interactivity
 - Always provide a descriptive, meaningful title
 - Include all necessary styles and scripts within the HTML
-- Ensure the HTML is self-contained and can be rendered in an iframe
 - For simple code snippets, use regular code blocks instead of artifacts
+
+**CRITICAL iframe layout rules** (artifacts render inside a fixed-size iframe panel):
+- Always set \`html, body { margin: 0; height: 100vh; overflow-y: auto; }\` so the page scrolls inside the iframe
+- Use a single scrollable wrapper div (e.g. \`<div style="padding:20px; min-height:100vh;">\`) instead of setting padding on body
+- Never rely on the page expanding infinitely — the iframe has a fixed viewport height
+- For dashboards with many sections, use \`overflow-y: auto\` on the main container
+- Charts: use \`maintainAspectRatio: true\` and reasonable max-heights (200-300px) so they don't dominate the viewport
+- Tables: wrap in a container with \`overflow-x: auto\` for horizontal scroll on narrow viewports
+- Test assumption: the iframe viewport is roughly 600-800px tall — design content to be scannable within that height with scrolling for overflow
 `;
 }
 

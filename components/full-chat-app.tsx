@@ -89,7 +89,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useKeyboardShortcuts, CHAT_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts"
 import { motion, AnimatePresence } from "motion/react"
-import { extractArtifacts, hasArtifacts, getTextBeforeArtifact, getTextAfterArtifact, isArtifactStreaming, getStreamingArtifact, type Artifact } from "@/lib/artifacts"
+import { extractArtifacts, hasArtifacts, getTextBeforeArtifact, getTextAfterArtifact, isArtifactStreaming, getStreamingArtifact, getMessageWithoutArtifacts, type Artifact } from "@/lib/artifacts"
 import { ArtifactTile } from "@/components/artifact-tile"
 import { ArtifactPreview } from "@/components/artifact-preview"
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels"
@@ -1528,7 +1528,7 @@ function ChatContent({
 
                       // Detect artifacts in message - optimized to avoid expensive ops for non-streaming messages
                       // For non-last messages, use simple string check first
-                      const hasArtifactTag = messageText.includes('<artifact ')
+                      const hasArtifactTag = /<artifact[\s>]/i.test(messageText)
                       let messageHasArtifacts = false
                       let hasStreamingArtifactFlag = false
                       let artifacts: Artifact[] = []
@@ -1696,6 +1696,13 @@ function ChatContent({
                                           }}
                                         />
                                       ))}
+
+                                      {/* Text AFTER artifact tag - render after artifact cards */}
+                                      {messageHasArtifacts && !hasStreamingArtifactFlag && getTextAfterArtifact(messageText) && (
+                                        <MessageContent role="assistant" className="mt-3">
+                                          <Markdown>{getTextAfterArtifact(messageText)}</Markdown>
+                                        </MessageContent>
+                                      )}
                                     </>
                                   ) : messageHasArtifacts ? (
                                     // Message has artifacts - use direct Markdown for static text (no streaming overhead)
@@ -1732,7 +1739,7 @@ function ChatContent({
                                     <MessageContent role="assistant">
                                       {isStreaming ? (
                                         <StreamingText
-                                          content={messageText || "Thinking..."}
+                                          content={getMessageWithoutArtifacts(messageText) || messageText || "Thinking..."}
                                           isStreaming={isStreaming}
                                           markdown
                                           charsPerTick={4}
