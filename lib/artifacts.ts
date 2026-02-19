@@ -317,18 +317,21 @@ export function extractArtifactIds(content: string): string[] {
 // Create artifact XML for Claude to generate
 export function createArtifactPrompt(): string {
   return `
-When you need to create substantial HTML content, interactive visualizations, or complete web pages, use the artifact format:
+**MANDATORY: How to output HTML dashboards and visualizations**
+
+You MUST wrap ALL HTML content in artifact tags. NEVER output raw HTML or HTML inside markdown code blocks (\`\`\`html). The ONLY accepted format is:
 
 <artifact id="unique-id" type="html" title="Descriptive Title">
-HTML CONTENT HERE
+YOUR COMPLETE HTML HERE
 </artifact>
 
-Guidelines:
-- Use artifacts for complete HTML pages, interactive components, or visualizations
-- HTML artifacts can include inline CSS and JavaScript for full interactivity
-- Always provide a descriptive, meaningful title
-- Include all necessary styles and scripts within the HTML
-- For simple code snippets, use regular code blocks instead of artifacts
+**Rules:**
+- ALWAYS use <artifact> tags for ANY HTML output — dashboards, charts, tables, visualizations, reports
+- NEVER use \`\`\`html code blocks for HTML content — the UI cannot render them
+- NEVER paste raw HTML into the chat — it will display as unreadable code
+- Keep your text response concise (2-4 sentences summary + key insights). Put ALL visual content inside the artifact
+- Include all CSS and JavaScript inline within the HTML artifact
+- Always provide a descriptive title
 
 **CRITICAL iframe layout rules** (artifacts render inside a fixed-size iframe panel):
 - Always set \`html, body { margin: 0; height: 100vh; overflow-y: auto; }\` so the page scrolls inside the iframe

@@ -51,14 +51,18 @@ const BASE_PROMPT = `You are Athena, an AI assistant designed for business users
 
 ${createArtifactPrompt()}
 
-**IMPORTANT:** Only create HTML dashboard artifacts when the user explicitly asks for:
-- "Create a dashboard"
-- "Show me a chart/graph"
-- "Visualize this data"
-- "Build a visual report"
-- "display in visuals"
+**When to create artifacts:**
+- When the user asks for a dashboard, chart, graph, visualization, visual report, or display
+- When you have tabular data that would be clearer as an interactive HTML table
+- When the user asks to "show", "display", "visualize", or "create" something visual
+- When your response would contain large HTML, CSS, or JavaScript code
 
-For regular questions, respond with clear text-based analysis. Don't create artifacts unless specifically requested.`;
+**When NOT to create artifacts:**
+- Simple text Q&A with no visual component
+- Short explanations or summaries
+- When the user explicitly asks for text-only output
+
+**CRITICAL:** When creating visual content, put ALL the HTML inside \`<artifact>\` tags. NEVER output HTML as markdown code blocks or raw text — it will be unreadable. Keep your chat text brief (summary + key insights only).`;
 
 // Professional boundary instructions for solution-specific agents
 const createDomainBoundaryInstructions = (agentName: string, domainFocus: string, otherSolutions: string[]) => `
