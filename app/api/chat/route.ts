@@ -7,7 +7,7 @@ import { loadActiveMcpToolsWithDescriptions } from '@/lib/mcp-client';
 import { webSearchTool } from '@/lib/code-executor';
 import { requireAuth } from '@/lib/auth-middleware';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // Models that support reasoning/extended thinking
 const REASONING_CAPABLE_MODELS = [
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
       model: bedrock(modelId),
       system: systemPrompt,
       messages,
-      maxTokens: 4096,
+      maxTokens: 65536,
       temperature: 0.7,
       // Log tool calls for debugging - this is called after each step (including tool executions)
       onStepFinish: (event: {
