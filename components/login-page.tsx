@@ -169,36 +169,23 @@ export function LoginPage() {
         <div className="relative flex h-screen overflow-y-auto bg-background">
             {/* Left Section - Branding */}
             <div className="hidden w-1/2 flex-col justify-between border-r border-border bg-muted/30 p-12 lg:flex">
-                {/* Logo */}
-                <div className="flex items-center gap-5">
-                    <Image
-                        src="/logos/llmatscale-logo.png"
-                        alt="LLM at Scale.AI"
-                        width={220}
-                        height={70}
-                        className="h-[65px] w-auto object-contain"
-                        priority
-                        unoptimized
-                    />
-                    <div className="h-12 w-px bg-border" />
-                    <Image
-                        src="/logos/athena-logo.jpg"
-                        alt="Athena"
-                        width={180}
-                        height={55}
-                        className="h-[55px] w-auto object-contain"
-                        priority
-                        unoptimized
-                    />
+                {/* Product Name */}
+                <div>
+                    <h1 className="text-5xl font-bold tracking-tight text-foreground">
+                        Fab Orchestrator
+                    </h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Intelligent Enterprise Platform
+                    </p>
                 </div>
 
                 {/* Main Content */}
                 <div className="max-w-lg">
-                    <h1 className="text-4xl font-semibold leading-tight text-foreground">
+                    <h2 className="text-4xl font-semibold leading-tight text-foreground">
                         Your data, your questions,
                         <br />
                         <span className="text-primary">instant insights.</span>
-                    </h1>
+                    </h2>
 
                     <p className="mt-4 text-base text-muted-foreground">
                         Connect your enterprise data sources, ask questions in natural language,
@@ -218,15 +205,38 @@ export function LoginPage() {
                     </ul>
                 </div>
 
-                {/* Footer */}
-                <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                        <Shield className="size-3.5 text-primary/70" />
-                        <span>SOC 2 Compliant</span>
+                {/* Footer - Logos & Badges */}
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                            <Shield className="size-3.5 text-primary/70" />
+                            <span>SOC 2 Compliant</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <Zap className="size-3.5 text-primary/70" />
+                            <span>Enterprise Ready</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <Zap className="size-3.5 text-primary/70" />
-                        <span>Enterprise Ready</span>
+                    <div className="flex items-center justify-end gap-4">
+                        <Image
+                            src="/logos/athena-logo.jpg"
+                            alt="Athena"
+                            width={180}
+                            height={55}
+                            className="h-[55px] w-auto object-contain opacity-70"
+                            priority
+                            unoptimized
+                        />
+                        <div className="h-10 w-px bg-border" />
+                        <Image
+                            src="/logos/llmatscale-logo.png"
+                            alt="LLM at Scale.AI"
+                            width={220}
+                            height={65}
+                            className="h-[60px] w-auto object-contain opacity-70"
+                            priority
+                            unoptimized
+                        />
                     </div>
                 </div>
             </div>
@@ -234,26 +244,13 @@ export function LoginPage() {
             {/* Right Section - Auth Form */}
             <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-20">
                 {/* Mobile Logo */}
-                <div className="mb-10 flex items-center gap-4 lg:hidden">
-                    <Image
-                        src="/logos/llmatscale-logo.png"
-                        alt="LLM at Scale.AI"
-                        width={160}
-                        height={50}
-                        className="h-[45px] w-auto object-contain"
-                        priority
-                        unoptimized
-                    />
-                    <div className="h-8 w-px bg-border" />
-                    <Image
-                        src="/logos/athena-logo.jpg"
-                        alt="Athena"
-                        width={130}
-                        height={40}
-                        className="h-[38px] w-auto object-contain"
-                        priority
-                        unoptimized
-                    />
+                <div className="mb-10 lg:hidden">
+                    <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                        Fab Orchestrator
+                    </h1>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Intelligent Enterprise Platform
+                    </p>
                 </div>
 
                 <div className="mx-auto w-full max-w-sm">
