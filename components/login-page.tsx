@@ -11,7 +11,11 @@ import {
     Shield,
     Zap,
     ArrowRight,
-    Check
+    Check,
+    Lock,
+    Globe,
+    BarChart3,
+    Network
 } from "lucide-react"
 
 type AuthMode = "signin" | "signup"
@@ -159,316 +163,333 @@ export function LoginPage() {
     }
 
     const capabilities = [
-        "Connect 50+ enterprise data sources via MCP",
-        "Ask questions in natural language",
-        "Generate insights and interactive dashboards",
-        "Enterprise-grade security and compliance",
+        { icon: Network, text: "Connect 50+ enterprise data sources via MCP" },
+        { icon: Globe, text: "Ask questions in natural language" },
+        { icon: BarChart3, text: "Generate insights and interactive dashboards" },
+        { icon: Lock, text: "Enterprise-grade security and compliance" },
     ]
 
     return (
-        <div className="relative flex h-screen overflow-y-auto bg-background">
+        <div className="relative flex h-screen overflow-hidden bg-background">
             {/* Left Section - Branding */}
-            <div className="hidden w-1/2 flex-col justify-between border-r border-border bg-muted/30 p-12 lg:flex">
-                {/* Product Name */}
-                <div>
-                    <h1 className="text-5xl font-bold tracking-tight text-foreground">
-                        Fab Orchestrator
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Intelligent Enterprise Platform
-                    </p>
-                </div>
+            <div className="hidden w-[55%] flex-col justify-between border-r border-border bg-muted/40 lg:flex">
+                {/* Subtle dot pattern */}
+                <div
+                    className="pointer-events-none absolute inset-0 w-[55%] opacity-[0.04]"
+                    style={{
+                        backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+                        backgroundSize: "32px 32px",
+                    }}
+                />
 
-                {/* Main Content */}
-                <div className="max-w-lg">
-                    <h2 className="text-4xl font-semibold leading-tight text-foreground">
-                        Your data, your questions,
-                        <br />
-                        <span className="text-primary">instant insights.</span>
-                    </h2>
-
-                    <p className="mt-4 text-base text-muted-foreground">
-                        Connect your enterprise data sources, ask questions in natural language,
-                        and unlock powerful analytics — all in one intelligent platform.
-                    </p>
-
-                    {/* Capabilities List */}
-                    <ul className="mt-8 space-y-3">
-                        {capabilities.map((item) => (
-                            <li key={item} className="flex items-center gap-3 text-sm text-foreground/80">
-                                <div className="flex size-5 items-center justify-center rounded-full bg-primary/10">
-                                    <Check className="size-3 text-primary" />
-                                </div>
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Footer - Logos & Badges */}
-                <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                            <Shield className="size-3.5 text-primary/70" />
-                            <span>SOC 2 Compliant</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Zap className="size-3.5 text-primary/70" />
-                            <span>Enterprise Ready</span>
+                <div className="relative z-10 flex h-full flex-col justify-between p-14">
+                    {/* Product Name */}
+                    <div>
+                        <h1 className="text-5xl font-bold tracking-tight text-foreground">
+                            Fab Orchestrator
+                        </h1>
+                        <div className="mt-3 flex items-center gap-3">
+                            <div className="h-px w-8 bg-primary/60" />
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                                Intelligent Enterprise Platform
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center justify-end gap-4">
-                        <Image
-                            src="/logos/athena-logo.jpg"
-                            alt="Athena"
-                            width={180}
-                            height={55}
-                            className="h-[55px] w-auto object-contain opacity-70"
-                            priority
-                            unoptimized
-                        />
-                        <div className="h-10 w-px bg-border" />
-                        <Image
-                            src="/logos/llmatscale-logo.png"
-                            alt="LLM at Scale.AI"
-                            width={220}
-                            height={65}
-                            className="h-[60px] w-auto object-contain opacity-70"
-                            priority
-                            unoptimized
-                        />
+
+                    {/* Main Content */}
+                    <div className="max-w-lg">
+                        <h2 className="text-[2.75rem] font-semibold leading-[1.15] text-foreground">
+                            Your data, your questions,
+                            <br />
+                            <span className="text-primary">instant insights.</span>
+                        </h2>
+
+                        <p className="mt-5 text-base leading-relaxed text-muted-foreground">
+                            Connect your enterprise data sources, ask questions in natural language,
+                            and unlock powerful analytics — all in one intelligent platform.
+                        </p>
+
+                        {/* Capabilities */}
+                        <div className="mt-10 space-y-4">
+                            {capabilities.map(({ icon: Icon, text }) => (
+                                <div key={text} className="flex items-center gap-4">
+                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/[0.07] ring-1 ring-primary/10">
+                                        <Icon className="size-[18px] text-primary" />
+                                    </div>
+                                    <span className="text-sm text-foreground/70">{text}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Footer - Badges & Logos */}
+                    <div className="flex items-end justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 ring-1 ring-border">
+                                <Shield className="size-3.5 text-primary/80" />
+                                <span className="text-xs font-medium text-muted-foreground">SOC 2 Compliant</span>
+                            </div>
+                            <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 ring-1 ring-border">
+                                <Zap className="size-3.5 text-primary/80" />
+                                <span className="text-xs font-medium text-muted-foreground">Enterprise Ready</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Image
+                                src="/logos/athena-logo.jpg"
+                                alt="Athena"
+                                width={170}
+                                height={52}
+                                className="h-[50px] w-auto object-contain opacity-50"
+                                priority
+                                unoptimized
+                            />
+                            <div className="h-10 w-px bg-border" />
+                            <Image
+                                src="/logos/llmatscale-logo.png"
+                                alt="LLM at Scale.AI"
+                                width={200}
+                                height={60}
+                                className="h-[55px] w-auto object-contain opacity-50"
+                                priority
+                                unoptimized
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Right Section - Auth Form */}
-            <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-20">
-                {/* Mobile Logo */}
-                <div className="mb-10 lg:hidden">
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                        Fab Orchestrator
-                    </h1>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                        Intelligent Enterprise Platform
-                    </p>
-                </div>
-
-                <div className="mx-auto w-full max-w-sm">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <AnimatePresence mode="wait">
-                            <motion.h2
-                                key={mode}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                transition={{ duration: 0.15 }}
-                                className="text-2xl font-semibold text-foreground"
-                            >
-                                {mode === "signin" ? "Sign in" : "Create account"}
-                            </motion.h2>
-                        </AnimatePresence>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {mode === "signin"
-                                ? "Enter your credentials to access your account."
-                                : "Get started with your free account today."}
+            <div className="flex w-full flex-col lg:w-[45%]">
+                <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-16">
+                    {/* Mobile Logo */}
+                    <div className="mb-10 w-full max-w-[400px] lg:hidden">
+                        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                            Fab Orchestrator
+                        </h1>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                            Intelligent Enterprise Platform
                         </p>
                     </div>
 
-                    {/* Error Message */}
-                    <AnimatePresence>
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -8 }}
-                                className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-                            >
-                                {error}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Forms */}
-                    <AnimatePresence mode="wait">
-                        {mode === "signin" ? (
-                            <motion.form
-                                key="signin"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.15 }}
-                                className="space-y-5"
-                                onSubmit={handleSignIn}
-                            >
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium text-foreground">
-                                        Email
-                                    </label>
-                                    <Input
-                                        name="email"
-                                        type="email"
-                                        placeholder="you@company.com"
-                                        autoComplete="email"
-                                        required
-                                        className="h-11"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium text-foreground">
-                                        Password
-                                    </label>
-                                    <Input
-                                        name="password"
-                                        type="password"
-                                        placeholder="Enter your password"
-                                        autoComplete="current-password"
-                                        required
-                                        className="h-11"
-                                    />
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <label className="flex items-center gap-2 text-muted-foreground">
-                                        <input
-                                            type="checkbox"
-                                            className="size-4 rounded border-input bg-background text-primary focus:ring-ring"
-                                        />
-                                        Remember me
-                                    </label>
-                                    <button
-                                        type="button"
-                                        className="text-muted-foreground hover:text-foreground"
+                    <div className="w-full max-w-[400px]">
+                            {/* Header */}
+                            <div className="mb-8">
+                                <AnimatePresence mode="wait">
+                                    <motion.h2
+                                        key={mode}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="text-2xl font-bold text-foreground"
                                     >
-                                        Forgot password?
-                                    </button>
-                                </div>
-                                <Button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="h-11 w-full"
-                                >
-                                    {isSubmitting ? "Signing in..." : "Sign in"}
-                                    {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
-                                </Button>
-                            </motion.form>
-                        ) : (
-                            <motion.form
-                                key="signup"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.15 }}
-                                className="space-y-5"
-                                onSubmit={handleSignUp}
-                            >
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="mb-2 block text-sm font-medium text-foreground">
-                                            First name
-                                        </label>
-                                        <Input
-                                            name="firstName"
-                                            type="text"
-                                            placeholder="John"
-                                            autoComplete="given-name"
-                                            required
-                                            className="h-11"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-2 block text-sm font-medium text-foreground">
-                                            Last name
-                                        </label>
-                                        <Input
-                                            name="lastName"
-                                            type="text"
-                                            placeholder="Doe"
-                                            autoComplete="family-name"
-                                            required
-                                            className="h-11"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium text-foreground">
-                                        Work email
-                                    </label>
-                                    <Input
-                                        name="email"
-                                        type="email"
-                                        placeholder="you@company.com"
-                                        autoComplete="email"
-                                        required
-                                        className="h-11"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium text-foreground">
-                                        Password
-                                    </label>
-                                    <Input
-                                        name="password"
-                                        type="password"
-                                        placeholder="Min. 8 characters"
-                                        autoComplete="new-password"
-                                        required
-                                        className="h-11"
-                                    />
-                                </div>
-                                <label className="flex items-start gap-2 text-sm text-muted-foreground">
-                                    <input
-                                        name="terms"
-                                        type="checkbox"
-                                        required
-                                        className="mt-0.5 size-4 rounded border-input bg-background text-primary focus:ring-ring"
-                                    />
-                                    I agree to the Terms of Service and Privacy Policy
-                                </label>
-                                <Button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="h-11 w-full"
-                                >
-                                    {isSubmitting ? "Creating account..." : "Create account"}
-                                    {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
-                                </Button>
-                            </motion.form>
-                        )}
-                    </AnimatePresence>
+                                        {mode === "signin" ? "Welcome back" : "Create account"}
+                                    </motion.h2>
+                                </AnimatePresence>
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    {mode === "signin"
+                                        ? "Sign in to your account to continue."
+                                        : "Get started with your free account today."}
+                                </p>
+                            </div>
 
-                    {/* Mode Switch */}
-                    <p className="mt-6 text-center text-sm text-muted-foreground">
-                        {mode === "signin" ? (
-                            <>
-                                Don&apos;t have an account?{" "}
-                                <button
-                                    type="button"
-                                    onClick={() => handleModeChange("signup")}
-                                    className="font-medium text-primary hover:text-primary/80"
-                                >
-                                    Sign up
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                Already have an account?{" "}
-                                <button
-                                    type="button"
-                                    onClick={() => handleModeChange("signin")}
-                                    className="font-medium text-primary hover:text-primary/80"
-                                >
-                                    Sign in
-                                </button>
-                            </>
-                        )}
-                    </p>
+                            {/* Error Message */}
+                            <AnimatePresence>
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                                    >
+                                        {error}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
-                    {/* Copyright */}
-                    <p className="mt-12 text-center text-[11px] text-muted-foreground/60">
-                        © 2026 LLM at Scale.AI. All Rights Reserved.
-                        <br />
-                        Confidential and Proprietary Information. Version 1.0
-                    </p>
+                            {/* Forms */}
+                            <AnimatePresence mode="wait">
+                                {mode === "signin" ? (
+                                    <motion.form
+                                        key="signin"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-5"
+                                        onSubmit={handleSignIn}
+                                    >
+                                        <div>
+                                            <label className="mb-2 block text-sm font-medium text-foreground">
+                                                Email address
+                                            </label>
+                                            <Input
+                                                name="email"
+                                                type="email"
+                                                placeholder="name@company.com"
+                                                autoComplete="email"
+                                                required
+                                                className="h-11 rounded-lg border-border bg-muted/30 transition-colors focus:bg-background"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="mb-2 block text-sm font-medium text-foreground">
+                                                Password
+                                            </label>
+                                            <Input
+                                                name="password"
+                                                type="password"
+                                                placeholder="Enter your password"
+                                                autoComplete="current-password"
+                                                required
+                                                className="h-11 rounded-lg border-border bg-muted/30 transition-colors focus:bg-background"
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <label className="flex items-center gap-2 text-muted-foreground">
+                                                <input
+                                                    type="checkbox"
+                                                    className="size-4 rounded border-input bg-background text-primary focus:ring-ring"
+                                                />
+                                                Remember me
+                                            </label>
+                                            <button
+                                                type="button"
+                                                className="font-medium text-primary hover:text-primary/70 transition-colors"
+                                            >
+                                                Forgot password?
+                                            </button>
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="h-12 w-full rounded-lg text-sm font-semibold tracking-wide shadow-md shadow-primary/15 transition-all hover:shadow-lg hover:shadow-primary/20"
+                                        >
+                                            {isSubmitting ? "Signing in..." : "Sign in"}
+                                            {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
+                                        </Button>
+                                    </motion.form>
+                                ) : (
+                                    <motion.form
+                                        key="signup"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-5"
+                                        onSubmit={handleSignUp}
+                                    >
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="mb-2 block text-sm font-medium text-foreground">
+                                                    First name
+                                                </label>
+                                                <Input
+                                                    name="firstName"
+                                                    type="text"
+                                                    placeholder="John"
+                                                    autoComplete="given-name"
+                                                    required
+                                                    className="h-11 rounded-lg border-border bg-muted/30 transition-colors focus:bg-background"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="mb-2 block text-sm font-medium text-foreground">
+                                                    Last name
+                                                </label>
+                                                <Input
+                                                    name="lastName"
+                                                    type="text"
+                                                    placeholder="Doe"
+                                                    autoComplete="family-name"
+                                                    required
+                                                    className="h-11 rounded-lg border-border bg-muted/30 transition-colors focus:bg-background"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="mb-2 block text-sm font-medium text-foreground">
+                                                Work email
+                                            </label>
+                                            <Input
+                                                name="email"
+                                                type="email"
+                                                placeholder="name@company.com"
+                                                autoComplete="email"
+                                                required
+                                                className="h-11 rounded-lg border-border bg-muted/30 transition-colors focus:bg-background"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="mb-2 block text-sm font-medium text-foreground">
+                                                Password
+                                            </label>
+                                            <Input
+                                                name="password"
+                                                type="password"
+                                                placeholder="Min. 8 characters"
+                                                autoComplete="new-password"
+                                                required
+                                                className="h-11 rounded-lg border-border bg-muted/30 transition-colors focus:bg-background"
+                                            />
+                                        </div>
+                                        <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                                            <input
+                                                name="terms"
+                                                type="checkbox"
+                                                required
+                                                className="mt-0.5 size-4 rounded border-input bg-background text-primary focus:ring-ring"
+                                            />
+                                            I agree to the Terms of Service and Privacy Policy
+                                        </label>
+                                        <Button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="h-12 w-full rounded-lg text-sm font-semibold tracking-wide shadow-md shadow-primary/15 transition-all hover:shadow-lg hover:shadow-primary/20"
+                                        >
+                                            {isSubmitting ? "Creating account..." : "Create account"}
+                                            {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
+                                        </Button>
+                                    </motion.form>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Mode Switch */}
+                            <p className="mt-6 text-center text-sm text-muted-foreground">
+                                {mode === "signin" ? (
+                                    <>
+                                        Don&apos;t have an account?{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleModeChange("signup")}
+                                            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                                        >
+                                            Sign up
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        Already have an account?{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleModeChange("signin")}
+                                            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                                        >
+                                            Sign in
+                                        </button>
+                                    </>
+                                )}
+                            </p>
+
+                        {/* Copyright */}
+                        <p className="mt-8 text-center text-[11px] text-muted-foreground/50">
+                            &copy; 2026 LLM at Scale.AI. All Rights Reserved.
+                            <br />
+                            Confidential and Proprietary Information. Version 1.0
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
