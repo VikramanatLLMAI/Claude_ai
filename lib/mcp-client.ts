@@ -149,7 +149,7 @@ async function refreshMcpSession(connectionId: string): Promise<string | null> {
         params: {
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          clientInfo: { name: 'athena-mcp', version: '1.0.0' },
+          clientInfo: { name: 'llmatscale-ai', version: '1.0.0' },
         },
       }),
       signal: AbortSignal.timeout(10000),

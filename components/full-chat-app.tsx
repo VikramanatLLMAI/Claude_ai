@@ -6,17 +6,11 @@ import {
 } from "@/components/prompt-kit/chat-container"
 import {
   Message,
-  MessageAvatar,
   MessageAction,
   MessageActions,
   MessageContent,
 } from "@/components/prompt-kit/message"
-import {
-  PromptInput,
-  PromptInputAction,
-  PromptInputActions,
-  PromptInputTextarea,
-} from "@/components/prompt-kit/prompt-input"
+// PromptInput components replaced by ClaudeChatInput
 import { ScrollButton } from "@/components/prompt-kit/scroll-button"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,18 +19,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+// Tooltip imports removed - now handled by ClaudeChatInput
 import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+// Label removed - using plain <label> in McpConnectionsSubmenu
 import {
   Sidebar,
   SidebarContent,
@@ -56,20 +42,14 @@ import { cn } from "@/lib/utils"
 import { useChat } from "@ai-sdk/react"
 import { type UIMessage, DefaultChatTransport } from "ai"
 import {
-  ArrowUp,
-  Bot,
-  Check,
-  CheckCircle,
-  ChevronDown,
+  BookOpen,
   ChevronUp,
+  Code2,
   Copy,
   FolderOpen,
-  Globe,
-  Grid2X2,
-  Loader2,
+  Home,
   LogOut,
   MessageSquare,
-  Mic,
   MoreHorizontal,
   Pencil,
   Pin,
@@ -78,102 +58,83 @@ import {
   Plus,
   Settings,
   Share2,
-  Square,
   ThumbsDown,
   ThumbsUp,
   Trash,
   User2,
-  XCircle,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useKeyboardShortcuts, CHAT_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts"
 import { motion, AnimatePresence } from "motion/react"
-import { extractArtifacts, hasArtifacts, getTextBeforeArtifact, getTextAfterArtifact, isArtifactStreaming, getStreamingArtifact, getMessageWithoutArtifacts, type Artifact } from "@/lib/artifacts"
-import { ArtifactTile } from "@/components/artifact-tile"
+import { createFileArtifact, type Artifact } from "@/lib/artifacts"
+import { extractTagArtifacts, segmentMessageText } from "@/lib/artifact-parser"
+import { ArtifactTile } from "@/components/prompt-kit/artifact-tile"
+import { isPreviewableFile } from "@/lib/file-classifier"
+import { useFileContent } from "@/hooks/use-file-content"
+// ArtifactTile removed — artifacts now open directly in preview panel
 import { ArtifactPreview } from "@/components/artifact-preview"
+import { ArtifactPanelWrapper } from "@/components/artifact-panel-wrapper"
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels"
 import { extractToolParts, type ToolPart } from "@/components/prompt-kit/tool"
-import {
-  Disclosure,
-  DisclosureContent,
-  DisclosureTrigger,
-} from "@/components/ui/disclosure"
 import { Loader } from "@/components/prompt-kit/loader"
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/prompt-kit/reasoning"
 import { TextShimmer } from "@/components/prompt-kit/text-shimmer"
 import { FeedbackBar } from "@/components/prompt-kit/feedback-bar"
-import { PromptSuggestion, type Suggestion } from "@/components/prompt-kit/prompt-suggestion"
+// PromptSuggestion replaced by inline chips in welcome state
 import { SystemMessage } from "@/components/prompt-kit/system-message"
 import { StreamingText } from "@/components/prompt-kit/streaming-text"
 import { Markdown } from "@/components/prompt-kit/markdown"
-import { Steps, StepsTrigger, StepsContent } from "@/components/prompt-kit/steps"
-import Link from "next/link"
-import Image from "next/image"
+import { ToolTimeline } from "@/components/prompt-kit/tool-timeline"
+import { FileCard } from "@/components/prompt-kit/file-card"
+import { ClaudeChatInput, type ClaudeChatInputHandle } from "@/components/ui/claude-style-chat-input"
+import { SettingsModal } from "@/components/settings-modal"
+// Image import removed - welcome state no longer uses logo
 
-// Claude 4.5 series models
+// Time-based greeting helper
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return "Good morning"
+  if (hour >= 12 && hour < 17) return "Good afternoon"
+  if (hour >= 17 && hour < 21) return "Good evening"
+  return "Hey there"
+}
+
+// Claude 4.6 and 4.5 series models
 const CLAUDE_MODELS = [
   {
-    id: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    id: "claude-opus-4-6",
+    name: "Claude 4.6 Opus",
+    description: "Most powerful with adaptive thinking",
+  },
+  {
+    id: "claude-sonnet-4-6",
+    name: "Claude 4.6 Sonnet",
+    description: "Fast and intelligent with adaptive thinking",
+  },
+  {
+    id: "claude-sonnet-4-5-20250929",
     name: "Claude 4.5 Sonnet",
     description: "Most intelligent model, best for complex tasks",
   },
   {
-    id: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    id: "claude-haiku-4-5-20251001",
     name: "Claude 4.5 Haiku",
     description: "Fast and efficient for simple tasks",
   },
   {
-    id: "global.anthropic.claude-opus-4-5-20251101-v1:0",
+    id: "claude-opus-4-5-20251101",
     name: "Claude 4.5 Opus",
     description: "Best for complex reasoning and analysis",
   },
   {
-    id: "us.anthropic.claude-sonnet-4-20250514-v1:0",
+    id: "claude-sonnet-4-20250514",
     name: "Claude 4 Sonnet",
     description: "Balanced performance and speed",
   },
 ] as const
 
-// Disabled models (frontend only - Coming soon)
-const DISABLED_MODELS = [
-  {
-    id: "gpt-5",
-    name: "GPT-5",
-    description: "Coming soon",
-    disabled: true,
-  },
-  {
-    id: "gpt-5.1",
-    name: "GPT-5.1",
-    description: "Coming soon",
-    disabled: true,
-  },
-  {
-    id: "gemini-3-pro",
-    name: "Gemini 3 Pro",
-    description: "Coming soon",
-    disabled: true,
-  },
-  {
-    id: "gemini-3-flash",
-    name: "Gemini 3 Flash",
-    description: "Coming soon",
-    disabled: true,
-  },
-] as const
-
-// Solution-specific welcome taglines
-const SOLUTION_TAGLINES: Record<string, string> = {
-  "manufacturing": "Start a conversation with your Manufacturing AI Agent to optimize production and maximize yield",
-  "maintenance": "Start a conversation with your Maintenance AI Agent to predict failures and minimize downtime",
-  "support": "Start a conversation with your Support AI Agent to resolve issues faster and smarter",
-  "change-management": "Start a conversation with your Change Management AI Agent to streamline workflows and compliance",
-  "impact-analysis": "Start a conversation with your Impact Analysis AI Agent to uncover insights and quantify ROI",
-  "requirements": "Start a conversation with your Requirements AI Agent to validate specs and identify gaps",
-}
-
-const DEFAULT_TAGLINE = "Start a conversation with your AI Agent for intelligent assistance"
+// Tagline removed - welcome state now uses time-based greeting
 
 type ClaudeModelId = (typeof CLAUDE_MODELS)[number]["id"]
 
@@ -184,14 +145,13 @@ interface Conversation {
   isPinned: boolean
   isShared: boolean
   model: string
-  solutionType: string | null
   createdAt: string
   updatedAt: string
   lastMessage: string | null
 }
 
-const AUTH_SESSION_KEY = "athena_auth_session"
-const AUTH_TOKEN_KEY = "athena_auth_token"
+const AUTH_SESSION_KEY = "llmatscale_auth_session"
+const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
 // Helper function to get auth headers for API calls
 function getAuthHeaders(): Record<string, string> {
@@ -217,136 +177,41 @@ function getUserNameFromSession(): string {
   return "User"
 }
 
-// Solution type display names
-const SOLUTION_NAMES: Record<string, string> = {
-  'manufacturing': 'Manufacturing',
-  'maintenance': 'Maintenance',
-  'support': 'Support',
-  'change-management': 'Change Mgmt',
-  'impact-analysis': 'Impact Analysis',
-  'requirements': 'Requirements',
-}
-
-// Format tool name for display (e.g. "mcp_run_support_query" → "Run Support Query")
-function formatToolDisplayName(name: string): string {
-  return name
-    .replace(/^mcp_/, "")
-    .replace(/_/g, " ")
-    .replace(/([A-Z])/g, " $1")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim()
-}
-
-// Lightweight tool step item for inside Steps component
-function ToolStepItem({ toolPart }: { toolPart: ToolPart }) {
-  const [open, setOpen] = useState(false)
-  const { state, input, output, errorText } = toolPart
-  const isProcessing = state === "input-streaming" || state === "input-available"
-  const isError = state === "output-error"
-
-  const formatValue = (value: unknown): string => {
-    if (value === null) return "null"
-    if (value === undefined) return "undefined"
-    if (typeof value === "string") return value
-    if (typeof value === "object") return JSON.stringify(value, null, 2)
-    return String(value)
+// Helper function to get user email from session
+function getUserEmailFromSession(): string {
+  if (typeof window === 'undefined') return ""
+  try {
+    const sessionData = localStorage.getItem(AUTH_SESSION_KEY)
+    if (sessionData) {
+      const session = JSON.parse(sessionData)
+      return session.user?.email || ""
+    }
+  } catch {
+    // Ignore parse errors
   }
-
-  return (
-    <div className="space-y-1.5">
-      {/* Avatar + tool name row */}
-      <div className="flex items-center gap-2">
-        <span className="bg-primary/10 text-primary flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
-          A
-        </span>
-        <span className="text-foreground text-sm font-medium">
-          {formatToolDisplayName(toolPart.type)}
-        </span>
-        {isProcessing && (
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-            <Loader2 className="size-3 animate-spin" />
-            Processing...
-          </span>
-        )}
-      </div>
-
-      {/* Result badge / disclosure (only when output is available) */}
-      {!isProcessing && (state === "output-available" || isError) && (
-        <Disclosure
-          open={open}
-          onOpenChange={setOpen}
-          className="ml-7"
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
-          <DisclosureTrigger>
-            <span
-              className={cn(
-                "inline-flex cursor-pointer select-none items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:bg-muted",
-                isError
-                  ? "border-red-300 text-red-600 dark:border-red-800 dark:text-red-400"
-                  : "border-border bg-muted/50 text-muted-foreground"
-              )}
-            >
-              {isError ? "Error" : "Result"}
-              <ChevronDown className={cn("size-3 transition-transform", open && "rotate-180")} />
-            </span>
-          </DisclosureTrigger>
-          <DisclosureContent>
-            <div className="bg-muted/60 border-border mt-1.5 overflow-hidden rounded-lg border dark:bg-zinc-900/50">
-              <div className="max-h-72 overflow-auto p-3 font-mono text-xs leading-relaxed">
-                {/* Request section */}
-                {input && Object.keys(input).length > 0 && (
-                  <div>
-                    <div className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wider">
-                      Request
-                    </div>
-                    <pre className="text-foreground/80 whitespace-pre-wrap break-words dark:text-emerald-300">
-                      {formatValue(input)}
-                    </pre>
-                  </div>
-                )}
-
-                {/* Divider */}
-                {input && Object.keys(input).length > 0 && (output || errorText) && (
-                  <div className="border-border my-3 border-t" />
-                )}
-
-                {/* Response / Error section */}
-                {isError && errorText ? (
-                  <div>
-                    <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
-                      Error
-                    </div>
-                    <pre className="whitespace-pre-wrap break-words text-red-700 dark:text-red-300">
-                      {errorText}
-                    </pre>
-                  </div>
-                ) : output ? (
-                  <div>
-                    <div className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wider">
-                      Response
-                    </div>
-                    <pre className="text-foreground/80 whitespace-pre-wrap break-words dark:text-emerald-300">
-                      {formatValue(output)}
-                    </pre>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </DisclosureContent>
-        </Disclosure>
-      )}
-    </div>
-  )
+  return ""
 }
 
-// MCP Connections Submenu Component
+
+// Badge colors for MCP connection initials
+const MCP_BADGE_COLORS = [
+  'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+  'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+]
+
+// MCP Connections Submenu Component - Claude.ai Connectors style
 function McpConnectionsSubmenu({
   activeMcpIds,
   onToggle,
+  onManageConnectors,
 }: {
   activeMcpIds: string[]
   onToggle: (connectionId: string, isActive: boolean) => void
+  onManageConnectors?: () => void
 }) {
   const [connections, setConnections] = useState<{
     id: string
@@ -379,63 +244,81 @@ function McpConnectionsSubmenu({
 
   if (isLoading) {
     return (
-      <div className="px-2 py-3 text-center text-sm text-muted-foreground">
-        Loading...
+      <div className="space-y-2 px-3 py-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-2.5 rounded-md px-2 py-1.5">
+            <div className="h-4 w-4 shrink-0 rounded bg-muted animate-pulse" />
+            <div className="h-3.5 flex-1 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+          </div>
+        ))}
       </div>
     )
   }
 
   if (connections.length === 0) {
     return (
-      <div className="px-2 py-3 text-center">
-        <Plug className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">No MCP connections</p>
-        <a href="/settings?tab=mcp" className="text-xs text-primary hover:underline">
-          Add Connection
-        </a>
-      </div>
+      <>
+        <div className="px-3 py-4 text-center">
+          <p className="text-[13px] text-text-500">No connectors configured</p>
+        </div>
+        <div className="border-t border-border dark:border-sidebar-border" />
+        <button
+          onClick={onManageConnectors}
+          className="flex items-center gap-3 px-3 py-2.5 mx-1 my-1 rounded-lg text-[14px] text-text-200 dark:text-foreground hover:bg-bg-hover dark:hover:bg-bg-hover transition-colors cursor-pointer w-[calc(100%-8px)]"
+          type="button"
+        >
+          <Settings className="h-[18px] w-[18px] text-text-300 dark:text-text-500" />
+          Manage connectors
+        </button>
+      </>
     )
   }
 
   if (connectedConnections.length === 0) {
     return (
-      <div className="px-2 py-3 text-center">
-        <p className="text-xs text-muted-foreground">No connected servers</p>
-        <a href="/settings?tab=mcp" className="text-xs text-primary hover:underline">
-          Manage Connections
-        </a>
-      </div>
+      <>
+        <div className="px-3 py-4 text-center">
+          <p className="text-[13px] text-text-500">No connected servers</p>
+        </div>
+        <div className="border-t border-border dark:border-sidebar-border" />
+        <button
+          onClick={onManageConnectors}
+          className="flex items-center gap-3 px-3 py-2.5 mx-1 my-1 rounded-lg text-[14px] text-text-200 dark:text-foreground hover:bg-bg-hover dark:hover:bg-bg-hover transition-colors cursor-pointer w-[calc(100%-8px)]"
+          type="button"
+        >
+          <Settings className="h-[18px] w-[18px] text-text-300 dark:text-text-500" />
+          Manage connectors
+        </button>
+      </>
     )
   }
 
   return (
     <>
-      {connectedConnections.map((connection) => {
+      {connectedConnections.map((connection, idx) => {
         const isActive = activeMcpIds.includes(connection.id)
-        const toolCount = connection.availableTools?.length || 0
+        const initial = connection.name.charAt(0).toUpperCase()
+        const badgeColor = MCP_BADGE_COLORS[idx % MCP_BADGE_COLORS.length]
 
         return (
           <div
             key={connection.id}
-            className="grid grid-cols-[1fr_auto] items-center gap-2 px-2 py-2"
+            className="flex items-center gap-3 px-3 py-2 mx-1 rounded-lg hover:bg-bg-hover dark:hover:bg-bg-hover transition-colors"
           >
-            <div className="flex flex-col overflow-hidden">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
-                <Label
-                  htmlFor={`mcp-${connection.id}`}
-                  className="font-medium cursor-pointer truncate"
-                  title={connection.name}
-                >
-                  {connection.name}
-                </Label>
-              </div>
-              <span className="text-xs text-muted-foreground ml-4 truncate">
-                {toolCount} tool{toolCount !== 1 ? "s" : ""}
-              </span>
+            {/* Initial badge */}
+            <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${badgeColor}`}>
+              {initial}
             </div>
+            {/* Name */}
+            <span
+              className="flex-1 text-[14px] text-text-200 dark:text-foreground truncate cursor-default"
+              title={connection.name}
+            >
+              {connection.name}
+            </span>
+            {/* Toggle */}
             <Switch
-              id={`mcp-${connection.id}`}
+              id={`mcp-plus-${connection.id}`}
               checked={isActive}
               onCheckedChange={(checked) => onToggle(connection.id, checked)}
               className="shrink-0"
@@ -443,13 +326,15 @@ function McpConnectionsSubmenu({
           </div>
         )
       })}
-      <DropdownMenuSeparator />
-      <DropdownMenuItem asChild>
-        <a href="/settings?tab=mcp" className="cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
-          Manage Connections
-        </a>
-      </DropdownMenuItem>
+      <div className="my-1 border-t border-border dark:border-sidebar-border" />
+      <button
+        onClick={onManageConnectors}
+        className="flex items-center gap-3 px-3 py-2.5 mx-1 mb-1 rounded-lg text-[14px] text-text-200 dark:text-foreground hover:bg-bg-hover dark:hover:bg-bg-hover transition-colors cursor-pointer w-[calc(100%-8px)]"
+        type="button"
+      >
+        <Settings className="h-[18px] w-[18px] text-text-300 dark:text-text-500" />
+        Manage connectors
+      </button>
     </>
   )
 }
@@ -462,8 +347,9 @@ function ChatSidebar({
   onDeleteConversation,
   onPinConversation,
   onShareConversation,
-  solutionType,
   userName,
+  userEmail,
+  onOpenSettings,
 }: {
   conversations: Conversation[]
   selectedId: string | null
@@ -472,8 +358,9 @@ function ChatSidebar({
   onDeleteConversation: (id: string) => void
   onPinConversation: (id: string, isPinned: boolean) => void
   onShareConversation: (id: string) => void
-  solutionType?: string | null
   userName: string
+  userEmail: string
+  onOpenSettings: () => void
 }) {
   const router = useRouter()
 
@@ -483,65 +370,96 @@ function ChatSidebar({
     router.push("/")
   }
 
-  // Navigate back to solutions page
-  const handleBackToSolutions = () => {
-    router.push("/solutions")
-  }
-
   // Ensure conversations is always an array
   const safeConversations = Array.isArray(conversations) ? conversations : []
   const pinnedConversations = safeConversations.filter((c) => c.isPinned)
   const unpinnedConversations = safeConversations.filter((c) => !c.isPinned)
 
-  // Get display name for current solution
-  const solutionDisplayName = solutionType ? SOLUTION_NAMES[solutionType] || solutionType : 'General Chat'
+  // Group unpinned conversations by time period
+  const groupedConversations = useMemo(() => {
+    const now = new Date()
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfYesterday = new Date(startOfToday)
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+    const startOf7DaysAgo = new Date(startOfToday)
+    startOf7DaysAgo.setDate(startOf7DaysAgo.getDate() - 7)
+    const startOf14DaysAgo = new Date(startOfToday)
+    startOf14DaysAgo.setDate(startOf14DaysAgo.getDate() - 14)
+    const startOf30DaysAgo = new Date(startOfToday)
+    startOf30DaysAgo.setDate(startOf30DaysAgo.getDate() - 30)
+
+    const groups: { label: string; conversations: Conversation[] }[] = [
+      { label: 'Today', conversations: [] },
+      { label: 'Yesterday', conversations: [] },
+      { label: 'Previous 7 days', conversations: [] },
+      { label: 'Previous 14 days', conversations: [] },
+      { label: 'Previous 30 days', conversations: [] },
+      { label: 'Older', conversations: [] },
+    ]
+
+    for (const conv of unpinnedConversations) {
+      const date = new Date(conv.updatedAt)
+      if (date >= startOfToday) {
+        groups[0].conversations.push(conv)
+      } else if (date >= startOfYesterday) {
+        groups[1].conversations.push(conv)
+      } else if (date >= startOf7DaysAgo) {
+        groups[2].conversations.push(conv)
+      } else if (date >= startOf14DaysAgo) {
+        groups[3].conversations.push(conv)
+      } else if (date >= startOf30DaysAgo) {
+        groups[4].conversations.push(conv)
+      } else {
+        groups[5].conversations.push(conv)
+      }
+    }
+
+    return groups.filter(g => g.conversations.length > 0)
+  }, [unpinnedConversations])
 
   return (
     <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="p-2 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
-        <div className="flex w-full items-center justify-between gap-2 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:justify-center">
+      <SidebarHeader>
+        <div className="flex w-full items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-medium">
               LLMatscale.ai
             </span>
-            {solutionType && (
-              <span className="text-xs text-muted-foreground">
-                {solutionDisplayName}
-              </span>
-            )}
           </div>
           <SidebarTrigger className="size-8 shrink-0 border-0 bg-transparent shadow-none hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-2 group-data-[collapsible=icon]:px-1">
-        <SidebarGroup className="gap-0 group-data-[collapsible=icon]:px-0">
-          <SidebarMenu className="group-data-[collapsible=icon]:items-center">
-            <SidebarMenuButton tooltip={`New ${solutionDisplayName} chat`} onClick={onNewChat}>
-              <Plus className="size-4" />
-              <span>New chat</span>
-            </SidebarMenuButton>
-            <SidebarMenuButton tooltip="All Solutions" onClick={handleBackToSolutions}>
-              <Grid2X2 className="size-4" />
-              <span>Solutions</span>
-            </SidebarMenuButton>
-            <SidebarMenuButton tooltip="Projects">
-              <FolderOpen className="size-4" />
-              <span>Projects</span>
-            </SidebarMenuButton>
+      <SidebarContent>
+        <SidebarGroup className="gap-0">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="New chat" onClick={onNewChat}>
+                <Plus className="size-4" />
+                <span>New chat</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Projects">
+                <FolderOpen className="size-4" />
+                <span>Projects</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
         {/* Pinned Conversations */}
         {pinnedConversations.length > 0 && (
-          <SidebarGroup className="group-data-[collapsible=icon]:px-0">
+          <SidebarGroup>
             <SidebarGroupLabel className="text-xs group-data-[collapsible=icon]:hidden">
               Pinned
             </SidebarGroupLabel>
-            <SidebarMenu className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center">
-              <SidebarMenuButton tooltip="Pinned">
-                <Pin className="size-4" />
-                <span>Pinned</span>
-              </SidebarMenuButton>
+            <SidebarMenu className="hidden group-data-[collapsible=icon]:flex">
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Pinned">
+                  <Pin className="size-4" />
+                  <span>Pinned</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
             <SidebarMenu className="group-data-[collapsible=icon]:hidden">
               {pinnedConversations.map((conversation) => (
@@ -590,71 +508,81 @@ function ChatSidebar({
           </SidebarGroup>
         )}
 
-        {/* Recent Conversations */}
-        <SidebarGroup className="group-data-[collapsible=icon]:px-0">
-          <SidebarGroupLabel className="text-xs group-data-[collapsible=icon]:hidden">
-            Recents
-          </SidebarGroupLabel>
-          {/* Single Recents icon shown only when collapsed */}
-          <SidebarMenu className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center">
-            <SidebarMenuButton tooltip="Recents">
-              <MessageSquare className="size-4" />
-              <span>Recents</span>
-            </SidebarMenuButton>
+        {/* Recent Conversations - grouped by time period */}
+        {/* Single Recents icon shown only when collapsed */}
+        <SidebarGroup className="hidden group-data-[collapsible=icon]:flex">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Recents">
+                <MessageSquare className="size-4" />
+                <span>Recents</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
-          {/* Chat history shown only when expanded */}
-          <SidebarMenu className="group-data-[collapsible=icon]:hidden">
-            {unpinnedConversations.length === 0 ? (
+        </SidebarGroup>
+        {/* Time-grouped chat history shown only when expanded */}
+        <div className="group-data-[collapsible=icon]:hidden">
+          {unpinnedConversations.length === 0 ? (
+            <SidebarGroup>
               <div className="px-2 py-4 text-center text-xs text-muted-foreground">
                 No conversations yet
               </div>
-            ) : (
-              unpinnedConversations.map((conversation) => (
-                <SidebarMenuItem key={conversation.id} className="group/item">
-                  <SidebarMenuButton
-                    isActive={conversation.id === selectedId}
-                    onClick={() => onSelectConversation(conversation.id)}
-                    className="pr-8"
-                  >
-                    <span className="truncate">{conversation.title}</span>
-                  </SidebarMenuButton>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 size-6 -translate-y-1/2 opacity-0 transition-opacity group-hover/item:opacity-100 data-[state=open]:opacity-100"
+            </SidebarGroup>
+          ) : (
+            groupedConversations.map((group) => (
+              <SidebarGroup key={group.label}>
+                <SidebarGroupLabel className="text-xs">
+                  {group.label}
+                </SidebarGroupLabel>
+                <SidebarMenu>
+                  {group.conversations.map((conversation) => (
+                    <SidebarMenuItem key={conversation.id} className="group/item">
+                      <SidebarMenuButton
+                        isActive={conversation.id === selectedId}
+                        onClick={() => onSelectConversation(conversation.id)}
+                        className="pr-8"
                       >
-                        <MoreHorizontal className="size-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => onPinConversation(conversation.id, true)}>
-                        <Pin className="mr-2 size-4" />
-                        <span>Pin</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onShareConversation(conversation.id)}>
-                        <Share2 className="mr-2 size-4" />
-                        <span>Share</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => onDeleteConversation(conversation.id)}
-                      >
-                        <Trash className="mr-2 size-4" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </SidebarMenuItem>
-              ))
-            )}
-          </SidebarMenu>
-        </SidebarGroup>
+                        <span className="truncate">{conversation.title}</span>
+                      </SidebarMenuButton>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 size-6 -translate-y-1/2 opacity-0 transition-opacity group-hover/item:opacity-100 data-[state=open]:opacity-100"
+                          >
+                            <MoreHorizontal className="size-4" />
+                            <span className="sr-only">More options</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem onClick={() => onPinConversation(conversation.id, true)}>
+                            <Pin className="mr-2 size-4" />
+                            <span>Pin</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onShareConversation(conversation.id)}>
+                            <Share2 className="mr-2 size-4" />
+                            <span>Share</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => onDeleteConversation(conversation.id)}
+                          >
+                            <Trash className="mr-2 size-4" />
+                            <span>Delete</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+            ))
+          )}
+        </div>
       </SidebarContent>
-      <SidebarFooter className="p-2">
+      <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -663,31 +591,33 @@ function ChatSidebar({
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   tooltip="Account"
                 >
-                  <User2 className="size-4" />
-                  <span>{userName}</span>
+                  <svg viewBox="0 0 16 16" className="!size-6 shrink-0" aria-hidden="true">
+                    <circle cx="8" cy="8" r="8" className="fill-primary" />
+                    <text x="8" y="8" textAnchor="middle" dominantBaseline="central" className="fill-primary-foreground" fontSize="8" fontWeight="600" fontFamily="system-ui, sans-serif">
+                      {userName.charAt(0).toUpperCase()}
+                    </text>
+                  </svg>
+                  <span className="truncate">{userName}</span>
                   <ChevronUp className="ml-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-popper-anchor-width]"
+                className="w-[220px] p-1"
               >
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <User2 className="mr-2 size-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <Settings className="mr-2 size-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
+                {/* User info header */}
+                <div className="px-3 py-2.5">
+                  <p className="text-sm font-medium text-foreground">{userName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+                </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 size-4" />
-                  <span>Sign out</span>
+                <DropdownMenuItem onClick={onOpenSettings} className="gap-2.5 px-3 py-2">
+                  <Settings className="size-4 text-muted-foreground" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut} className="gap-2.5 px-3 py-2">
+                  <LogOut className="size-4 text-muted-foreground" />
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -703,15 +633,18 @@ function ChatContent({
   selectedModel,
   setSelectedModel,
   onConversationCreated,
-  solutionType,
+  userName,
+  onOpenMcpSettings,
 }: {
   conversationId: string | null
   selectedModel: ClaudeModelId
   setSelectedModel: (model: ClaudeModelId) => void
   onConversationCreated: (id: string) => void
-  solutionType: string | null
+  userName: string
+  onOpenMcpSettings: () => void
 }) {
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [thinkingEnabled, setThinkingEnabled] = useState(false)
   const [activeMcpIds, setActiveMcpIds] = useState<string[]>([])
   const mcpLoadedRef = useRef(false) // Track if MCP connections have been loaded
 
@@ -743,31 +676,47 @@ function ChatContent({
   }, [])
 
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([])
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(!!conversationId)
+  const [waitingForResponse, setWaitingForResponse] = useState(false)
   const [input, setInput] = useState("")
+  const chatInputRef = useRef<ClaudeChatInputHandle>(null)
   const pendingMessageRef = useRef<{ text: string; messageId: string } | null>(null)
   const currentConversationRef = useRef<string | null>(null)
   const isNewConversationRef = useRef(false) // Track if we just created a new conversation
   const optimisticMessageCounterRef = useRef(0)
+
+  // File content loading hook
+  const { fetchFileContent, fetchFileArrayBuffer, getCache: getFileContentCache } = useFileContent()
 
   // Artifact state - use refs to prevent re-render loops
   const [activeArtifact, setActiveArtifact] = useState<Artifact | null>(null)
   const [allArtifacts, setAllArtifacts] = useState<Artifact[]>([])
   const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
   const [showArtifactPreview, setShowArtifactPreview] = useState(false)
-  const [isStreamingArtifact, setIsStreamingArtifact] = useState(false)
+  const [artifactPanelMounted, setArtifactPanelMounted] = useState(false)
+  const [panelResizeTransition, setPanelResizeTransition] = useState(false)
   const userClosedArtifactRef = useRef<boolean>(false) // Track if user manually closed
   const lastDetectedArtifactIdRef = useRef<string | null>(null) // Track last detected artifact to prevent re-opening
   const showArtifactPreviewRef = useRef<boolean>(false) // Ref version to avoid callback recreation
   const artifactMessageIdRef = useRef<string | null>(null) // Track which message owns the current artifacts
   const manuallySelectedArtifactRef = useRef<boolean>(false) // Track if artifact was manually clicked (not auto-detected)
-
+  const isLoadedConversationRef = useRef<boolean>(!!conversationId) // Track if messages came from loading a saved conversation
   const [modelJustChanged, setModelJustChanged] = useState(false)
+  type TransitionPhase = 'idle' | 'exiting-welcome' | 'entering-chat'
+  const [transitionPhase, setTransitionPhase] = useState<TransitionPhase>('idle')
+  const pendingSendDataRef = useRef<{ message: string; files: unknown[]; pastedContent: unknown[]; model: string; isThinkingEnabled: boolean } | null>(null)
   const prevModelRef = useRef<string>(selectedModel)
 
-  // Keep ref in sync with state to avoid callback recreation
+  // Keep ref in sync with state and manage panel mount lifecycle
   useEffect(() => {
     showArtifactPreviewRef.current = showArtifactPreview
+    if (showArtifactPreview) {
+      setArtifactPanelMounted(true)
+    }
+    // Enable smooth CSS transition on panels during open/close
+    setPanelResizeTransition(true)
+    const timer = setTimeout(() => setPanelResizeTransition(false), 350)
+    return () => clearTimeout(timer)
   }, [showArtifactPreview])
 
   // Track model changes for SystemMessage notification
@@ -781,73 +730,7 @@ function ChatContent({
     }
   }, [selectedModel])
 
-  // Get personalized suggestions based on solution type
-  const suggestions = useMemo((): Suggestion[] => {
-    switch (solutionType) {
-      case "manufacturing":
-        return [
-          { label: "Show defects by machine for last month", description: "Natural language MES query", highlighted: true },
-          { label: "Generate weekly production report", description: "Automated reporting with yield trends", highlighted: true },
-          { label: "Drill down from plant to operator level", description: "Plant → Line → Operation → Equipment" },
-          { label: "Predict output for next week", description: "AI forecasting based on current performance" },
-          { label: "Show operator performance trends", description: "Cycle time and error analysis" },
-          { label: "Trace product genealogy", description: "AI-assisted traceability mapping" },
-        ]
-      case "maintenance":
-        return [
-          { label: "Calculate MTBF for all machines", description: "From MES downtime logs", highlighted: true },
-          { label: "Predict upcoming failure probabilities", description: "AI-based failure prediction", highlighted: true },
-          { label: "Show MTTR trends this month", description: "Mean time to repair analysis" },
-          { label: "Identify recurring failure modes", description: "Top failures impacting MTBF/MTTR" },
-          { label: "Create maintenance dashboard", description: "Daily/weekly/monthly trends" },
-          { label: "Evaluate supplier performance", description: "Recommendations based on failure patterns" },
-        ]
-      case "support":
-        return [
-          { label: "Suggest root cause for this issue", description: "With similar past ticket references", highlighted: true },
-          { label: "Recommend troubleshooting steps", description: "Step-by-step resolution guide", highlighted: true },
-          { label: "Predict resolution time for ticket", description: "AI severity and time prediction" },
-          { label: "Create RCA for incident", description: "Root cause analysis document" },
-          { label: "Recommend operator training needs", description: "Based on incident patterns" },
-          { label: "Prioritize alerts by impact", description: "Smart alert prioritization" },
-        ]
-      case "change-management":
-        return [
-          { label: "Show workflow for part number ABC123", description: "Natural language workflow query", highlighted: true },
-          { label: "Show objects mapped to current revision", description: "Object-to-revision mapping", highlighted: true },
-          { label: "Find specs shared between flows", description: "Spec overrides impact analysis" },
-          { label: "Which path expressions need updates?", description: "ECO change impact" },
-          { label: "Generate redline document", description: "For approval after edits" },
-          { label: "Show data collection parameters", description: "Shared across multiple processes" },
-        ]
-      case "impact-analysis":
-        return [
-          { label: "Show dependent objects for this part", description: "Dependency visualization", highlighted: true },
-          { label: "Where is this component used?", description: "Where-used natural language query", highlighted: true },
-          { label: "Show current WIP status", description: "Work-in-progress tracking" },
-          { label: "List affected work orders", description: "Orders impacted by this change" },
-          { label: "What path expressions are impacted?", description: "Routing and process path effects" },
-          { label: "Calculate ROI for this change", description: "Cost-benefit analysis" },
-        ]
-      case "requirements":
-        return [
-          { label: "Generate industry-specific template", description: "Default requirements for your industry", highlighted: true },
-          { label: "Create As-Is and To-Be process flows", description: "Document current vs desired state", highlighted: true },
-          { label: "Generate use cases from requirements", description: "With test cases and acceptance criteria" },
-          { label: "Map MES-ERP touchpoints", description: "Integration points and data flows" },
-          { label: "Identify customizations needed", description: "Beyond OOB modules" },
-          { label: "Map OOB modules to requirements", description: "Standard module recommendations" },
-        ]
-      default:
-        return [
-          { label: "Help me analyze data", description: "Get insights from your connected systems", highlighted: true },
-          { label: "Answer my questions", description: "Get clear explanations on any topic", highlighted: true },
-          { label: "Create a report or dashboard", description: "Visualize your data" },
-          { label: "Explain a concept to me", description: "Learn about any topic" },
-          { label: "Summarize information", description: "Get concise summaries" },
-        ]
-    }
-  }, [solutionType])
+  // Suggestions replaced by inline welcome chips in the greeting state
 
   // Helper to extract reasoning parts from message
   // AI SDK sends reasoning with { type: 'reasoning', text: '...' }
@@ -865,6 +748,60 @@ function ChatContent({
       .filter(Boolean)
   }
 
+  // Extract file artifacts from message parts (file-download and data-fileDownload)
+  const getFileArtifactsFromMessage = useCallback((message: UIMessage): Artifact[] => {
+    const parts = Array.isArray(message.parts) ? message.parts : []
+    const fileArtifacts: Artifact[] = []
+
+    for (const part of parts) {
+      if (typeof part !== 'object' || part === null) continue
+      const p = part as Record<string, unknown>
+      const partType = p.type as string
+
+      let fileData: { fileId: string; filename: string; mimeType?: string; sizeBytes?: number } | null = null
+
+      if (partType === 'file-download') {
+        fileData = {
+          fileId: p.fileId as string,
+          filename: p.filename as string || 'download',
+          mimeType: p.mimeType as string | undefined,
+          sizeBytes: p.sizeBytes as number | undefined,
+        }
+      } else if (partType === 'data-fileDownload') {
+        const data = p.data as Record<string, unknown> | undefined
+        if (data) {
+          fileData = {
+            fileId: data.fileId as string,
+            filename: data.filename as string || 'download',
+            mimeType: data.mimeType as string | undefined,
+            sizeBytes: data.sizeBytes as number | undefined,
+          }
+        }
+      }
+
+      if (fileData?.fileId && isPreviewableFile(fileData.filename, fileData.mimeType)) {
+        fileArtifacts.push(createFileArtifact(fileData))
+      }
+    }
+
+    return fileArtifacts
+  }, [])
+
+  // Extract tag artifacts from message text parts
+  const getTagArtifactsFromMessage = useCallback((message: UIMessage): { artifacts: Artifact[]; hasStreamingArtifact: boolean } => {
+    const parts = Array.isArray(message.parts) ? message.parts : []
+    const rawText = parts
+      .filter((part) => part.type === "text")
+      .map((part) => ("text" in part ? part.text : ""))
+      .join("")
+    if (!rawText.includes('<antArtifact')) return { artifacts: [], hasStreamingArtifact: false }
+    const result = extractTagArtifacts(rawText)
+    return { artifacts: result.artifacts, hasStreamingArtifact: result.hasStreamingArtifact }
+  }, [])
+
+  // Streaming state for artifact panel
+  const [isArtifactStreaming, setIsArtifactStreaming] = useState(false)
+
   // Sidebar control for artifact panel
   const { setOpen: setSidebarOpen } = useSidebar()
   const sidebarStateBeforeArtifact = useRef<boolean>(true)
@@ -872,7 +809,7 @@ function ChatContent({
   // Open artifact and collapse sidebar - memoized to prevent re-renders
   // Uses refs instead of state in dependencies to prevent recreation and infinite loops
   // manualSelection: true when user clicks an artifact tile (not auto-detected during streaming)
-  const openArtifactPanel = useCallback((artifact: Artifact, artifacts: Artifact[] = [], streaming: boolean = false, manualSelection: boolean = false) => {
+  const openArtifactPanel = useCallback((artifact: Artifact, artifacts: Artifact[] = [], _streaming: boolean = false, manualSelection: boolean = false) => {
     // Check if this artifact was already opened (to prevent infinite loops)
     // Use ref version of showArtifactPreview to avoid dependency
     if (artifact.id === lastDetectedArtifactIdRef.current && showArtifactPreviewRef.current && !manualSelection) {
@@ -880,7 +817,7 @@ function ChatContent({
       setActiveArtifact(artifact)
       setAllArtifacts(artifacts.length > 0 ? artifacts : [artifact])
       setActiveArtifactIndex(artifacts.length > 0 ? artifacts.indexOf(artifact) : 0)
-      setIsStreamingArtifact(streaming)
+  
       return
     }
 
@@ -894,7 +831,7 @@ function ChatContent({
     setAllArtifacts(artifacts.length > 0 ? artifacts : [artifact])
     setActiveArtifactIndex(artifacts.length > 0 ? artifacts.indexOf(artifact) : 0)
     setShowArtifactPreview(true)
-    setIsStreamingArtifact(streaming)
+
     userClosedArtifactRef.current = false // Reset the manual close flag
   }, [setSidebarOpen]) // Removed showArtifactPreview - using ref instead
 
@@ -906,27 +843,34 @@ function ChatContent({
     }
   }, [allArtifacts])
 
+  // Called when exit animation finishes - safe to fully unmount the panel
+  const handleArtifactExitComplete = useCallback(() => {
+    setArtifactPanelMounted(false)
+    setActiveArtifact(null)
+  }, [])
+
   // Close artifact and restore sidebar
   const closeArtifactPanel = useCallback(() => {
     userClosedArtifactRef.current = true // Mark as manually closed by user
     lastDetectedArtifactIdRef.current = null // Reset tracking
     manuallySelectedArtifactRef.current = false // Reset manual selection flag
     setShowArtifactPreview(false)
-    setActiveArtifact(null)
-    setIsStreamingArtifact(false)
+    // Don't null activeArtifact here — let exit animation play first, then handleArtifactExitComplete cleans up
+
     setSidebarOpen(true) // Expand sidebar
   }, [setSidebarOpen])
 
-  // Determine API endpoint based on solution type
-  const apiEndpoint = solutionType ? `/api/chat/${solutionType}` : "/api/chat"
+  // API endpoint
+  const apiEndpoint = "/api/chat"
 
   // Create request body - this will be sent with each chat request
   const requestBody = useMemo(() => ({
     model: selectedModel,
     webSearch: webSearchEnabled,
+    enableReasoning: thinkingEnabled,
     conversationId,
     activeMcpIds,
-  }), [selectedModel, webSearchEnabled, conversationId, activeMcpIds])
+  }), [selectedModel, webSearchEnabled, thinkingEnabled, conversationId, activeMcpIds])
 
   // Create transport with memoized configuration - includes auth headers
   const transport = useMemo(() => new DefaultChatTransport({
@@ -945,6 +889,7 @@ function ChatContent({
   } = useChat({
     transport,
     messages: initialMessages,
+    experimental_throttle: 50,
     // Auto-scroll handled by use-stick-to-bottom
     onError: (err) => {
       console.error('[useChat] Error:', err)
@@ -954,6 +899,7 @@ function ChatContent({
   // Retry function - resends the last user message
   const retryLastMessage = useCallback(() => {
     if (messages.length < 2) return
+    isLoadedConversationRef.current = false
     // Find the last user message
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
     if (lastUserMsg) {
@@ -1041,6 +987,17 @@ function ChatContent({
   }, [messages])
 
   const isLoading = status === "submitted" || status === "streaming"
+  const isWelcomeVisible = messages.length === 0 && transitionPhase === 'idle' && !isLoadingMessages
+
+  // Clear waitingForResponse once the AI SDK picks up the request
+  useEffect(() => {
+    if (status === "streaming" || status === "submitted") {
+      setWaitingForResponse(false)
+    }
+  }, [status])
+
+  // File-download parts are now delivered in-band via the SSE stream as data-fileDownload chunks.
+  // The AI SDK automatically adds them to message.parts - no polling needed.
 
   // If we just created a conversation, send the pending message once the id is available
   useEffect(() => {
@@ -1099,6 +1056,7 @@ function ChatContent({
             setTimeout(() => {
               if (currentConversationRef.current === conversationId) {
                 setMessages(loadedMessages)
+                isLoadedConversationRef.current = true
               }
             }, 0)
           } else {
@@ -1107,6 +1065,7 @@ function ChatContent({
             setTimeout(() => {
               if (currentConversationRef.current === conversationId) {
                 setMessages([])
+                isLoadedConversationRef.current = true
               }
             }, 0)
           }
@@ -1134,103 +1093,78 @@ function ChatContent({
   const lastArtifactUpdateRef = useRef<number>(0)
   const artifactUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Auto-detect artifacts during streaming and open preview
-  // Throttled to reduce performance impact during fast streaming
+  // Auto-detect artifacts (both tag-based and file-based) during/after streaming
+  // Tag artifacts: always update allArtifacts (inline tiles need data), never auto-open panel
+  // File artifacts: auto-open panel after streaming (existing behavior)
   useEffect(() => {
     if (messages.length === 0) return
-    // Don't auto-open if user manually closed
-    if (userClosedArtifactRef.current) return
 
-    const lastMessage = messages[messages.length - 1]
-    if (lastMessage.role !== 'assistant') return
+    // Find last assistant message (for loaded conversations, scan all messages)
+    const lastAssistantMessage = isLoadedConversationRef.current
+      ? [...messages].reverse().find(m => m.role === 'assistant')
+      : messages[messages.length - 1]
+    if (!lastAssistantMessage || lastAssistantMessage.role !== 'assistant') return
 
     // If this is a DIFFERENT assistant message than before, reset artifacts immediately
-    if (artifactMessageIdRef.current !== lastMessage.id) {
-      artifactMessageIdRef.current = lastMessage.id
+    if (artifactMessageIdRef.current !== lastAssistantMessage.id) {
+      artifactMessageIdRef.current = lastAssistantMessage.id
       setActiveArtifact(null)
       setAllArtifacts([])
       lastDetectedArtifactIdRef.current = null
-      manuallySelectedArtifactRef.current = false // Reset manual selection for new message
-      setIsStreamingArtifact(isLoading)
-      lastArtifactUpdateRef.current = 0 // Allow immediate update for new message
+      manuallySelectedArtifactRef.current = false
+      lastArtifactUpdateRef.current = 0
+      setIsArtifactStreaming(false)
+      userClosedArtifactRef.current = false
     }
 
-    const messageText = getMessageText(lastMessage)
-    if (!messageText) return
-
-    // Throttle artifact detection during streaming (100ms minimum)
-    const now = Date.now()
-    const timeSinceLastUpdate = now - lastArtifactUpdateRef.current
-    const THROTTLE_MS = 100
-
-    const processArtifacts = () => {
-      lastArtifactUpdateRef.current = Date.now()
-
-      // Check for BOTH complete and streaming artifacts
-      const hasCompleteArtifact = hasArtifacts(messageText)
-      const hasStreamingArtifactFlag = isArtifactStreaming(messageText)
-
-      if (hasCompleteArtifact || hasStreamingArtifactFlag) {
-        let artifacts: Artifact[] = []
-        if (hasCompleteArtifact) {
-          artifacts = extractArtifacts(messageText)
-        } else if (hasStreamingArtifactFlag) {
-          const { artifact } = getStreamingArtifact(messageText)
-          if (artifact) artifacts = [artifact]
-        }
-
-        if (artifacts.length > 0) {
-          const latestArtifact = artifacts[artifacts.length - 1]
-
-          if (!showArtifactPreviewRef.current && isLoading) {
-            // Auto-open artifact panel during streaming (reset manual selection flag)
-            manuallySelectedArtifactRef.current = false
-            openArtifactPanel(latestArtifact, artifacts, isLoading)
-          } else if (showArtifactPreviewRef.current && !manuallySelectedArtifactRef.current) {
-            // Only update if NOT manually selected (prevents overwriting user's artifact choice)
-            setActiveArtifact(latestArtifact)
-            setAllArtifacts(artifacts)
-            setActiveArtifactIndex(artifacts.length - 1)
-            setIsStreamingArtifact(isLoading)
-          }
-        }
+    // Detect tag artifacts from all assistant messages for loaded conversations
+    let tagArtifacts: Artifact[] = []
+    let hasStreamingArtifact = false
+    if (isLoadedConversationRef.current) {
+      // For loaded conversations, collect artifacts from ALL assistant messages
+      for (const msg of messages) {
+        if (msg.role !== 'assistant') continue
+        const result = getTagArtifactsFromMessage(msg)
+        tagArtifacts.push(...result.artifacts)
       }
-    }
-
-    // If not loading (streaming complete), process immediately
-    if (!isLoading) {
-      if (artifactUpdateTimeoutRef.current) {
-        clearTimeout(artifactUpdateTimeoutRef.current)
-        artifactUpdateTimeoutRef.current = null
-      }
-      processArtifacts()
-      return
-    }
-
-    // Throttle during streaming
-    if (timeSinceLastUpdate >= THROTTLE_MS) {
-      processArtifacts()
     } else {
-      // Schedule update after throttle period
-      if (artifactUpdateTimeoutRef.current) {
-        clearTimeout(artifactUpdateTimeoutRef.current)
-      }
-      artifactUpdateTimeoutRef.current = setTimeout(processArtifacts, THROTTLE_MS - timeSinceLastUpdate)
+      const result = getTagArtifactsFromMessage(lastAssistantMessage)
+      tagArtifacts = result.artifacts
+      hasStreamingArtifact = result.hasStreamingArtifact
     }
 
-    return () => {
-      if (artifactUpdateTimeoutRef.current) {
-        clearTimeout(artifactUpdateTimeoutRef.current)
+    // Detect file artifacts only after streaming completes
+    const fileArtifacts = isLoading ? [] : (
+      isLoadedConversationRef.current
+        ? messages.filter(m => m.role === 'assistant').flatMap(m => getFileArtifactsFromMessage(m))
+        : getFileArtifactsFromMessage(lastAssistantMessage)
+    )
+
+    const allDetected = [...tagArtifacts, ...fileArtifacts]
+
+    // Always update allArtifacts — inline tiles and panel navigation need this
+    setAllArtifacts(allDetected)
+    setIsArtifactStreaming(isLoading && hasStreamingArtifact)
+
+    if (allDetected.length === 0) return
+
+    // For loaded conversations, populate allArtifacts but don't auto-open panel
+    if (isLoadedConversationRef.current) return
+
+    // Don't auto-open panel if user manually closed
+    if (userClosedArtifactRef.current) return
+
+    // Auto-open panel ONLY for file artifacts (tag artifacts open via tile click)
+    if (fileArtifacts.length > 0) {
+      if (!showArtifactPreviewRef.current) {
+        manuallySelectedArtifactRef.current = false
+        openArtifactPanel(fileArtifacts[0], allDetected, false)
+      } else if (!manuallySelectedArtifactRef.current) {
+        setActiveArtifact(fileArtifacts[0])
+        setActiveArtifactIndex(allDetected.indexOf(fileArtifacts[0]))
       }
     }
-  }, [messages, isLoading, openArtifactPanel])
-
-  // When streaming stops, keep artifact open but mark as complete
-  useEffect(() => {
-    if (!isLoading && isStreamingArtifact) {
-      setIsStreamingArtifact(false)
-    }
-  }, [isLoading, isStreamingArtifact])
+  }, [messages, isLoading, openArtifactPanel, getFileArtifactsFromMessage, getTagArtifactsFromMessage])
 
   const selectedModelInfo = CLAUDE_MODELS.find((m) => m.id === selectedModel)
 
@@ -1252,22 +1186,25 @@ function ChatContent({
     return messageId
   }
 
-  const getMessageText = (message: UIMessage): string => {
+  // Get raw text from message parts (before stripping artifact tags)
+  const getRawMessageText = (message: UIMessage): string => {
     const parts = Array.isArray(message.parts) ? message.parts : []
-
-    // Only get text parts, NOT reasoning (reasoning is displayed separately)
     const textFromParts = parts
       .filter((part) => part.type === "text")
       .map((part) => ("text" in part ? part.text : ""))
       .join("")
-
-    if (textFromParts) {
-      return textFromParts
-    }
-
-    // Fallback for any legacy messages that might still use `content`
+    if (textFromParts) return textFromParts
     const legacyContent = (message as { content?: unknown }).content
     return typeof legacyContent === "string" ? legacyContent : ""
+  }
+
+  // Get display text with artifact tags stripped (for copy button, etc.)
+  const getMessageText = (message: UIMessage): string => {
+    const raw = getRawMessageText(message)
+    if (raw.includes('<antArtifact')) {
+      return extractTagArtifacts(raw).cleanedText
+    }
+    return raw
   }
 
   // Extract tool parts from message using PromptKit's extractToolParts helper
@@ -1277,11 +1214,12 @@ function ChatContent({
   }
 
   // Segment message parts into ordered sections for proper rendering
-  // Returns array of { type: 'text' | 'tool', content: string | ToolPart }
+  // Returns array of { type: 'text' | 'tool' | 'file', content: string | ToolPart }
   type MessageSegment =
     | { type: 'text'; content: string }
     | { type: 'tool'; content: ToolPart }
     | { type: 'tool-group'; content: ToolPart[] }
+    | { type: 'file'; content: { fileId: string; filename: string; mimeType?: string; sizeBytes?: number } }
 
   const getOrderedMessageSegments = (message: UIMessage): MessageSegment[] => {
     const parts = Array.isArray(message.parts) ? message.parts : []
@@ -1302,9 +1240,40 @@ function ChatContent({
                          partType === 'tool-call' ||
                          partType === 'tool-result'
 
-      if (partType === 'text' && typeof p.text === 'string') {
+      if (partType === 'step-start') {
+        // Step boundary - flush accumulated text to preserve step interleaving
+        if (currentText.trim()) {
+          segments.push({ type: 'text', content: currentText.trim() })
+          currentText = ''
+        }
+      } else if (partType === 'text' && typeof p.text === 'string') {
         // Accumulate text
         currentText += (currentText ? '\n\n' : '') + p.text
+      } else if (partType === 'file-download') {
+        // File download part from DB-loaded messages
+        segments.push({
+          type: 'file',
+          content: {
+            fileId: p.fileId as string,
+            filename: p.filename as string || 'download',
+            mimeType: p.mimeType as string | undefined,
+            sizeBytes: p.sizeBytes as number | undefined,
+          },
+        })
+      } else if (partType === 'data-fileDownload') {
+        // File download part from SSE stream (AI SDK data chunk)
+        const fileData = p.data as Record<string, unknown> | undefined
+        if (fileData) {
+          segments.push({
+            type: 'file',
+            content: {
+              fileId: fileData.fileId as string,
+              filename: fileData.filename as string || 'download',
+              mimeType: fileData.mimeType as string | undefined,
+              sizeBytes: fileData.sizeBytes as number | undefined,
+            },
+          })
+        }
       } else if (isToolPart) {
         // Flush any accumulated text before tool
         if (currentText.trim()) {
@@ -1325,7 +1294,10 @@ function ChatContent({
       segments.push({ type: 'text', content: currentText.trim() })
     }
 
-    return segments
+    // Move file segments to the end so FileCards appear after all text content
+    const fileSegments = segments.filter(s => s.type === 'file')
+    const nonFileSegments = segments.filter(s => s.type !== 'file')
+    return [...nonFileSegments, ...fileSegments]
   }
 
   // Group consecutive tool segments into tool-group segments for compact rendering
@@ -1348,6 +1320,7 @@ function ChatContent({
         result.push(segment)
       }
     }
+
     flushTools()
     return result
   }
@@ -1358,7 +1331,9 @@ function ChatContent({
     if (!text || isLoading) return
 
     setInput("")
+    setWaitingForResponse(true)
     userClosedArtifactRef.current = false // Reset so new artifacts can auto-open
+    isLoadedConversationRef.current = false // Reset so new artifacts from AI can auto-open
     const optimisticMessageId = createOptimisticUserMessage(text)
 
     // If no conversation exists, create one first
@@ -1366,14 +1341,12 @@ function ChatContent({
       try {
         // Mark that we're creating a new conversation - this prevents the message loading effect from clearing messages
         isNewConversationRef.current = true
-        console.log("[createConversation] Creating with solutionType:", solutionType)
         const response = await fetch("/api/conversations", {
           method: "POST",
           headers: getAuthHeaders(),
           body: JSON.stringify({
             title: text.slice(0, 50) + (text.length > 50 ? "..." : ""),
             model: selectedModel,
-            solutionType: solutionType,
           }),
         })
 
@@ -1383,7 +1356,7 @@ function ChatContent({
         }
 
         const newConversation = await response.json()
-        console.log("[createConversation] Created:", newConversation.id, "solutionType:", newConversation.solutionType)
+        console.log("[createConversation] Created:", newConversation.id)
         if (!newConversation.id) {
           throw new Error("Invalid conversation response - no ID")
         }
@@ -1408,13 +1381,130 @@ function ChatContent({
     }
   }
 
+  // Core send logic - extracted so it can be called directly or after transition delay
+  const executeSend = useCallback((data: {
+    message: string;
+    files: unknown[];
+    pastedContent: unknown[];
+    model: string;
+    isThinkingEnabled: boolean;
+  }) => {
+    const text = data.message.trim()
+
+    setInput("")
+    setWaitingForResponse(true)
+    userClosedArtifactRef.current = false
+    isLoadedConversationRef.current = false
+    const optimisticMessageId = createOptimisticUserMessage(text)
+
+    if (!conversationId) {
+      ;(async () => {
+        try {
+          isNewConversationRef.current = true
+          const response = await fetch("/api/conversations", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              title: text.slice(0, 50) + (text.length > 50 ? "..." : ""),
+              model: data.model,
+            }),
+          })
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.error || `HTTP ${response.status}`)
+          }
+          const newConversation = await response.json()
+          if (!newConversation.id) throw new Error("Invalid conversation response - no ID")
+          onConversationCreated(newConversation.id)
+          pendingMessageRef.current = { text, messageId: optimisticMessageId }
+        } catch (error) {
+          isNewConversationRef.current = false
+          console.error("Error creating conversation:", error)
+          setMessages((prev) => prev.filter((m) => m.id !== optimisticMessageId))
+        }
+      })()
+    } else {
+      sendMessage({ text, messageId: optimisticMessageId }, { body: requestBody }).catch((error) => {
+        console.error("Error sending message:", error)
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticMessageId))
+      })
+    }
+  }, [conversationId, onConversationCreated, sendMessage, requestBody, setMessages, createOptimisticUserMessage])
+
+  // Bridge from ClaudeChatInput's onSendMessage to existing chat flow
+  // When sending from welcome state, triggers transition animation first
+  const handleSendMessage = useCallback((data: {
+    message: string;
+    files: unknown[];
+    pastedContent: unknown[];
+    model: string;
+    isThinkingEnabled: boolean;
+  }) => {
+    if (data.model !== selectedModel) {
+      setSelectedModel(data.model as ClaudeModelId)
+    }
+
+    const text = data.message.trim()
+    if (!text && data.files.length === 0 && data.pastedContent.length === 0) return
+
+    // If sending from welcome state, trigger exit animation first
+    if (messages.length === 0 && transitionPhase === 'idle') {
+      pendingSendDataRef.current = data
+      setTransitionPhase('exiting-welcome')
+    } else {
+      executeSend(data)
+    }
+  }, [selectedModel, setSelectedModel, messages.length, transitionPhase, executeSend])
+
+  // Called when welcome exit animation completes
+  const handleWelcomeExitComplete = useCallback(() => {
+    if (transitionPhase === 'exiting-welcome' && pendingSendDataRef.current) {
+      setTransitionPhase('entering-chat')
+      executeSend(pendingSendDataRef.current)
+      pendingSendDataRef.current = null
+      // Reset after paint
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setTransitionPhase('idle'))
+      })
+    }
+  }, [transitionPhase, executeSend])
+
   return (
-    <PanelGroup orientation="horizontal" className="h-full">
+    <PanelGroup orientation="horizontal" className={cn("h-full", panelResizeTransition && "panel-resize-transition")}>
       {/* Left Panel: Chat + Prompt Input - SINGLE scrollable container */}
-      <Panel defaultSize={showArtifactPreview ? 50 : 100} minSize={30}>
-        <ChatContainerRoot className="h-full">
-              <ChatContainerContent className="space-y-0 px-5 py-12">
-                <AnimatePresence mode="wait">
+      <Panel defaultSize={artifactPanelMounted ? 50 : 100} minSize={30}>
+
+        {/* Skeleton loader for conversation switching - rendered OUTSIDE scroll container */}
+        {isLoadingMessages ? (
+          <div className="flex h-full flex-col">
+            <div className="flex-1 mx-auto w-full max-w-3xl space-y-6 px-11 py-16">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className={cn("flex gap-3", i % 2 === 0 ? "justify-end" : "justify-start")}>
+                  {i % 2 === 0 ? (
+                    <div className="w-[55%] space-y-2">
+                      <div className="h-10 rounded-2xl bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                    </div>
+                  ) : (
+                    <div className="w-[70%] space-y-2">
+                      <div className="h-4 w-3/4 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                      <div className="h-4 w-1/2 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 50}ms` }} />
+                      {i === 1 && <div className="h-4 w-2/3 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 100}ms` }} />}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Skeleton input bar */}
+            <div className="px-8 pb-5 pt-2">
+              <div className="mx-auto max-w-3xl">
+                <div className="h-[52px] w-full rounded-xl bg-muted animate-pulse" />
+              </div>
+            </div>
+          </div>
+        ) : (
+        <ChatContainerRoot className={cn("h-full", isWelcomeVisible && "!overflow-hidden")}>
+              <ChatContainerContent className={cn("space-y-0 px-5 transition-[padding] duration-300", isWelcomeVisible ? "h-full py-0" : "py-12")}>
+                <AnimatePresence mode="popLayout" onExitComplete={handleWelcomeExitComplete}>
                   {/* Error Display */}
                   {error && (
                     <motion.div
@@ -1439,83 +1529,81 @@ function ChatContent({
                     </SystemMessage>
                   )}
 
-                  {isLoadingMessages ? (
+                  {isWelcomeVisible ? (
                     <motion.div
-                      key="loading"
+                      key="welcome"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex h-full items-center justify-center"
+                      exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
+                      transition={{ duration: 0.3 }}
+                      className="flex h-full flex-col items-center justify-center px-6"
                     >
-                      <div className="text-center">
-                        <div className="mx-auto mb-4">
-                          <Loader variant="pulse-dot" size="lg" />
-                        </div>
-                        <p className="text-muted-foreground">Loading messages...</p>
-                      </div>
-                    </motion.div>
-                  ) : messages.length === 0 ? (
-                    <motion.div
-                      key="empty"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ type: "spring" as const, stiffness: 100, damping: 20 }}
-                      className="flex h-full flex-col items-center justify-center px-6 pt-16"
-                    >
-                      <div className="w-full max-w-2xl text-center -mt-8">
-                        <motion.div
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.2, type: "spring" as const }}
-                          className="mx-auto mb-6 flex items-center justify-center gap-6"
+                      <div className="w-full max-w-2xl flex flex-col items-center text-center">
+                        {/* Time-based greeting */}
+                        <motion.h1
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.15, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                          className="text-3xl md:text-4xl font-light text-foreground mb-8"
                         >
-                          <Image
-                            src="/logos/llmatscale-logo.png"
-                            alt="LLM at Scale.AI"
-                            width={240}
-                            height={80}
-                            className="h-[75px] w-auto object-contain"
-                            unoptimized
-                          />
-                          <div className="h-14 w-px bg-border" />
-                          <Image
-                            src="/logos/athena-logo.jpg"
-                            alt="Athena"
-                            width={200}
-                            height={65}
-                            className="h-[65px] w-auto object-contain"
-                            unoptimized
+                          {getGreeting()}, {userName}
+                        </motion.h1>
+
+                        {/* Centered input */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                          className="w-full mb-5"
+                        >
+                          <ClaudeChatInput
+                            ref={chatInputRef}
+                            onSendMessage={handleSendMessage}
+                            defaultModel={selectedModel}
+                            placeholder="How can I help you today?"
+                            isLoading={isLoading}
+                            onStop={stop}
+                            webSearchEnabled={webSearchEnabled}
+                            onWebSearchChange={setWebSearchEnabled}
+                            isThinkingEnabled={thinkingEnabled}
+                            onThinkingChange={setThinkingEnabled}
+                            activeMcpIds={activeMcpIds}
+                            onMcpToggle={(connectionId, isActive) => {
+                              setActiveMcpIds((prev) =>
+                                isActive
+                                  ? [...prev, connectionId]
+                                  : prev.filter((id) => id !== connectionId)
+                              )
+                            }}
+                            McpConnectionsSubmenu={McpConnectionsSubmenu}
+                            onManageConnectors={onOpenMcpSettings}
                           />
                         </motion.div>
-                        <motion.h2
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                          className="mb-2 text-xl font-semibold"
-                        >
-                          How can I help you today?
-                        </motion.h2>
-                        <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.4 }}
-                          className="mb-6 text-muted-foreground"
-                        >
-                          {solutionType ? SOLUTION_TAGLINES[solutionType] || DEFAULT_TAGLINE : DEFAULT_TAGLINE}
-                        </motion.p>
+
+                        {/* Suggestion chips */}
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5 }}
+                          transition={{ delay: 0.25, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                          className="flex flex-wrap justify-center gap-2"
                         >
-                          <PromptSuggestion
-                            suggestions={suggestions}
-                            onSelect={(suggestion) => {
-                              setInput(suggestion.label)
-                            }}
-                            columns={2}
-                          />
+                          {[
+                            { label: "Write", icon: Pencil },
+                            { label: "Learn", icon: BookOpen },
+                            { label: "Code", icon: Code2 },
+                            { label: "Life stuff", icon: Home },
+                          ].map((chip) => (
+                            <button
+                              key={chip.label}
+                              onClick={() => chatInputRef.current?.setMessage(chip.label + ": ")}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full
+                                         border border-border bg-transparent text-muted-foreground
+                                         hover:bg-muted hover:text-foreground transition-colors"
+                            >
+                              <chip.icon className="size-4" />
+                              {chip.label}
+                            </button>
+                          ))}
                         </motion.div>
                       </div>
                     </motion.div>
@@ -1524,35 +1612,17 @@ function ChatContent({
                       const isAssistant = message.role === "assistant"
                       const isLastMessage = index === messages.length - 1
                       const isStreaming = isLoading && isLastMessage && isAssistant
-                      const messageText = getMessageText(message)
+                      const rawText = isAssistant ? getRawMessageText(message) : ''
+                      const hasArtifactTags = isAssistant && rawText.includes('<antArtifact')
+                      const artifactSegments = hasArtifactTags ? segmentMessageText(rawText) : null
+                      const messageText = hasArtifactTags ? extractTagArtifacts(rawText).cleanedText : (isAssistant ? rawText : getMessageText(message))
 
-                      // Detect artifacts in message - optimized to avoid expensive ops for non-streaming messages
-                      // For non-last messages, use simple string check first
-                      const hasArtifactTag = /<artifact[\s>]/i.test(messageText)
-                      let messageHasArtifacts = false
-                      let hasStreamingArtifactFlag = false
-                      let artifacts: Artifact[] = []
-
-                      if (hasArtifactTag || (isStreaming && messageText.includes('<'))) {
-                        // Only do expensive detection if there might be artifacts
-                        const hasCompleteArtifacts = hasArtifacts(messageText)
-                        hasStreamingArtifactFlag = isStreaming && isArtifactStreaming(messageText)
-                        messageHasArtifacts = hasCompleteArtifacts || hasStreamingArtifactFlag
-
-                        // Extract artifacts - for streaming, get partial artifact
-                        if (hasCompleteArtifacts) {
-                          artifacts = extractArtifacts(messageText)
-                        } else if (hasStreamingArtifactFlag) {
-                          const { artifact: streamingArtifact } = getStreamingArtifact(messageText)
-                          if (streamingArtifact) {
-                            artifacts = [streamingArtifact]
-                          }
-                        }
-                      }
+                      // Show pulse-dot after the last user message while waiting for assistant response
+                      const showWaitingIndicator = isLastMessage && !isAssistant && (waitingForResponse || status === "submitted")
 
                       // Get ordered message segments (text and tool parts in correct order)
                       const messageSegments = isAssistant ? groupConsecutiveTools(getOrderedMessageSegments(message)) : []
-                      const hasToolParts = messageSegments.some(s => s.type === 'tool-group')
+                      const hasToolParts = messageSegments.some(s => s.type === 'tool-group' || s.type === 'file')
 
                       return (
                         <motion.div
@@ -1574,9 +1644,6 @@ function ChatContent({
                           >
                             {isAssistant ? (
                               <>
-                                <MessageAvatar className="mt-1 bg-primary/10 text-primary">
-                                  <Bot className="size-4" />
-                                </MessageAvatar>
                                 <div className="group flex-1 min-w-0">
                                   {/* Reasoning/Extended Thinking - shown when model provides reasoning */}
                                   {(() => {
@@ -1603,148 +1670,146 @@ function ChatContent({
 
                                   {/* Render message segments in order: text -> tool -> text -> tool -> text */}
                                   {hasToolParts ? (
-                                    // Message has tool parts - render segments in order, cleaning artifact content from text
+                                    // Message has tool parts - render segments in order with timeline
                                     <>
-                                      {messageSegments.map((segment, segIndex) => {
-                                        if (segment.type === 'tool-group') {
-                                          const tools = segment.content as ToolPart[]
-                                          const allCompleted = tools.every(t => t.state === 'output-available')
-                                          const hasError = tools.some(t => t.state === 'output-error')
-                                          const completedCount = tools.filter(t => t.state === 'output-available' || t.state === 'output-error').length
-                                          const isRunning = !allCompleted && !hasError && isStreaming
-                                          const errorCount = tools.filter(t => t.state === 'output-error').length
+                                      {(() => {
+                                        // Collect artifacts from text segments to render after all text
+                                        const collectedArtifacts: { artifact: Artifact; isStreamingArt: boolean }[] = []
 
-                                          return (
-                                            <Steps key={`steps-${segIndex}`} defaultOpen={false}>
-                                              <StepsTrigger
-                                                leftIcon={
-                                                  isRunning ? <Loader2 className="size-4 animate-spin text-blue-500" />
-                                                  : hasError ? <XCircle className="size-4 text-red-500" />
-                                                  : <CheckCircle className="size-4 text-green-500" />
+                                        const rendered = messageSegments.map((segment, segIndex) => {
+                                          if (segment.type === 'tool-group') {
+                                            const tools = segment.content as ToolPart[]
+                                            return (
+                                              <ToolTimeline
+                                                key={`timeline-${segIndex}`}
+                                                tools={tools}
+                                                isStreaming={isStreaming}
+                                                artifacts={allArtifacts}
+                                                onOpenArtifact={(artifact) => openArtifactPanel(artifact, allArtifacts, false, true)}
+                                              />
+                                            )
+                                          } else if (segment.type === 'file') {
+                                            const fileData = segment.content as { fileId: string; filename: string; mimeType?: string; sizeBytes?: number }
+                                            if (!fileData.fileId) return null
+                                            return (
+                                              <FileCard
+                                                key={`file-${segIndex}`}
+                                                fileId={fileData.fileId}
+                                                filename={fileData.filename}
+                                                mimeType={fileData.mimeType}
+                                                sizeBytes={fileData.sizeBytes}
+                                                onPreview={isPreviewableFile(fileData.filename, fileData.mimeType) ? () => {
+                                                  const fileArt = createFileArtifact(fileData)
+                                                  const currentArtifacts = [...allArtifacts]
+                                                  const exists = currentArtifacts.find(a => a.id === fileArt.id)
+                                                  if (!exists) currentArtifacts.push(fileArt)
+                                                  openArtifactPanel(fileArt, currentArtifacts, false, true)
+                                                } : undefined}
+                                              />
+                                            )
+                                          } else {
+                                            // Text segment — collect artifacts, render text only
+                                            const textContent = segment.content as string
+                                            const isLastSegment = segIndex === messageSegments.length - 1
+
+                                            if (!textContent.trim()) return null
+
+                                            if (textContent.includes('<antArtifact')) {
+                                              const { segments: artSegs, hasStreamingArtifact: segHasStreaming } = segmentMessageText(textContent)
+                                              const textParts: React.ReactNode[] = []
+                                              artSegs.forEach((artSeg, artIdx) => {
+                                                if (artSeg.type === 'artifact') {
+                                                  collectedArtifacts.push({ artifact: artSeg.artifact, isStreamingArt: isStreaming && artSeg.isStreaming })
+                                                } else {
+                                                  if (!artSeg.content.trim()) return
+                                                  const isLastArt = isLastSegment && artIdx === artSegs.length - 1 && !segHasStreaming
+                                                  textParts.push(
+                                                    <MessageContent key={`art-text-${segIndex}-${artIdx}`} role="assistant">
+                                                      <StreamingText
+                                                        content={artSeg.content}
+                                                        isStreaming={isStreaming && isLastArt}
+                                                        markdown
+                                                        cursorStyle="pulse-dot"
+                                                      />
+                                                    </MessageContent>
+                                                  )
                                                 }
-                                              >
-                                                {isRunning ? (
-                                                  <TextShimmer duration={2}>
-                                                    Running {completedCount} of {tools.length} tool {tools.length === 1 ? 'call' : 'calls'}...
-                                                  </TextShimmer>
-                                                ) : hasError ? (
-                                                  `Used ${tools.length} tool ${tools.length === 1 ? 'call' : 'calls'} (${errorCount} failed)`
-                                                ) : (
-                                                  `Used ${tools.length} tool ${tools.length === 1 ? 'call' : 'calls'}`
-                                                )}
-                                              </StepsTrigger>
-                                              <StepsContent>
-                                                {tools.map((toolPart, toolIdx) => (
-                                                  <ToolStepItem
-                                                    key={toolPart.toolCallId || `tool-${segIndex}-${toolIdx}`}
-                                                    toolPart={toolPart}
-                                                  />
-                                                ))}
-                                                {/* Done footer */}
-                                                <div className="text-muted-foreground flex items-center gap-1.5 pt-1 text-sm">
-                                                  {isRunning ? (
-                                                    <>
-                                                      <Loader2 className="size-3.5 animate-spin" />
-                                                      <span>Running...</span>
-                                                    </>
-                                                  ) : (
-                                                    <>
-                                                      <CheckCircle className="size-3.5 text-green-500" />
-                                                      <span>Done{errorCount > 0 ? ` (${errorCount} ${errorCount === 1 ? 'error' : 'errors'})` : ''}</span>
-                                                    </>
-                                                  )}
-                                                </div>
-                                              </StepsContent>
-                                            </Steps>
-                                          )
-                                        } else {
-                                          // Text segment - clean artifact content if present
-                                          const rawText = segment.content as string
-                                          const textContent = messageHasArtifacts ? getTextBeforeArtifact(rawText) : rawText
-                                          const isLastSegment = segIndex === messageSegments.length - 1
+                                              })
+                                              return textParts.length > 0 ? <Fragment key={`text-${segIndex}`}>{textParts}</Fragment> : null
+                                            }
 
-                                          // Don't render empty text segments
-                                          if (!textContent.trim()) return null
-
-                                          return (
-                                            <MessageContent key={`text-${segIndex}`} role="assistant">
-                                              {messageHasArtifacts ? (
-                                                // Static render for artifact messages
-                                                <Markdown>{textContent}</Markdown>
-                                              ) : (
+                                            return (
+                                              <MessageContent key={`text-${segIndex}`} role="assistant">
                                                 <StreamingText
                                                   content={textContent}
                                                   isStreaming={isStreaming && isLastSegment}
                                                   markdown
-                                                  showCursor={isStreaming && isLastSegment}
+                                                  cursorStyle="pulse-dot"
                                                 />
-                                              )}
-                                            </MessageContent>
+                                              </MessageContent>
+                                            )
+                                          }
+                                        })
+
+                                        return (
+                                          <>
+                                            {rendered}
+                                            {/* Artifact tiles collected from text segments, rendered after all text */}
+                                            {collectedArtifacts.map(({ artifact, isStreamingArt }) => (
+                                              <ArtifactTile
+                                                key={artifact.id}
+                                                artifact={artifact}
+                                                isStreaming={isStreamingArt}
+                                                onOpenPreview={() => openArtifactPanel(artifact, allArtifacts, false, true)}
+                                              />
+                                            ))}
+                                          </>
+                                        )
+                                      })()}
+                                    </>
+                                  ) : artifactSegments ? (
+                                    /* Has artifact tags — render text + inline ArtifactTile segments */
+                                    <>
+                                      {artifactSegments.segments.map((artSeg, artIdx) => {
+                                        if (artSeg.type === 'artifact') {
+                                          return (
+                                            <ArtifactTile
+                                              key={artSeg.artifact.id}
+                                              artifact={artSeg.artifact}
+                                              isStreaming={isStreaming && artSeg.isStreaming}
+                                              onOpenPreview={() => openArtifactPanel(artSeg.artifact, allArtifacts, false, true)}
+                                            />
                                           )
                                         }
+                                        if (!artSeg.content.trim()) return null
+                                        const isLastText = artIdx === artifactSegments.segments.length - 1 && !artifactSegments.hasStreamingArtifact
+                                        return (
+                                          <MessageContent key={`art-text-${artIdx}`} role="assistant">
+                                            <StreamingText
+                                              content={artSeg.content}
+                                              isStreaming={isStreaming && isLastText}
+                                              markdown
+                                              cursorStyle="pulse-dot"
+                                            />
+                                          </MessageContent>
+                                        )
                                       })}
-
-                                      {/* Show artifact tile if message has artifacts */}
-                                      {messageHasArtifacts && artifacts.length > 0 && artifacts.map((artifact, artifactIndex) => (
-                                        <ArtifactTile
-                                          key={`${message.id}-artifact-${artifactIndex}`}
-                                          artifact={artifact}
-                                          isActive={activeArtifact?.id === artifact.id && showArtifactPreview}
-                                          isStreaming={isStreaming && hasStreamingArtifactFlag}
-                                          onClick={() => {
-                                            openArtifactPanel(artifact, artifacts, isStreaming && hasStreamingArtifactFlag, true)
-                                          }}
-                                        />
-                                      ))}
-
-                                      {/* Text AFTER artifact tag - render after artifact cards */}
-                                      {messageHasArtifacts && !hasStreamingArtifactFlag && getTextAfterArtifact(messageText) && (
-                                        <MessageContent role="assistant" className="mt-3">
-                                          <Markdown>{getTextAfterArtifact(messageText)}</Markdown>
-                                        </MessageContent>
-                                      )}
-                                    </>
-                                  ) : messageHasArtifacts ? (
-                                    // Message has artifacts - use direct Markdown for static text (no streaming overhead)
-                                    <>
-                                      {/* Text BEFORE artifact tag - static, render directly */}
-                                      {getTextBeforeArtifact(messageText) && (
-                                        <MessageContent role="assistant">
-                                          <Markdown>{getTextBeforeArtifact(messageText)}</Markdown>
-                                        </MessageContent>
-                                      )}
-
-                                      {/* Artifact tile card - shown during AND after streaming */}
-                                      {artifacts.length > 0 && artifacts.map((artifact, artifactIndex) => (
-                                        <ArtifactTile
-                                          key={`${message.id}-artifact-${artifactIndex}`}
-                                          artifact={artifact}
-                                          isActive={activeArtifact?.id === artifact.id && showArtifactPreview}
-                                          isStreaming={isStreaming && hasStreamingArtifactFlag}
-                                          onClick={() => {
-                                            openArtifactPanel(artifact, artifacts, isStreaming && hasStreamingArtifactFlag, true)
-                                          }}
-                                        />
-                                      ))}
-
-                                      {/* Text AFTER artifact tag - static, render directly */}
-                                      {!hasStreamingArtifactFlag && getTextAfterArtifact(messageText) && (
-                                        <MessageContent role="assistant" className="mt-3">
-                                          <Markdown>{getTextAfterArtifact(messageText)}</Markdown>
-                                        </MessageContent>
-                                      )}
                                     </>
                                   ) : (
-                                    /* No tools or artifacts - normal message display with smooth streaming */
+                                    /* No tool parts, no artifacts - normal message display */
                                     <MessageContent role="assistant">
                                       {isStreaming ? (
+                                        messageText.trim() ? (
                                         <StreamingText
-                                          content={getMessageWithoutArtifacts(messageText) || messageText || "Thinking..."}
+                                          content={messageText}
                                           isStreaming={isStreaming}
                                           markdown
                                           charsPerTick={4}
-                                          showCursor
+                                          cursorStyle="pulse-dot"
                                         />
+                                        ) : (
+                                          <Loader variant="pulse-dot" size="md" className="justify-start" />
+                                        )
                                       ) : (
                                         <StreamingText
                                           content={messageText}
@@ -1853,14 +1918,26 @@ function ChatContent({
                                     </MessageAction>
                                   </MessageActions>
                                 </div>
-                                <MessageAvatar className="mt-1" fallback="U" />
                               </>
                             )}
                           </Message>
+
+                          {/* Pulse-dot waiting indicator */}
+                          {showWaitingIndicator && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="mx-auto w-full max-w-3xl px-6 pt-3"
+                            >
+                              <Loader variant="pulse-dot" size="md" className="justify-start" />
+                            </motion.div>
+                          )}
                         </motion.div>
                       )
                     })
                   )}
+
                 </AnimatePresence>
               </ChatContainerContent>
 
@@ -1869,220 +1946,66 @@ function ChatContent({
                 <ScrollButton className="pointer-events-auto bg-background border-border shadow-md" />
               </div>
 
-              {/* Prompt Input - INSIDE ChatContainerRoot, sticky at bottom */}
-              <div className="sticky bottom-0 z-20 bg-background px-3 pb-3 pt-2 md:px-5 md:pb-5">
-                <div className="mx-auto max-w-3xl">
-                <form onSubmit={onSubmit}>
-                  <PromptInput
-                    isLoading={isLoading}
-                    value={input}
-                    onValueChange={setInput}
-                    onSubmit={onSubmit}
-                    className="prompt-input relative z-10 w-full rounded-2xl p-0 shadow-sm focus-within:ring-0 focus-within:outline-none"
-                  >
-                    <div className="flex flex-col">
-                      <PromptInputTextarea
-                        placeholder="Ask anything"
-                        className="min-h-[36px] pt-2.5 pl-4 text-sm leading-[1.3] sm:text-sm"
-                      />
-
-                      <PromptInputActions className="mt-2 flex w-full items-center justify-between gap-2 px-3 pb-2.5">
-                        <div className="flex items-center gap-2">
-                          {/* Consolidated Options Dropdown */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="size-9 rounded-full"
-                              >
-                                <Plus size={18} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-72">
-                              {/* Model Selection Submenu */}
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger>
-                                  <Bot className="mr-2 size-4" />
-                                  <span>Model</span>
-                                  <span className="ml-auto text-xs text-muted-foreground">
-                                    {selectedModelInfo?.name.split(" ").slice(-2).join(" ")}
-                                  </span>
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent className="w-64 max-h-48 overflow-y-auto">
-                                  <TooltipProvider>
-                                    {CLAUDE_MODELS.map((model) => (
-                                      <DropdownMenuItem
-                                        key={model.id}
-                                        onClick={() => setSelectedModel(model.id)}
-                                        className="flex items-center justify-between"
-                                      >
-                                        <div className="flex flex-col">
-                                          <span className="font-medium">{model.name}</span>
-                                          <span className="text-xs text-muted-foreground">
-                                            {model.description}
-                                          </span>
-                                        </div>
-                                        {selectedModel === model.id && (
-                                          <Check className="size-4 text-primary" />
-                                        )}
-                                      </DropdownMenuItem>
-                                    ))}
-                                    <DropdownMenuSeparator />
-                                    {DISABLED_MODELS.map((model) => (
-                                      <Tooltip key={model.id}>
-                                        <TooltipTrigger asChild>
-                                          <div
-                                            className="flex items-center justify-between px-2 py-1.5 opacity-50 cursor-not-allowed"
-                                          >
-                                            <div className="flex flex-col">
-                                              <span className="font-medium text-sm">{model.name}</span>
-                                              <span className="text-xs text-muted-foreground">
-                                                {model.description}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="right">
-                                          <p>Coming soon</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    ))}
-                                  </TooltipProvider>
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-
-                              <DropdownMenuSeparator />
-
-                              {/* Web Search Toggle */}
-                              <div className="flex items-center justify-between px-2 py-1.5">
-                                <div className="flex items-center">
-                                  <Globe className="mr-2 size-4" />
-                                  <Label htmlFor="web-search" className="text-sm font-normal cursor-pointer">
-                                    Web Search
-                                  </Label>
-                                </div>
-                                <Switch
-                                  id="web-search"
-                                  checked={webSearchEnabled}
-                                  onCheckedChange={setWebSearchEnabled}
-                                />
-                              </div>
-
-                              <DropdownMenuSeparator />
-
-                              {/* MCP Connections Submenu */}
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger>
-                                  <Plug className="mr-2 size-4" />
-                                  <span>MCP Connections</span>
-                                  {activeMcpIds.length > 0 && (
-                                    <span className="ml-auto rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground">
-                                      {activeMcpIds.length}
-                                    </span>
-                                  )}
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent className="w-64">
-                                  <McpConnectionsSubmenu
-                                    activeMcpIds={activeMcpIds}
-                                    onToggle={(connectionId, isActive) => {
-                                      setActiveMcpIds((prev) => {
-                                        return isActive
-                                          ? [...prev, connectionId]
-                                          : prev.filter((id) => id !== connectionId)
-                                      })
-                                    }}
-                                  />
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-
-                          {/* Voice Input */}
-                          <PromptInputAction tooltip="Voice input">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="size-9 rounded-full"
-                              type="button"
-                            >
-                              <Mic size={18} />
-                            </Button>
-                          </PromptInputAction>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <AnimatePresence mode="wait">
-                            {isLoading ? (
-                              <motion.div
-                                key="stop"
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.8, opacity: 0 }}
-                                transition={{ duration: 0.15 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <Button
-                                  variant="destructive"
-                                  size="icon"
-                                  onClick={stop}
-                                  className="size-9 rounded-full"
-                                  type="button"
-                                >
-                                  <Square size={14} className="fill-current" />
-                                </Button>
-                              </motion.div>
-                            ) : (
-                              <motion.div
-                                key="send"
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.8, opacity: 0 }}
-                                transition={{ duration: 0.15 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <Button
-                                  size="icon"
-                                  disabled={!input?.trim()}
-                                  type="submit"
-                                  className="size-9 rounded-full"
-                                >
-                                  <ArrowUp size={18} />
-                                </Button>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </PromptInputActions>
-                    </div>
-                  </PromptInput>
-                </form>
-
-                {/* Copyright */}
-                <p className="mt-2 text-center text-[10px] text-muted-foreground/50">
-                  LLM at Scale.AI. All Rights Reserved. Confidential and Proprietary Information. Version 1.0
-                </p>
-              </div>
-            </div>
+              {/* Sticky Input - only in chat mode (messages exist) */}
+              {!isWelcomeVisible && messages.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                  className="sticky bottom-0 z-20 bg-background px-3 pb-3 pt-2 md:px-5 md:pb-5"
+                >
+                  <div className="mx-auto max-w-3xl">
+                    <ClaudeChatInput
+                      ref={chatInputRef}
+                      onSendMessage={handleSendMessage}
+                      defaultModel={selectedModel}
+                      placeholder="Reply..."
+                      isLoading={isLoading}
+                      onStop={stop}
+                      webSearchEnabled={webSearchEnabled}
+                      onWebSearchChange={setWebSearchEnabled}
+                      isThinkingEnabled={thinkingEnabled}
+                      onThinkingChange={setThinkingEnabled}
+                      activeMcpIds={activeMcpIds}
+                      onMcpToggle={(connectionId, isActive) => {
+                        setActiveMcpIds((prev) =>
+                          isActive
+                            ? [...prev, connectionId]
+                            : prev.filter((id) => id !== connectionId)
+                        )
+                      }}
+                      McpConnectionsSubmenu={McpConnectionsSubmenu}
+                      onManageConnectors={onOpenMcpSettings}
+                    />
+                    <p className="mt-2 text-center text-[10px] text-muted-foreground/50">
+                      LLM at Scale.AI. All Rights Reserved. Confidential and Proprietary Information. Version 1.0
+                    </p>
+                  </div>
+                </motion.div>
+              )}
         </ChatContainerRoot>
+        )}
         </Panel>
 
         {/* Resize Handle + Right Panel: Artifact Preview */}
-        {showArtifactPreview && activeArtifact && (
+        {artifactPanelMounted && activeArtifact && (
           <>
             <PanelResizeHandle className="w-2 bg-border hover:bg-primary/20 transition-colors cursor-col-resize flex items-center justify-center">
               <div className="w-0.5 h-8 bg-muted-foreground/30 rounded-full" />
             </PanelResizeHandle>
             <Panel defaultSize={50} minSize={20}>
-              <ArtifactPreview
+              <ArtifactPanelWrapper
                 artifact={activeArtifact}
                 artifacts={allArtifacts}
                 currentIndex={activeArtifactIndex}
-                isStreaming={isStreamingArtifact}
+                isStreaming={isArtifactStreaming}
                 onClose={closeArtifactPanel}
                 onNavigate={navigateArtifact}
+                onFetchFileContent={fetchFileContent}
+                onFetchFileArrayBuffer={fetchFileArrayBuffer}
+                fileContentCache={getFileContentCache}
+                isOpen={showArtifactPreview}
+                onExitComplete={handleArtifactExitComplete}
               />
             </Panel>
           </>
@@ -2091,93 +2014,47 @@ function ChatContent({
   )
 }
 
-interface FullChatAppProps {
-  solutionType?: string | null
-}
-
-function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) {
+function FullChatApp() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [selectedModel, setSelectedModel] = useState<ClaudeModelId>(CLAUDE_MODELS[0].id)
   const [isLoading, setIsLoading] = useState(true)
-  const [solutionType, setSolutionType] = useState<string | null>(propSolutionType ?? null)
   const [userName, setUserName] = useState<string>("User")
+  const [userEmail, setUserEmail] = useState<string>("")
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<"general" | "appearance" | "api-keys" | "mcp" | "instructions" | "advanced">("general")
   // Track the chat key separately - stays stable during new conversation creation
   // Only changes when user explicitly selects an existing conversation
   const [chatKey, setChatKey] = useState<string>('new-chat')
   const router = useRouter()
 
-  // Load user name from session on mount
+  // Load user name and email from session on mount
   useEffect(() => {
     setUserName(getUserNameFromSession())
+    setUserEmail(getUserEmailFromSession())
   }, [])
 
-  // Get solution type from prop or URL on mount
-  useEffect(() => {
-    // If solution type is provided as prop, use it and skip URL parsing
-    if (propSolutionType !== undefined) {
-      setSolutionType(propSolutionType)
-      return
-    }
-
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search)
-      const solution = params.get("solution")
-      if (solution) {
-        setSolutionType(solution)
-        // Store in session storage so it persists
-        sessionStorage.setItem("athena_solution_type", solution)
-      } else {
-        // Try to get from session storage
-        const stored = sessionStorage.getItem("athena_solution_type")
-        if (stored) {
-          setSolutionType(stored)
-        }
-      }
-    }
-  }, [propSolutionType])
-
-  // Fetch conversations filtered by solution type
+  // Fetch conversations
   const fetchConversations = useCallback(async () => {
     try {
-      // Build URL with solution type filter
-      const url = new URL("/api/conversations", window.location.origin)
-      if (solutionType) {
-        url.searchParams.set("solutionType", solutionType)
-      } else {
-        // For general chat, fetch conversations without a solution type
-        url.searchParams.set("solutionType", "")
-      }
-
-      console.log("[fetchConversations] Fetching with solutionType:", solutionType, "URL:", url.toString())
-
-      const response = await fetch(url.toString(), {
+      const response = await fetch("/api/conversations", {
         headers: getAuthHeaders(),
       })
 
-      console.log("[fetchConversations] Response status:", response.status)
-
-      // Check if response is ok before parsing
       if (!response.ok) {
-        // Auth failed - user needs to log in
         if (response.status === 401) {
-          console.log("[fetchConversations] 401 - redirecting to login")
           window.location.href = '/'
           return
         }
-        console.error("[fetchConversations] Failed:", response.status)
         setConversations([])
         return
       }
 
       const data = await response.json()
-      console.log("[fetchConversations] Data received:", data?.length ?? 0, "conversations")
 
-      // Only set if response is an array (not an error object)
       if (Array.isArray(data)) {
         setConversations(data)
       } else {
-        console.error("[fetchConversations] Invalid data format:", data)
         setConversations([])
       }
     } catch (error) {
@@ -2186,9 +2063,9 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
     } finally {
       setIsLoading(false)
     }
-  }, [solutionType])
+  }, [])
 
-  // Fetch conversations on mount and when solution type changes
+  // Fetch conversations on mount
   useEffect(() => {
     fetchConversations()
   }, [fetchConversations])
@@ -2207,24 +2084,18 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
       },
       {
         ...CHAT_SHORTCUTS.openSettings,
-        action: () => router.push('/settings'),
+        action: () => setSettingsOpen(true),
       },
     ],
   })
 
   const handleSelectConversation = useCallback((id: string) => {
-    // When selecting an existing conversation, update both ID and key
-    // This causes the ChatContent to remount and load messages
     setSelectedConversationId(id)
     setChatKey(id)
   }, [])
 
   const handleConversationCreated = useCallback((id: string) => {
-    // When a new conversation is created, only update the conversationId
-    // DO NOT update chatKey - this keeps the same ChatContent instance
-    // so the pending message can be sent without losing the optimistic message
     setSelectedConversationId(id)
-    // Refresh conversations list
     fetchConversations()
   }, [fetchConversations])
 
@@ -2236,10 +2107,8 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
       })
       setConversations((prev) => prev.filter((c) => c.id !== id))
       if (selectedConversationId === id) {
-        // Reset both ID and chatKey to force ChatContent remount
-        // This ensures transport is recreated with null conversationId
         setSelectedConversationId(null)
-        setChatKey('new-chat-' + Date.now()) // Force remount with unique key
+        setChatKey('new-chat-' + Date.now())
       }
     } catch (error) {
       console.error("Error deleting conversation:", error)
@@ -2268,7 +2137,6 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
         headers: getAuthHeaders(),
         body: JSON.stringify({ isShared: true }),
       })
-      // Copy share link to clipboard
       const shareUrl = `${window.location.origin}/share/${id}`
       await navigator.clipboard.writeText(shareUrl)
       alert("Share link copied to clipboard!")
@@ -2278,29 +2146,40 @@ function FullChatApp({ solutionType: propSolutionType }: FullChatAppProps = {}) 
   }, [])
 
   return (
-    <SidebarProvider>
-      <ChatSidebar
-        conversations={conversations}
-        selectedId={selectedConversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewChat={handleNewChat}
-        onDeleteConversation={handleDeleteConversation}
-        onPinConversation={handlePinConversation}
-        onShareConversation={handleShareConversation}
-        solutionType={solutionType}
-        userName={userName}
-      />
-      <SidebarInset className="overflow-hidden">
-        <ChatContent
-          key={chatKey}
-          conversationId={selectedConversationId}
-          selectedModel={selectedModel}
-          setSelectedModel={setSelectedModel}
-          onConversationCreated={handleConversationCreated}
-          solutionType={solutionType}
+    <>
+      <SidebarProvider>
+        <ChatSidebar
+          conversations={conversations}
+          selectedId={selectedConversationId}
+          onSelectConversation={handleSelectConversation}
+          onNewChat={handleNewChat}
+          onDeleteConversation={handleDeleteConversation}
+          onPinConversation={handlePinConversation}
+          onShareConversation={handleShareConversation}
+          userName={userName}
+          userEmail={userEmail}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
-      </SidebarInset>
-    </SidebarProvider>
+        <SidebarInset className="overflow-hidden">
+          <ChatContent
+            key={chatKey}
+            conversationId={selectedConversationId}
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
+            onConversationCreated={handleConversationCreated}
+            userName={userName}
+            onOpenMcpSettings={() => { setSettingsTab("mcp"); setSettingsOpen(true) }}
+          />
+        </SidebarInset>
+      </SidebarProvider>
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => { setSettingsOpen(false); setSettingsTab("general") }}
+        defaultTab={settingsTab}
+        currentModel={selectedModel}
+        onDefaultModelChange={(modelId) => setSelectedModel(modelId as ClaudeModelId)}
+      />
+    </>
   )
 }
 

@@ -4,7 +4,7 @@ env:
   variables:
     AWS_ACCOUNT_ID: "628203515088"
     AWS_REGION: "us-west-2"
-    IMAGE_REPO_NAME: "athena-mcp"
+    IMAGE_REPO_NAME: "llmatscale-ai"
     IMAGE_TAG: "latest"
 
 phases:

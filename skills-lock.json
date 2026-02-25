@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "docs-sandpack": {
+      "source": "reactjs/react.dev",
+      "sourceType": "github",
+      "computedHash": "bb9ee76c48a08034d040b9f58b223d68aefd77a910ce42deb844f28d478a886a"
+    },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "e513e29a52533c4dd0aff72964c80d2d43c6fe9619ecb8766aabcd117e2b1acd"
+    }
+  }
+}

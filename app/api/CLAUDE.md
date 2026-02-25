@@ -1,4 +1,4 @@
-# Backend API Documentation - Athena MCP
+# Backend API Documentation - LLMatscale.ai
 
 ## Quick Reference
 
@@ -6,7 +6,7 @@
 |------|-------|
 | **Framework** | Next.js 16 API Routes |
 | **Database** | PostgreSQL + Prisma 7.3.0 |
-| **AI Provider** | AWS Bedrock via Vercel AI SDK |
+| **AI Provider** | Anthropic API via Vercel AI SDK |
 | **Authentication** | Bearer token + Session table |
 | **Encryption** | AES-256-GCM (credentials), scrypt (passwords) |
 | **Validation** | Zod schemas |
@@ -25,13 +25,11 @@ app/api/
 │       ├── route.ts              # POST - Request reset
 │       └── confirm/route.ts      # POST - Confirm reset
 ├── chat/                          # AI Chat
-│   ├── route.ts                  # General chat (no domain context)
-│   ├── manufacturing/route.ts    # Manufacturing-specific
-│   ├── maintenance/route.ts      # Maintenance-specific
-│   ├── support/route.ts          # Support-specific
-│   ├── change-management/route.ts # Change management
-│   ├── impact-analysis/route.ts  # Impact analysis
-│   └── requirements/route.ts     # Requirements
+│   └── route.ts                  # Chat endpoint
+├── files/                         # Anthropic Files API
+│   └── [fileId]/
+│       ├── route.ts              # GET - File metadata
+│       └── download/route.ts     # GET - Download file
 ├── conversations/                 # Conversation CRUD
 │   ├── route.ts                  # GET list, POST create
 │   └── [id]/
@@ -48,9 +46,9 @@ app/api/
 │           └── test/route.ts     # POST - Test connection
 ├── user/                          # User Settings
 │   ├── settings/route.ts         # GET, PATCH preferences
-│   └── aws/
-│       ├── route.ts              # GET, POST credentials
-│       └── test/route.ts         # POST - Test credentials
+│   └── anthropic/
+│       ├── route.ts              # GET, POST API key
+│       └── test/route.ts         # POST - Test API key
 ├── artifacts/                     # Artifacts
 │   ├── route.ts                  # POST create
 │   └── [id]/route.ts             # GET, PATCH, DELETE
@@ -63,11 +61,13 @@ lib/
 ├── auth-middleware.ts            # Authentication utilities
 ├── validation.ts                 # Zod schemas
 ├── encryption.ts                 # AES-256-GCM + scrypt
-├── bedrock.ts                    # AWS Bedrock client
-├── system-prompts.ts             # Solution-specific prompts
+├── anthropic.ts                  # Anthropic API client
+├── system-prompts.ts             # System prompts
 ├── artifacts.ts                  # Artifact parsing
 ├── mcp-client.ts                 # MCP tool execution
-├── code-executor.ts              # Math & search tools
+├── anthropic-files.ts            # Anthropic Files API client
+├── file-classifier.ts            # File type classification for rendering
+├── file-utils.ts                 # Shared file utility functions
 └── api-utils.ts                  # HTTP, retry, errors
 ```
 
@@ -114,7 +114,7 @@ const isValid = await verifyPassword(plaintext, hash)
 ### Credential Encryption (`lib/encryption.ts`)
 
 ```typescript
-// Encrypt sensitive data (AWS keys, MCP credentials)
+// Encrypt sensitive data (API keys, MCP credentials)
 const encrypted = encrypt(plaintext)  // Returns "iv:authTag:encrypted" (hex)
 
 // Decrypt
@@ -160,7 +160,7 @@ Invalidate session token. Requires Bearer token.
 Get current user info. Requires Bearer token.
 ```typescript
 // Response 200
-{ user: { id, email, name, avatarUrl, preferences, awsRegion } }
+{ user: { id, email, name, avatarUrl, preferences } }
 ```
 
 #### POST /api/auth/change-password
@@ -201,8 +201,8 @@ Confirm password reset with token.
 
 All chat endpoints require Bearer token authentication.
 
-#### POST /api/chat (or /api/chat/{solution})
-Stream AI response.
+#### POST /api/chat
+Stream AI response. Supports 7 Claude models including 4.6 Opus, 4.6 Sonnet, 4 Opus, 4.5 Sonnet, 4.5 Haiku, 4.5 Opus, and 4 Sonnet. Supports adaptive thinking (4.6 models) and manual thinking (4.5 models). Integrated with Anthropic Files API for file downloads and container skills for document generation (PPTX, DOCX, PDF, XLSX). Uses `maxTokens: 65536` and `maxDuration: 300` (5 minutes).
 ```typescript
 // Request
 {
@@ -221,17 +221,9 @@ Stream AI response.
 // data: {"type": "text", "text": "..."}
 // data: {"type": "reasoning", "reasoning": "..."}
 // data: {"type": "tool_call", "tool": "...", "result": "..."}
+// data: {"type": "data-fileDownload", ...}  // File download chunks
 // data: {"type": "done"}
 ```
-
-**Solution-specific endpoints:**
-- `/api/chat` - General (no domain context)
-- `/api/chat/manufacturing` - Production, yield, OEE, forecasting
-- `/api/chat/maintenance` - MTBF/MTTR, failure prediction, SPC
-- `/api/chat/support` - Tickets, RCA, knowledge base
-- `/api/chat/change-management` - ECO workflow, impact tracking
-- `/api/chat/impact-analysis` - Operational insights, ROI
-- `/api/chat/requirements` - Validation, gap detection
 
 #### GET /api/chat
 List available Claude models.
@@ -251,14 +243,10 @@ All endpoints require Bearer token authentication.
 #### GET /api/conversations
 List all conversations for user.
 ```typescript
-// Query params
-?solutionType=manufacturing  // Filter by solution
-?all=true                    // Show all regardless of filter
-
 // Response 200
 {
   conversations: [
-    { id, title, isPinned, isShared, model, solutionType, createdAt, updatedAt }
+    { id, title, isPinned, isShared, model, createdAt, updatedAt }
   ]
 }
 // Ordered: pinned first, then by updatedAt desc
@@ -268,10 +256,10 @@ List all conversations for user.
 Create new conversation.
 ```typescript
 // Request
-{ title?: string, model?: string, solutionType?: string }
+{ title?: string, model?: string }
 
 // Response 201
-{ id, title, isPinned, isShared, model, solutionType, createdAt, updatedAt }
+{ id, title, isPinned, isShared, model, createdAt, updatedAt }
 ```
 
 #### GET /api/conversations/[id]
@@ -279,7 +267,7 @@ Get single conversation with messages.
 ```typescript
 // Response 200
 {
-  id, title, isPinned, isShared, model, solutionType, createdAt, updatedAt,
+  id, title, isPinned, isShared, model, createdAt, updatedAt,
   messages: [{ id, role, content, parts, metadata, createdAt }]
 }
 ```
@@ -288,10 +276,10 @@ Get single conversation with messages.
 Update conversation metadata.
 ```typescript
 // Request (all optional)
-{ title?: string, isPinned?: boolean, isShared?: boolean, model?: string, solutionType?: string }
+{ title?: string, isPinned?: boolean, isShared?: boolean, model?: string }
 
 // Response 200
-{ id, title, isPinned, isShared, model, solutionType, createdAt, updatedAt }
+{ id, title, isPinned, isShared, model, createdAt, updatedAt }
 ```
 
 #### DELETE /api/conversations/[id]
@@ -423,41 +411,51 @@ Update user preferences.
 { ...updated preferences }
 ```
 
-#### GET /api/user/aws
-Get user AWS credentials (decrypted).
+#### GET /api/user/anthropic
+Get user Anthropic API key status.
 ```typescript
 // Response 200
-{
-  accessKeyId: string,
-  secretAccessKey: string,
-  region: string
-}
+{ hasApiKey: boolean, maskedKey: string }
 
 // Response 404 if not configured
 ```
 
-#### POST /api/user/aws
-Store AWS credentials (encrypted).
+#### POST /api/user/anthropic
+Store Anthropic API key (encrypted).
 ```typescript
 // Request
-{
-  accessKeyId: string,
-  secretAccessKey: string,
-  region?: string
-}
+{ apiKey: string }  // Must have sk-ant- prefix
 
 // Response 200
 { success: true }
 ```
 
-#### POST /api/user/aws/test
-Test AWS Bedrock connection.
+#### POST /api/user/anthropic/test
+Test Anthropic API key with a lightweight call.
 ```typescript
+// Request
+{ apiKey: string }  // Must have sk-ant- prefix
+
 // Response 200
-{ success: true, message: "AWS credentials are valid" }
+{ success: true, message: "Anthropic API key is valid" }
 
 // Response 400
-{ success: false, error: "Invalid credentials" }
+{ success: false, error: "Invalid API key" }
+```
+
+### Files
+
+#### GET /api/files/[fileId]
+Get file metadata from Anthropic Files API.
+```typescript
+// Response 200
+{ id, filename, mime_type, size, created_at }
+```
+
+#### GET /api/files/[fileId]/download
+Download file content from Anthropic Files API.
+```typescript
+// Response 200 - Binary file content with appropriate Content-Type header
 ```
 
 ### Artifacts
@@ -529,10 +527,9 @@ cleanupExpiredSessions()
 
 ### Conversation Operations
 ```typescript
-createConversation(userId, { title, model, solutionType })
+createConversation(userId, { title, model })
 getConversation(id)
 getAllConversations(userId)
-getConversationsBySolution(userId, solutionType)
 updateConversation(id, data)
 deleteConversation(id)
 ```
@@ -607,16 +604,14 @@ ChatRequestSchema = z.object({
 ```typescript
 CreateConversationSchema = z.object({
   title: z.string().optional(),
-  model: z.string().optional(),
-  solutionType: z.string().optional()
+  model: z.string().optional()
 })
 
 UpdateConversationSchema = z.object({
   title: z.string().optional(),
   isPinned: z.boolean().optional(),
   isShared: z.boolean().optional(),
-  model: z.string().optional(),
-  solutionType: z.string().optional()
+  model: z.string().optional()
 })
 ```
 
@@ -632,59 +627,50 @@ if (error) {
 
 ## System Prompts (`lib/system-prompts.ts`)
 
-### Solution Types
-```typescript
-type SolutionType =
-  | 'manufacturing'
-  | 'maintenance'
-  | 'support'
-  | 'change-management'
-  | 'impact-analysis'
-  | 'requirements'
-```
-
 ### Building System Prompt
 ```typescript
-import { buildSystemPromptWithTools, SOLUTION_PROMPTS } from '@/lib/system-prompts'
+import { buildSystemPromptWithTools } from '@/lib/system-prompts'
 
-// Get solution-specific system prompt
-const systemPrompt = SOLUTION_PROMPTS[solutionType] || BASE_PROMPT
-
-// Or build with tool descriptions
-const systemPrompt = buildSystemPromptWithTools(solutionType, availableTools)
+// Build system prompt with tool descriptions
+const systemPrompt = buildSystemPromptWithTools(availableTools)
 ```
 
 ### Prompt Structure
-Each solution prompt includes:
+Each system prompt includes:
 1. Base assistant capabilities
-2. Domain-specific expertise
-3. Communication style guidelines
-4. Artifact creation instructions
-5. Tool usage guidance (if MCP tools available)
+2. Communication style guidelines
+3. Artifact creation instructions
+4. Tool usage guidance (if MCP tools available)
 
-## AWS Bedrock Integration (`lib/bedrock.ts`)
+## Anthropic API Integration (`lib/anthropic.ts`)
+
+Uses both `@ai-sdk/anthropic` (Vercel AI SDK provider) and `@anthropic-ai/sdk` (direct Anthropic SDK) for different capabilities. Forwards container IDs for document generation features.
 
 ```typescript
-import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
+import { createAnthropic } from '@ai-sdk/anthropic';
+import Anthropic from '@anthropic-ai/sdk';
 
-// Creates Bedrock provider
-// - Uses IAM role in AWS (App Runner, Lambda, EC2)
-// - Falls back to env vars locally (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-export const bedrock = createAmazonBedrock({
-  region: process.env.AWS_REGION || 'us-west-2'
-})
+// Vercel AI SDK provider
+export const anthropic = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// Direct Anthropic SDK client (for Files API, containers, etc.)
+export const anthropicClient = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 // Usage in chat route
-import { bedrock } from '@/lib/bedrock'
-import { streamText } from 'ai'
+import { anthropic } from '@/lib/anthropic';
+import { streamText } from 'ai';
 
 const result = await streamText({
-  model: bedrock(modelId),
+  model: anthropic(modelId),
   system: systemPrompt,
   messages,
   tools,
-  maxTokens: 4096,
-})
+  maxTokens: 65536,
+});
 ```
 
 ## MCP Tool Execution (`lib/mcp-client.ts`)
@@ -786,25 +772,6 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-### Adding New Solution Type
-1. Create route file: `app/api/chat/[solution-name]/route.ts`
-2. Add system prompt in `lib/system-prompts.ts`
-3. Update `SolutionType` type
-4. Copy structure from existing solution route
-
-```typescript
-// app/api/chat/my-solution/route.ts
-import { POST as basePost, GET } from '../route'
-import { MY_SOLUTION_PROMPT } from '@/lib/system-prompts'
-
-export { GET }
-
-export async function POST(request: NextRequest) {
-  // Add solution-specific context
-  return basePost(request, { solutionType: 'my-solution' })
-}
-```
-
 ## Performance Considerations
 
 ### Database
@@ -814,7 +781,7 @@ export async function POST(request: NextRequest) {
 
 ### Streaming
 - Chat responses use Server-Sent Events
-- `maxDuration: 60` for long-running streams
+- `maxDuration: 300` (5 minutes) for long-running streams
 - Stream chunks sent as they arrive
 
 ### Caching
@@ -825,7 +792,7 @@ export async function POST(request: NextRequest) {
 
 - [x] All routes require Bearer token authentication
 - [x] Passwords hashed with scrypt (not plain text)
-- [x] AWS/MCP credentials encrypted with AES-256-GCM
+- [x] API keys/MCP credentials encrypted with AES-256-GCM
 - [x] Session tokens are cryptographically random
 - [x] Input validation with Zod schemas
 - [x] Cascade deletes for referential integrity
@@ -838,6 +805,6 @@ export async function POST(request: NextRequest) {
 
 - [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
 - [Vercel AI SDK](https://sdk.vercel.ai/docs)
-- [AWS Bedrock](https://docs.aws.amazon.com/bedrock)
+- [Anthropic API](https://docs.anthropic.com/en/docs)
 - [Prisma](https://www.prisma.io/docs)
 - [Zod](https://zod.dev)

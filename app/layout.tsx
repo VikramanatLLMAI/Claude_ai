@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import "./artifact-panel.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Athena MCP - AI Chat Application",
-  description: "Specialized AI chat application with solution-specific agents powered by Claude",
+  title: "LLMatscale.ai - AI Chat Application",
+  description: "AI chat application powered by Claude",
   keywords: ["AI", "chat", "Claude", "MCP", "assistant"],
-  authors: [{ name: "Athena MCP Team" }],
+  authors: [{ name: "LLMatscale.ai" }],
   robots: "noindex, nofollow",
 };
 
@@ -27,8 +28,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#FAF9F5" },
+    { media: "(prefers-color-scheme: dark)", color: "#262624" },
   ],
 };
 

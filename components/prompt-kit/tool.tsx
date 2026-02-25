@@ -48,13 +48,13 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
   const getStateIcon = () => {
     switch (state) {
       case "input-streaming":
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+        return <Loader2 className="h-4 w-4 animate-spin text-status-info" />
       case "input-available":
-        return <Settings className="h-4 w-4 text-orange-500" />
+        return <Settings className="h-4 w-4 text-status-warning" />
       case "output-available":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-4 w-4 text-status-success" />
       case "output-error":
-        return <XCircle className="h-4 w-4 text-red-500" />
+        return <XCircle className="h-4 w-4 text-status-error" />
       default:
         return <Settings className="text-muted-foreground h-4 w-4" />
     }
@@ -68,7 +68,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
           <span
             className={cn(
               baseClasses,
-              "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+              "bg-status-info-muted text-status-info-foreground"
             )}
           >
             Processing
@@ -79,7 +79,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
           <span
             className={cn(
               baseClasses,
-              "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+              "bg-status-warning-muted text-status-warning-foreground"
             )}
           >
             Ready
@@ -90,7 +90,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
           <span
             className={cn(
               baseClasses,
-              "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              "bg-status-success-muted text-status-success-foreground"
             )}
           >
             Completed
@@ -101,7 +101,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
           <span
             className={cn(
               baseClasses,
-              "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+              "bg-status-error-muted text-status-error-foreground"
             )}
           >
             Error
@@ -112,7 +112,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
           <span
             className={cn(
               baseClasses,
-              "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+              "bg-muted text-muted-foreground"
             )}
           >
             Pending
@@ -122,6 +122,12 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
   }
 
   const formatToolName = (name: string) => {
+    const knownNames: Record<string, string> = {
+      'web_search': 'Web Search',
+      'web_fetch': 'Web Fetch',
+      'code_execution': 'Code Execution',
+    };
+    if (knownNames[name]) return knownNames[name];
     // Convert snake_case or camelCase to Title Case
     return name
       .replace(/^mcp_/, "") // Remove mcp_ prefix
@@ -233,7 +239,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
               </span>
               {getStateBadge()}
             </div>
-            <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+            <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 ease-out", isOpen ? "rotate-180" : "rotate-0")} />
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent
@@ -290,8 +296,8 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
 
             {state === "output-error" && toolPart.errorText && (
               <div>
-                <h4 className="mb-2 text-sm font-medium text-red-500">Error</h4>
-                <div className="bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800 p-2 text-sm text-red-800 dark:text-red-300">
+                <h4 className="mb-2 text-sm font-medium text-status-error">Error</h4>
+                <div className="bg-status-error-muted rounded border border-status-error/20 p-2 text-sm text-status-error-foreground">
                   {toolPart.errorText}
                 </div>
               </div>

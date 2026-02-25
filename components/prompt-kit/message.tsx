@@ -83,7 +83,7 @@ const MessageAvatar = React.forwardRef<HTMLDivElement, MessageAvatarProps>(
       <div
         ref={ref}
         className={cn(
-          "relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-medium text-muted-foreground transition-all duration-200",
+          "relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-medium text-muted-foreground transition-colors duration-200",
           isStreaming && "bg-primary/20 text-primary",
           className
         )}
@@ -118,7 +118,7 @@ const MessageContent = React.forwardRef<HTMLDivElement, MessageContentProps>(
 
     // Base styling - specific colors handled in globals.css for dark/light modes
     const baseClassName = cn(
-      "min-w-0 break-words whitespace-normal transition-all duration-200 rounded-2xl px-4 py-3",
+      "min-w-0 break-words whitespace-normal transition-colors duration-200 rounded-2xl px-4 py-3",
       role === "user" && "message-user",
       role === "assistant" && "message-assistant",
       role === "system" && "message-system"
@@ -180,7 +180,7 @@ const MessageAction = React.forwardRef<HTMLDivElement, MessageActionProps>(
         className={cn(
           "flex h-7 w-7 items-center justify-center rounded-md cursor-pointer",
           "text-muted-foreground hover:text-foreground hover:bg-muted",
-          "transition-all duration-150 hover:scale-105 active:scale-95",
+          "transition-[transform,colors] duration-150 hover:scale-105 active:scale-95",
           isSuccess && "text-green-600 bg-green-50",
           className
         )}

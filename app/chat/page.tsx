@@ -3,9 +3,10 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { FullChatApp } from "@/components/full-chat-app"
+import { PageLoadingSkeleton } from "@/components/ui/skeleton-loaders"
 
-const AUTH_SESSION_KEY = "athena_auth_session"
-const AUTH_TOKEN_KEY = "athena_auth_token"
+const AUTH_SESSION_KEY = "llmatscale_auth_session"
+const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
 function hasValidSession() {
     if (typeof window === "undefined") return false
@@ -26,11 +27,7 @@ export default function ChatPage() {
     }, [router])
 
     if (!session) {
-        return (
-            <div className="flex h-svh items-center justify-center bg-background overflow-hidden">
-                <p className="text-sm text-muted-foreground">Checking session...</p>
-            </div>
-        )
+        return <PageLoadingSkeleton />
     }
 
     // FullChatApp's SidebarProvider already has h-svh - no extra wrapper needed

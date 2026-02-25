@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useSmoothStreaming, useTypingCursor } from "@/hooks/use-smooth-streaming"
 import { Markdown } from "@/components/prompt-kit/markdown"
+import type { Components } from "react-markdown"
 import { cn } from "@/lib/utils"
 
 interface StreamingTextProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -16,12 +17,14 @@ interface StreamingTextProps extends React.HTMLAttributes<HTMLDivElement> {
   charsPerTick?: number
   /** Show typing cursor at end */
   showCursor?: boolean
-  /** Cursor style - 'block' shows a block cursor, 'line' shows a thin line */
-  cursorStyle?: "block" | "line"
+  /** Cursor style - 'block' shows a block cursor, 'line' shows a thin line, 'pulse-dot' shows a pulsing dot */
+  cursorStyle?: "block" | "line" | "pulse-dot"
   /** Callback when text display catches up to content */
   onDisplayComplete?: () => void
   /** Enable adaptive speed to catch up when behind */
   adaptiveSpeed?: boolean
+  /** Custom markdown components to merge into the Markdown renderer */
+  markdownComponents?: Partial<Components>
 }
 
 /**
@@ -38,6 +41,7 @@ export function StreamingText({
   cursorStyle = "block",
   onDisplayComplete,
   adaptiveSpeed = true,
+  markdownComponents,
   className,
   ...props
 }: StreamingTextProps) {
@@ -49,15 +53,19 @@ export function StreamingText({
     maxCatchUpChars: 25,
   })
 
+  // useTypingCursor now returns a static "|" when active (no JS interval).
+  // The blink animation is handled purely by CSS .animate-smooth-blink.
   const cursor = useTypingCursor(isStreaming && !isComplete)
 
   // For non-streaming content, show immediately
   const textToShow = isStreaming ? displayedText : content
   const shouldShowCursor = showCursor && isStreaming && !isComplete
+  const usePulseDot = cursorStyle === "pulse-dot" && isStreaming && !isComplete
 
-  // Memoize cursor element to prevent re-renders
-  const cursorElement = React.useMemo(() => {
-    if (!shouldShowCursor) return null
+  // Memoize cursor element -- stable now that cursor doesn't toggle via JS
+  const cursorEl = React.useMemo(() => {
+    // pulse-dot uses CSS ::after, no element needed
+    if (!shouldShowCursor || cursorStyle === "pulse-dot") return null
 
     if (cursorStyle === "line") {
       return (
@@ -80,17 +88,17 @@ export function StreamingText({
 
   if (markdown) {
     return (
-      <div className={cn("relative", className)} {...props}>
-        <Markdown>{textToShow}</Markdown>
-        {cursorElement}
+      <div className={cn("relative", usePulseDot && "streaming-pulse-dot", className)} {...props}>
+        <Markdown components={markdownComponents}>{textToShow}</Markdown>
+        {cursorEl}
       </div>
     )
   }
 
   return (
-    <div className={cn("relative", className)} {...props}>
+    <div className={cn("relative", usePulseDot && "streaming-pulse-dot", className)} {...props}>
       <span className="whitespace-pre-wrap">{textToShow}</span>
-      {cursorElement}
+      {cursorEl}
     </div>
   )
 }

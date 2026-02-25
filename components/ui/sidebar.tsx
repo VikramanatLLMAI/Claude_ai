@@ -18,8 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
     Tooltip,
     TooltipContent,
+    TooltipProvider,
     TooltipTrigger,
-    TooltipProvider
 } from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { PanelLeftIcon } from "lucide-react"
@@ -117,25 +117,23 @@ function SidebarProvider({
 
     return (
         <SidebarContext.Provider value={contextValue}>
-            <TooltipProvider>
-                <div
-                    data-slot="sidebar-wrapper"
-                    style={
-                        {
-                            "--sidebar-width": SIDEBAR_WIDTH,
-                            "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-                            ...style,
-                        } as React.CSSProperties
-                    }
-                    className={cn(
-                        "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex h-svh max-h-screen w-full overflow-hidden",
-                        className
-                    )}
-                    {...props}
-                >
-                    {children}
-                </div>
-            </TooltipProvider>
+            <div
+                data-slot="sidebar-wrapper"
+                style={
+                    {
+                        "--sidebar-width": SIDEBAR_WIDTH,
+                        "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+                        ...style,
+                    } as React.CSSProperties
+                }
+                className={cn(
+                    "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
+                    className
+                )}
+                {...props}
+            >
+                {children}
+            </div>
         </SidebarContext.Provider>
     )
 }
@@ -143,14 +141,14 @@ function SidebarProvider({
 function Sidebar({
     side = "left",
     variant = "sidebar",
-    collapsible = "offExamples",
+    collapsible = "offcanvas",
     className,
     children,
     ...props
 }: React.ComponentProps<"div"> & {
     side?: "left" | "right"
     variant?: "sidebar" | "floating" | "inset"
-    collapsible?: "offExamples" | "icon" | "none"
+    collapsible?: "offcanvas" | "icon" | "none"
 }) {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -206,8 +204,8 @@ function Sidebar({
             <div
                 data-slot="sidebar-gap"
                 className={cn(
-                    "transition-[width] duration-200 ease-linear relative w-(--sidebar-width) bg-transparent",
-                    "group-data-[collapsible=offExamples]:w-0",
+                    "transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative w-(--sidebar-width) bg-transparent",
+                    "group-data-[collapsible=offcanvas]:w-0",
                     "group-data-[side=right]:rotate-180",
                     variant === "floating" || variant === "inset"
                         ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
@@ -217,10 +215,10 @@ function Sidebar({
             <div
                 data-slot="sidebar-container"
                 className={cn(
-                    "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+                    "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:flex",
                     side === "left"
-                        ? "left-0 group-data-[collapsible=offExamples]:left-[calc(var(--sidebar-width)*-1)]"
-                        : "right-0 group-data-[collapsible=offExamples]:right-[calc(var(--sidebar-width)*-1)]",
+                        ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+                        : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
                     variant === "floating" || variant === "inset"
                         ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
                         : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -259,7 +257,7 @@ function SidebarTrigger({
             }}
             {...props}
         >
-            <PanelLeftIcon />
+            <PanelLeftIcon className="rtl:rotate-180" />
             <span className="sr-only">Toggle Sidebar</span>
         </Button>
     )
@@ -276,12 +274,12 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
             onClick={toggleSidebar}
             title="Toggle Sidebar"
             className={cn(
-                "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
+                "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 ltr:-translate-x-1/2 rtl:translate-x-1/2 transition-colors ease-out group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
                 "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
                 "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-                "hover:group-data-[collapsible=offExamples]:bg-sidebar group-data-[collapsible=offExamples]:translate-x-0 group-data-[collapsible=offExamples]:after:left-full",
-                "[[data-side=left][data-collapsible=offExamples]_&]:-right-2",
-                "[[data-side=right][data-collapsible=offExamples]_&]:-left-2",
+                "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
+                "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
+                "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
                 className
             )}
             {...props}
@@ -294,7 +292,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
         <main
             data-slot="sidebar-inset"
             className={cn(
-                "bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 relative flex w-full h-full max-h-full flex-1 flex-col overflow-hidden",
+                "bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 relative flex w-full flex-1 flex-col",
                 className
             )}
             {...props}
@@ -391,7 +389,7 @@ function SidebarGroupLabel({
             data-slot="sidebar-group-label"
             data-sidebar="group-label"
             className={cn(
-                "text-sidebar-foreground/70 ring-sidebar-ring h-8 rounded-md px-2 text-xs font-medium transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 flex shrink-0 items-center outline-hidden [&>svg]:shrink-0",
+                "text-sidebar-foreground/70 ring-sidebar-ring h-8 rounded-md px-2 text-xs font-medium transition-[margin,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 flex shrink-0 items-center outline-hidden [&>svg]:shrink-0",
                 className
             )}
             {...props}
@@ -455,7 +453,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-    "ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground gap-2 rounded-md p-2 text-left text-sm transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:justify-center focus-visible:ring-2 data-active:font-medium peer/menu-button flex w-full items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0",
+    "ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground gap-2 rounded-md p-2 text-left text-sm transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 data-active:font-medium group/menu-button peer/menu-button flex w-full items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0",
     {
         variants: {
             variant: {
@@ -512,15 +510,17 @@ function SidebarMenuButton({
     }
 
     return (
-        <Tooltip>
-            <TooltipTrigger asChild>{button}</TooltipTrigger>
-            <TooltipContent
-                side="right"
-                align="center"
-                hidden={state !== "collapsed" || isMobile}
-                {...tooltip}
-            />
-        </Tooltip>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>{button}</TooltipTrigger>
+                <TooltipContent
+                    side="right"
+                    align="center"
+                    hidden={state !== "collapsed" || isMobile}
+                    {...tooltip}
+                />
+            </Tooltip>
+        </TooltipProvider>
     )
 }
 
@@ -541,7 +541,7 @@ function SidebarMenuAction({
             className={cn(
                 "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer-hover/menu-button:text-sidebar-accent-foreground absolute top-1.5 right-1 aspect-square w-5 rounded-md p-0 peer-data-[size=default]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 focus-visible:ring-2 [&>svg]:size-4 flex items-center justify-center outline-hidden transition-transform group-data-[collapsible=icon]:hidden after:absolute after:-inset-2 md:after:hidden [&>svg]:shrink-0",
                 showOnHover &&
-                "peer-data-active/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-open:opacity-100 md:opacity-0",
+                "peer-data-active/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 aria-expanded:opacity-100 md:opacity-0 transition-opacity duration-150 ease-out",
                 className
             )}
             {...props}
@@ -558,7 +558,7 @@ function SidebarMenuBadge({
             data-slot="sidebar-menu-badge"
             data-sidebar="menu-badge"
             className={cn(
-                "text-sidebar-foreground peer-hover/menu-button:text-sidebar-accent-foreground peer-data-active/menu-button:text-sidebar-accent-foreground pointer-events-none absolute right-1 flex h-5 min-w-5 rounded-md px-1 text-xs font-medium peer-data-[size=default]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 flex items-center justify-center tabular-nums select-none group-data-[collapsible=icon]:hidden",
+                "text-sidebar-foreground peer-hover/menu-button:text-sidebar-accent-foreground peer-data-active/menu-button:text-sidebar-accent-foreground pointer-events-none absolute right-1 h-5 min-w-5 rounded-md px-1 text-xs font-medium peer-data-[size=default]/menu-button:top-1.5 peer-data-[size=lg]/menu-button:top-2.5 peer-data-[size=sm]/menu-button:top-1 flex items-center justify-center tabular-nums select-none group-data-[collapsible=icon]:hidden",
                 className
             )}
             {...props}

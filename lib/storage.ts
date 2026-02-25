@@ -123,15 +123,13 @@ export async function cleanupExpiredSessions(): Promise<number> {
 export async function createConversation(data: {
   title?: string;
   model?: string;
-  solutionType?: string | null;
   userId: string;
 }): Promise<Conversation> {
   return prisma.conversation.create({
     data: {
       userId: data.userId,
       title: data.title || 'New Chat',
-      model: data.model || 'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
-      solutionType: data.solutionType || null,
+      model: data.model || 'claude-sonnet-4-5-20250929',
     },
   });
 }
@@ -150,25 +148,6 @@ export async function getConversation(id: string): Promise<(Conversation & { mes
 export async function getAllConversations(userId: string): Promise<Conversation[]> {
   return prisma.conversation.findMany({
     where: { userId },
-    orderBy: [
-      { isPinned: 'desc' },
-      { updatedAt: 'desc' },
-    ],
-  });
-}
-
-export async function getConversationsBySolution(
-  solutionType: string | null,
-  userId: string
-): Promise<Conversation[]> {
-  // If no solution type, get conversations without a solution type (general chat)
-  // If solution type provided, get conversations for that specific solution
-  const whereClause = solutionType
-    ? { userId, solutionType }
-    : { userId, solutionType: null };
-
-  return prisma.conversation.findMany({
-    where: whereClause,
     orderBy: [
       { isPinned: 'desc' },
       { updatedAt: 'desc' },
@@ -417,6 +396,8 @@ export function toUIMessage(message: Message) {
     return {
       id: message.id,
       role: message.role,
+      content: message.content,
+      createdAt: message.createdAt,
       parts: [{ type: 'text', text: message.content }],
     };
   }
@@ -424,6 +405,11 @@ export function toUIMessage(message: Message) {
   // Process stored parts to ensure correct format for frontend
   const parts = storedParts.map((part) => {
     const partType = part.type as string;
+
+    // Handle step-start parts (preserved from streaming for step interleaving)
+    if (partType === 'step-start') {
+      return { type: 'step-start' };
+    }
 
     // Handle reasoning parts - frontend expects 'text' property
     if (partType === 'reasoning') {
@@ -453,13 +439,15 @@ export function toUIMessage(message: Message) {
       };
     }
 
-    // Return as-is for unknown types
+    // Return as-is for unknown types (file-download, etc.)
     return part;
   });
 
   return {
     id: message.id,
     role: message.role,
+    content: message.content,
+    createdAt: message.createdAt,
     parts,
   };
 }
@@ -478,7 +466,6 @@ export function toConversationResponse(conversation: Conversation & { messages?:
     isPinned: conversation.isPinned,
     isShared: conversation.isShared,
     model: conversation.model,
-    solutionType: conversation.solutionType,
     createdAt: conversation.createdAt.toISOString(),
     updatedAt: conversation.updatedAt.toISOString(),
     lastMessage: lastMessage?.content.slice(0, 100) || null,

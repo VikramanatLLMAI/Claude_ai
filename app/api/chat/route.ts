@@ -1,87 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { streamText, convertToModelMessages, stepCountIs } from 'ai';
-import { bedrock } from '@/lib/bedrock';
-import { createArtifactPrompt, extractArtifacts } from '@/lib/artifacts';
-import { addMessage, createArtifact } from '@/lib/storage';
+import { streamText, convertToModelMessages, stepCountIs, createUIMessageStream, createUIMessageStreamResponse } from 'ai';
+import { anthropic, forwardAnthropicContainerIdFromLastStep } from '@/lib/anthropic';
+import { addMessage } from '@/lib/storage';
 import { loadActiveMcpToolsWithDescriptions } from '@/lib/mcp-client';
-import { webSearchTool } from '@/lib/code-executor';
 import { requireAuth } from '@/lib/auth-middleware';
+import { getAnthropicFilesClient } from '@/lib/anthropic-files';
+import { buildSystemPromptWithTools } from '@/lib/system-prompts';
+import { fitMessagesToContextWindow } from '@/lib/context-window';
+import { validate, ChatRequestSchema, formatValidationErrors } from '@/lib/validation';
 
 export const maxDuration = 300;
 
-// Models that support reasoning/extended thinking
-const REASONING_CAPABLE_MODELS = [
-  'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
-  'global.anthropic.claude-haiku-4-5-20251001-v1:0',
-  'global.anthropic.claude-opus-4-5-20251101-v1:0',
-  'us.anthropic.claude-sonnet-4-20250514-v1:0',
-  'us.anthropic.claude-opus-4-20250514-v1:0',
-  'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+// Models that support adaptive thinking (type: "adaptive" + effort)
+const ADAPTIVE_THINKING_MODELS = [
+  'claude-opus-4-6',
+  'claude-sonnet-4-6',
 ];
 
-function supportsReasoning(modelId: string): boolean {
-  return REASONING_CAPABLE_MODELS.includes(modelId);
-}
+// Models that support manual thinking (type: "enabled" + budgetTokens)
+const MANUAL_THINKING_MODELS = [
+  'claude-sonnet-4-5-20250929',
+  'claude-haiku-4-5-20251001',
+  'claude-opus-4-5-20251101',
+  'claude-sonnet-4-20250514',
+  'claude-opus-4-20250514',
+];
 
-// Base system prompt for business users
-const BASE_SYSTEM_PROMPT = `You are Athena, an AI assistant designed for business users. You help answer questions by fetching real data from connected systems.
-
-## How You Work
-
-1. **Use MCP tools to get real data** - When users ask questions, use the available MCP tools to query their connected systems
-2. **Provide clear insights** - Analyze the data and explain findings in simple, business-friendly language
-3. **Be actionable** - Focus on what the data means and what actions users might take
-
-## Response Guidelines
-
-- Keep it simple - Avoid technical jargon
-- Lead with key findings - Put important information first
-- Use tables and lists - Format data clearly
-- Provide context - Explain what numbers mean
-
-## Visual Dashboards
-
-${createArtifactPrompt()}
-
-**IMPORTANT:** Only create HTML dashboard artifacts when the user explicitly asks for dashboards, charts, graphs, or visualizations. For regular questions, respond with clear text-based analysis.`;
-
-// Build dynamic system prompt with available tools
-function buildSystemPrompt(availableTools: string[], mcpToolDescriptions: { name: string; description: string }[]): string {
-  const toolSections: string[] = [];
-
-  // Web search tool (if enabled)
-  if (availableTools.includes('webSearch')) {
-    toolSections.push('- **webSearch**: Search the web for current information');
-  }
-
-  // MCP tools - dynamically add with descriptions
-  if (mcpToolDescriptions.length > 0) {
-    const mcpSection = mcpToolDescriptions.map(t =>
-      `- **${t.name}**: ${t.description || 'MCP tool'}`
-    ).join('\n');
-    toolSections.push(mcpSection);
-  }
-
-  // If no tools available, return base prompt
-  if (toolSections.length === 0) {
-    return BASE_SYSTEM_PROMPT;
-  }
-
-  return `${BASE_SYSTEM_PROMPT}
-
----
-
-## Available Tools
-
-${toolSections.join('\n')}
-
----
-
-## How to Answer
-
-1. **Fetch data** - Use MCP tools to query connected systems (don't guess)
-2. **Analyze** - Explain findings in simple language
-3. **If asked for visuals** - Create HTML dashboard only when explicitly requested`;
+function getThinkingMode(modelId: string): 'adaptive' | 'manual' | 'none' {
+  if (ADAPTIVE_THINKING_MODELS.includes(modelId)) return 'adaptive';
+  if (MANUAL_THINKING_MODELS.includes(modelId)) return 'manual';
+  return 'none';
 }
 
 export async function POST(req: NextRequest) {
@@ -90,6 +38,15 @@ export async function POST(req: NextRequest) {
   const { user } = auth;
 
   try {
+    // Issue 2: Validate request body with Zod schema
+    const body = await req.json();
+    const validation = validate(ChatRequestSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: formatValidationErrors(validation.errors!) },
+        { status: 400 }
+      );
+    }
     const {
       messages: uiMessages,
       model: requestedModel,
@@ -97,20 +54,22 @@ export async function POST(req: NextRequest) {
       conversationId,
       webSearch = false,
       activeMcpIds = [],
-    } = await req.json();
+    } = validation.data!;
 
     // Use the model ID directly (frontend sends full Bedrock model IDs)
-    const modelId = requestedModel || 'global.anthropic.claude-sonnet-4-5-20250929-v1:0';
+    const modelId = requestedModel || 'claude-sonnet-4-5-20250929';
 
     // Check if reasoning should be enabled for this model
-    const useReasoning = enableReasoning && supportsReasoning(modelId);
+    const thinkingMode = enableReasoning ? getThinkingMode(modelId) : 'none';
 
     // Get the last user message to save to database
     const lastUserMessage = uiMessages[uiMessages.length - 1];
 
     // Save user message to database if we have a conversation
     if (conversationId && lastUserMessage?.role === 'user') {
-      const userContent = lastUserMessage.parts
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parts = lastUserMessage.parts as any[] | undefined;
+      const userContent = parts
         ?.filter((p: { type: string }) => p.type === 'text')
         .map((p: { text?: string }) => p.text || '')
         .join('') || lastUserMessage.content || '';
@@ -128,9 +87,15 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tools: Record<string, any> = {};
 
-    // Add web search tool if enabled
+    // Code execution - always enabled
+    tools.code_execution = anthropic.tools.codeExecution_20250825();
+
+    // Web search + web fetch - controlled by existing webSearch toggle
     if (webSearch) {
-      tools.webSearch = webSearchTool;
+      tools.web_search = anthropic.tools.webSearch_20250305({ maxUses: 5 });
+      tools.web_fetch = anthropic.tools.webFetch_20250910({
+        maxUses: 3,
+      });
     }
 
     // Track MCP tool descriptions for system prompt
@@ -159,7 +124,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Convert UI messages to model messages format
-    const messages = await convertToModelMessages(uiMessages);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages = await convertToModelMessages(uiMessages as any);
 
     // Log available tools
     const toolNames = Object.keys(tools);
@@ -167,46 +133,55 @@ export async function POST(req: NextRequest) {
     console.log(`[Chat] Available tools (${toolNames.length}):`, toolNames);
 
     // Build dynamic system prompt with available tools
-    const systemPrompt = buildSystemPrompt(toolNames, mcpToolDescriptions);
+    const systemPrompt = buildSystemPromptWithTools(toolNames, mcpToolDescriptions);
     console.log(`[Chat] System prompt includes ${mcpToolDescriptions.length} MCP tool descriptions`);
+
+    // Fit messages within the context window (trim tool results + drop old groups)
+    const fittedMessages = fitMessagesToContextWindow(messages, systemPrompt);
 
     // Build streamText configuration
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const streamConfig: any = {
-      model: bedrock(modelId),
+    const streamConfig: Record<string, any> = {
+      model: anthropic(modelId),
       system: systemPrompt,
-      messages,
+      messages: fittedMessages,
       maxTokens: 65536,
-      temperature: 0.7,
+      ...(thinkingMode !== 'none' ? {} : { temperature: 0.7 }),
       // Log tool calls for debugging - this is called after each step (including tool executions)
-      onStepFinish: (event: {
-        stepType: string;
-        toolCalls?: { toolName: string; args: unknown }[];
-        toolResults?: { toolCallId: string; result: unknown }[];
-        text?: string;
-        finishReason?: string;
-      }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onStepFinish: (event: any) => {
         console.log(`[Chat] ========== STEP FINISHED ==========`);
         console.log(`[Chat] Step type: ${event.stepType}`);
         console.log(`[Chat] Finish reason: ${event.finishReason}`);
 
         if (event.toolCalls && event.toolCalls.length > 0) {
-          console.log(`[Chat] Tool calls made:`, event.toolCalls.map(tc => ({
+          console.log(`[Chat] Tool calls made:`, event.toolCalls.map((tc: Record<string, unknown>) => ({
             name: tc.toolName,
-            args: JSON.stringify((tc as Record<string, unknown>).args ?? {}).substring(0, 200)
+            args: JSON.stringify(tc.args ?? {}).substring(0, 200)
           })));
         }
 
         if (event.toolResults && event.toolResults.length > 0) {
           console.log(`[Chat] Tool results received:`);
-          event.toolResults.forEach((tr, i) => {
-            const trResult = (tr as Record<string, unknown>).result;
+          event.toolResults.forEach((tr: Record<string, unknown>, i: number) => {
+            const trResult = tr.result;
             const resultStr = trResult === undefined || trResult === null
               ? '(no result)'
               : typeof trResult === 'string'
                 ? trResult.substring(0, 300)
                 : JSON.stringify(trResult).substring(0, 300);
-            console.log(`[Chat]   Result ${i + 1}:`, resultStr);
+            console.log(`[Chat]   Result ${i + 1} (${tr.toolName || 'unknown'}):`, resultStr);
+            // Log file_ids from code execution results
+            if (trResult && typeof trResult === 'object') {
+              const resultObj = trResult as Record<string, unknown>;
+              const content = resultObj.content as Array<Record<string, unknown>> | undefined;
+              if (content && Array.isArray(content) && content.length > 0) {
+                const fileIds = content.filter(c => c.file_id).map(c => c.file_id);
+                if (fileIds.length > 0) {
+                  console.log(`[Chat]   File IDs in result:`, fileIds);
+                }
+              }
+            }
           });
         }
 
@@ -221,102 +196,229 @@ export async function POST(req: NextRequest) {
     if (hasTools) {
       streamConfig.tools = tools;
       // Enable multi-step tool calls - model continues after tool results until done
-      streamConfig.stopWhen = stepCountIs(100);
-      // Set toolChoice to auto so model can decide when to use tools
-      streamConfig.toolChoice = 'auto';
+      streamConfig.stopWhen = stepCountIs(20);
       console.log(`[Chat] Tools attached to model config:`, Object.keys(tools));
     }
 
-    // Add reasoning config if supported
-    // NOTE: Reasoning and tool use can conflict on Bedrock - disable reasoning when tools are active
-    if (useReasoning && !hasTools) {
-      streamConfig.providerOptions = {
-        bedrock: {
-          reasoningConfig: {
-            type: 'enabled',
-            budgetTokens: 8000,
-          },
-        },
-      };
-      console.log(`[Chat] Reasoning mode enabled (no tools active)`);
-    } else if (useReasoning && hasTools) {
-      console.log(`[Chat] Reasoning mode disabled - tools are active (Bedrock compatibility)`);
+    // Build anthropic provider options
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anthropicOptions: Record<string, any> = {};
+
+    if (thinkingMode === 'adaptive') {
+      anthropicOptions.thinking = { type: 'adaptive' };
+      // For Opus 4.6 use 'max', for Sonnet 4.6 use 'high' (max is Opus-only)
+      const effort = modelId === 'claude-opus-4-6' ? 'max' : 'high';
+      anthropicOptions.effort = effort;
+      console.log(`[Chat] Adaptive thinking enabled (effort: ${effort})`);
+    } else if (thinkingMode === 'manual') {
+      anthropicOptions.thinking = { type: 'enabled', budgetTokens: 16000 };
+      console.log(`[Chat] Manual thinking enabled (budget: 16000)`);
     }
 
-    // Create the streaming response
-    const result = streamText({
-      ...streamConfig,
-      onFinish: async ({ text, reasoning, steps }) => {
-        // Save assistant message to database
-        if (conversationId) {
-          // Build parts array with all content types from ALL steps
-          // Order: reasoning -> text -> tool calls (per step, interleaved)
-          const parts: Array<Record<string, unknown>> = [];
+    // Agent skills for code execution (always enabled)
+    anthropicOptions.container = {
+      skills: [
+        { type: 'anthropic', skillId: 'pptx', version: 'latest' },
+        { type: 'anthropic', skillId: 'docx', version: 'latest' },
+        { type: 'anthropic', skillId: 'pdf', version: 'latest' },
+        { type: 'anthropic', skillId: 'xlsx', version: 'latest' },
+        { type: 'custom', skillId: 'skill_01JcCJjnPE6Pah8SceXsBy6P' },
+      ],
+    };
 
-          // Process each step to capture text and tool calls in order
-          if (steps && steps.length > 0) {
-            for (const step of steps) {
-              // Add reasoning from this step if present
-              if (step.reasoning) {
-                parts.push({ type: 'reasoning', text: step.reasoning });
-              }
+    streamConfig.providerOptions = { anthropic: anthropicOptions };
 
-              // Add text from this step BEFORE tool calls (if any)
-              // This is the text the model generated before making tool calls
-              if (step.text && step.toolCalls && step.toolCalls.length > 0) {
-                // Step has both text and tool calls - add text first
-                if (step.text.trim()) {
-                  parts.push({ type: 'text', text: step.text });
-                }
-              }
+    // Propagate container ID between steps for code execution continuity
+    streamConfig.prepareStep = forwardAnthropicContainerIdFromLastStep;
 
-              // Add tool calls from this step
-              if (step.toolCalls && step.toolCalls.length > 0) {
-                for (const toolCall of step.toolCalls) {
-                  // Match result by toolCallId (not index) for reliability
-                  const toolResult = step.toolResults?.find(
-                    (r: Record<string, unknown>) => r.toolCallId === toolCall.toolCallId
-                  );
-                  const toolInput = (toolCall as Record<string, unknown>).input ?? (toolCall as Record<string, unknown>).args ?? {};
-                  const toolOutput = toolResult
-                    ? (toolResult as Record<string, unknown>).output
-                    : undefined;
+    // Create the streaming response using createUIMessageStream
+    // This keeps the HTTP response open so we can merge the AI stream,
+    // then write file-download data chunks after completion - all in one response.
+    // DB persistence uses onFinish which receives responseMessage.parts — the exact
+    // parts the client saw (including step-start, interleaved text/tool parts).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = streamText(streamConfig as any);
 
-                  console.log(`[Chat] Storing tool part: ${toolCall.toolName}, input:`, JSON.stringify(toolInput));
+    // Issue 18: Ensure backend completes even if client disconnects
+    result.consumeStream();
 
-                  parts.push({
-                    type: `tool-${toolCall.toolName}`,
-                    toolCallId: toolCall.toolCallId,
-                    toolName: toolCall.toolName,
-                    input: toolInput,
-                    state: toolResult ? 'output-available' : 'input-available',
-                    output: toolOutput,
+    // Shared state between execute and onFinish
+    const fileDownloadParts: Array<Record<string, unknown>> = [];
+
+    const stream = createUIMessageStream({
+      execute: async ({ writer }) => {
+        // 1. Merge AI stream (tokens flow to client in real-time)
+        writer.merge(result.toUIMessageStream({ sendReasoning: true, sendSources: true }));
+
+        // 2. Wait for completion
+        const [, , steps] = await Promise.all([
+          result.text, result.reasoning, result.steps,
+        ]);
+
+        // 3. Extract file_ids from code_execution outputs and write to stream
+        if (conversationId && steps && steps.length > 0) {
+          const fileDownloads: Array<{ fileId: string; filename: string; mimeType: string; sizeBytes: number }> = [];
+          const seenFileIds = new Set<string>();
+
+          const extractFileIds = (output: unknown) => {
+            if (!output || typeof output !== 'object') return;
+            const obj = output as Record<string, unknown>;
+
+            if (typeof obj.file_id === 'string' && obj.file_id.startsWith('file_') && !seenFileIds.has(obj.file_id)) {
+              seenFileIds.add(obj.file_id);
+              fileDownloads.push({
+                fileId: obj.file_id,
+                filename: (obj.file_name as string) || (obj.filename as string) || 'download',
+                mimeType: (obj.file_type as string) || (obj.mime_type as string) || 'application/octet-stream',
+                sizeBytes: (obj.file_size as number) || (obj.size_bytes as number) || 0,
+              });
+            }
+
+            const content = obj.content as Array<Record<string, unknown>> | undefined;
+            if (Array.isArray(content)) {
+              for (const block of content) {
+                if (typeof block.file_id === 'string' && block.file_id.startsWith('file_') && !seenFileIds.has(block.file_id)) {
+                  seenFileIds.add(block.file_id);
+                  fileDownloads.push({
+                    fileId: block.file_id,
+                    filename: (block.file_name as string) || (block.filename as string) || 'download',
+                    mimeType: (block.file_type as string) || (block.mime_type as string) || 'application/octet-stream',
+                    sizeBytes: (block.file_size as number) || (block.size_bytes as number) || 0,
                   });
                 }
-              } else if (step.text && step.text.trim()) {
-                // Step has only text (no tool calls) - this is the final response text
-                parts.push({ type: 'text', text: step.text });
               }
             }
-          } else {
-            // No steps - just use the final text and reasoning
-            if (reasoning) {
-              parts.push({ type: 'reasoning', text: reasoning });
-            }
-            if (text) {
-              parts.push({ type: 'text', text });
+          };
+
+          // Scan tool results for file IDs
+          for (const step of steps) {
+            if (step.toolResults) {
+              for (const tr of step.toolResults) {
+                const trAny = tr as Record<string, unknown>;
+                extractFileIds(trAny.result);
+                extractFileIds(trAny.output);
+              }
             }
           }
 
+          // Deduplicate by filename — code execution often produces intermediate
+          // and final versions of the same file with different file_ids.
+          // Keep the last file_id per filename (the final version).
+          const fileByName = new Map<string, typeof fileDownloads[0]>();
+          for (const file of fileDownloads) {
+            fileByName.set(file.filename, file);
+          }
+          const uniqueFiles = Array.from(fileByName.values());
+
+          // Enrich with metadata from Files API and write data chunks to stream
+          for (const file of uniqueFiles) {
+            try {
+              const client = getAnthropicFilesClient();
+              const metadata = await client.beta.files.retrieveMetadata(file.fileId);
+              if (metadata.filename) file.filename = metadata.filename;
+              if (metadata.mime_type) file.mimeType = metadata.mime_type;
+              if (metadata.size_bytes) file.sizeBytes = metadata.size_bytes;
+            } catch {
+              // Use what we have from the output
+            }
+
+            console.log(`[Chat] File download: ${file.fileId} (${file.filename})`);
+
+            // Write file-download data chunk through the SSE stream
+            writer.write({
+              type: 'data-fileDownload',
+              data: {
+                fileId: file.fileId,
+                filename: file.filename,
+                mimeType: file.mimeType,
+                sizeBytes: file.sizeBytes,
+              },
+            });
+
+            // Save for DB persistence in onFinish
+            fileDownloadParts.push({
+              type: 'file-download',
+              fileId: file.fileId,
+              filename: file.filename,
+              mimeType: file.mimeType,
+              sizeBytes: file.sizeBytes,
+            });
+          }
+        }
+      },
+      onFinish: async ({ responseMessage }) => {
+        // Persist the message to DB using the exact parts the client received.
+        // responseMessage.parts has step-start, text, tool-*, reasoning parts
+        // in the correct interleaved order — matching what the streaming view showed.
+        if (!conversationId) return;
+
+        try {
+          // Convert the streaming parts to a serializable format for DB storage
+          const streamParts = Array.isArray(responseMessage.parts) ? responseMessage.parts : [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const dbParts: Array<Record<string, unknown>> = streamParts.map((part: any) => {
+            const partType = part.type as string;
+
+            if (partType === 'text') {
+              return { type: 'text', text: part.text || '' };
+            }
+
+            if (partType === 'reasoning') {
+              return { type: 'reasoning', text: part.text || '' };
+            }
+
+            if (partType === 'step-start') {
+              return { type: 'step-start' };
+            }
+
+            if (partType?.startsWith('tool-')) {
+              return {
+                type: partType,
+                toolCallId: part.toolCallId,
+                toolName: part.toolName,
+                input: part.input ?? part.args ?? {},
+                output: part.output ?? part.result ?? undefined,
+                state: part.state || 'output-available',
+              };
+            }
+
+            if (partType === 'dynamic-tool') {
+              return {
+                type: `tool-${part.toolName || 'unknown'}`,
+                toolCallId: part.toolCallId,
+                toolName: part.toolName,
+                input: part.input ?? part.args ?? {},
+                output: part.output ?? part.result ?? undefined,
+                state: part.state || 'output-available',
+              };
+            }
+
+            if (partType?.startsWith('data-')) {
+              // data-fileDownload parts are handled separately
+              return null;
+            }
+
+            // Pass through other parts (source-url, source-document, file, etc.)
+            return { ...part };
+          }).filter(Boolean) as Array<Record<string, unknown>>;
+
+          // Append file-download parts at the end
+          dbParts.push(...fileDownloadParts);
+
+          // Extract plain text for the content field
+          const text = await result.text;
+          const reasoning = await result.reasoning;
+          const steps = await result.steps;
+
           // Ensure we have at least one part
-          if (parts.length === 0 && text) {
-            parts.push({ type: 'text', text });
+          if (dbParts.length === 0 && text) {
+            dbParts.push({ type: 'text', text });
           }
 
           const message = await addMessage(conversationId, {
             role: 'assistant',
             content: text || '',
-            parts: parts.length > 0 ? parts : [{ type: 'text', text: text || '' }],
+            parts: dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }],
             metadata: {
               reasoning: reasoning || null,
               stepsCount: steps?.length || 0,
@@ -324,28 +426,27 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          // Detect and save artifacts
-          if (message) {
-            const artifacts = extractArtifacts(text);
-            for (const artifact of artifacts) {
-              await createArtifact({
-                conversationId,
-                messageId: message.id,
-                userId: user.id,
-                type: artifact.type || 'html',
-                title: artifact.title,
-                content: artifact.content,
-              });
-            }
-          }
+        } catch (error) {
+          console.error('[Chat] Error persisting message:', error);
         }
+      },
+      onError: (error) => {
+        console.error('[Stream] Error:', error);
+        if (error == null) return 'An unknown error occurred.';
+        if (typeof error === 'string') return error;
+        if (error instanceof Error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes('rate_limit') || msg.includes('rate limit')) return 'Rate limit exceeded. Please wait a moment and try again.';
+          if (msg.includes('overloaded') || msg.includes('529')) return 'The model is currently overloaded. Please try again in a few moments.';
+          if (msg.includes('invalid_api_key') || msg.includes('authentication')) return 'API authentication error. Please check your API key in settings.';
+          if (msg.includes('credit') || msg.includes('billing')) return 'Billing issue detected. Please check your Anthropic account.';
+          return error.message;
+        }
+        return JSON.stringify(error);
       },
     });
 
-    // Return UI message stream response for useChat compatibility
-    return result.toUIMessageStreamResponse({
-      sendReasoning: true,
-    });
+    return createUIMessageStreamResponse({ stream });
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(
@@ -365,25 +466,43 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   const models = [
     {
-      id: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
+      id: 'claude-opus-4-6',
+      name: 'Claude 4.6 Opus',
+      description: 'Most powerful model with adaptive thinking',
+      supportsReasoning: true,
+    },
+    {
+      id: 'claude-sonnet-4-6',
+      name: 'Claude 4.6 Sonnet',
+      description: 'Fast and intelligent with adaptive thinking',
+      supportsReasoning: true,
+    },
+    {
+      id: 'claude-sonnet-4-5-20250929',
       name: 'Claude 4.5 Sonnet',
       description: 'Most intelligent, best for complex tasks with extended thinking',
       supportsReasoning: true,
     },
     {
-      id: 'global.anthropic.claude-haiku-4-5-20251001-v1:0',
+      id: 'claude-haiku-4-5-20251001',
       name: 'Claude 4.5 Haiku',
       description: 'Fast and efficient with thinking capabilities',
       supportsReasoning: true,
     },
     {
-      id: 'global.anthropic.claude-opus-4-5-20251101-v1:0',
+      id: 'claude-opus-4-5-20251101',
       name: 'Claude 4.5 Opus',
       description: 'Most capable model for complex reasoning and analysis',
       supportsReasoning: true,
     },
     {
-      id: 'us.anthropic.claude-sonnet-4-20250514-v1:0',
+      id: 'claude-opus-4-20250514',
+      name: 'Claude 4 Opus',
+      description: 'Advanced reasoning and deep analysis',
+      supportsReasoning: true,
+    },
+    {
+      id: 'claude-sonnet-4-20250514',
       name: 'Claude 4 Sonnet',
       description: 'Balanced performance with reasoning support',
       supportsReasoning: true,
@@ -392,6 +511,6 @@ export async function GET() {
 
   return Response.json({
     models,
-    defaultModel: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0'
+    defaultModel: 'claude-sonnet-4-5-20250929'
   });
 }

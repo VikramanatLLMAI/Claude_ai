@@ -55,13 +55,13 @@ export function ToolCard({
   const getStateIcon = () => {
     switch (state) {
       case "partial-call":
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+        return <Loader2 className="h-4 w-4 animate-spin text-status-info" />
       case "call":
-        return <Database className="h-4 w-4 text-orange-500" />
+        return <Database className="h-4 w-4 text-status-warning" />
       case "result":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-4 w-4 text-status-success" />
       default:
-        return <Wrench className="h-4 w-4 text-gray-500" />
+        return <Wrench className="h-4 w-4 text-muted-foreground" />
     }
   }
 
@@ -70,19 +70,19 @@ export function ToolCard({
     switch (state) {
       case "partial-call":
         return (
-          <span className={cn(baseClasses, "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400")}>
+          <span className={cn(baseClasses, "bg-status-info-muted text-status-info-foreground")}>
             Executing...
           </span>
         )
       case "call":
         return (
-          <span className={cn(baseClasses, "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400")}>
+          <span className={cn(baseClasses, "bg-status-warning-muted text-status-warning-foreground")}>
             Waiting
           </span>
         )
       case "result":
         return (
-          <span className={cn(baseClasses, "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400")}>
+          <span className={cn(baseClasses, "bg-status-success-muted text-status-success-foreground")}>
             Complete
           </span>
         )
@@ -138,8 +138,8 @@ export function ToolCard({
             </div>
             <ChevronDown
               className={cn(
-                "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                isOpen && "rotate-180"
+                "h-4 w-4 text-muted-foreground transition-transform duration-200 ease-out",
+                isOpen ? "rotate-180" : "rotate-0"
               )}
             />
           </Button>
@@ -178,7 +178,7 @@ export function ToolCard({
                   className={cn(
                     "max-h-60 overflow-auto rounded border p-2 font-mono text-sm",
                     isError
-                      ? "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+                      ? "border-status-error/20 bg-status-error-muted text-status-error-foreground"
                       : "border-border bg-background text-foreground"
                   )}
                 >

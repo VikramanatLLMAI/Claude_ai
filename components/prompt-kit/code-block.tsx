@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { normalizeLanguage } from "@/lib/language-aliases"
+import { useDarkMode } from "@/hooks/use-dark-mode"
 import { Button } from "@/components/ui/button"
 import { Check, Copy } from "lucide-react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
@@ -28,41 +30,6 @@ export type CodeBlockCodeProps = {
   language?: string
 } & React.HTMLAttributes<HTMLDivElement>
 
-// Language mapping for common aliases
-const LANGUAGE_ALIASES: Record<string, string> = {
-  js: "javascript",
-  ts: "typescript",
-  tsx: "tsx",
-  jsx: "jsx",
-  py: "python",
-  rb: "ruby",
-  sh: "bash",
-  shell: "bash",
-  yml: "yaml",
-  md: "markdown",
-  json: "json",
-  html: "markup",
-  xml: "markup",
-  css: "css",
-  scss: "scss",
-  sql: "sql",
-  go: "go",
-  rust: "rust",
-  c: "c",
-  cpp: "cpp",
-  java: "java",
-  kotlin: "kotlin",
-  swift: "swift",
-  php: "php",
-  plaintext: "text",
-  text: "text",
-}
-
-function normalizeLanguage(language: string): string {
-  const lower = language.toLowerCase()
-  return LANGUAGE_ALIASES[lower] || lower
-}
-
 function CodeBlockCode({
   code,
   language = "plaintext",
@@ -70,23 +37,7 @@ function CodeBlockCode({
   ...props
 }: CodeBlockCodeProps) {
   const [copied, setCopied] = React.useState(false)
-  const [isDarkMode, setIsDarkMode] = React.useState(false)
-
-  // Detect dark mode
-  React.useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"))
-    }
-    checkDarkMode()
-
-    // Watch for theme changes
-    const observer = new MutationObserver(checkDarkMode)
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    })
-    return () => observer.disconnect()
-  }, [])
+  const isDarkMode = useDarkMode()
 
   const handleCopy = React.useCallback(async () => {
     try {
@@ -129,7 +80,7 @@ function CodeBlockCode({
           size="sm"
           aria-label={copied ? "Copied" : "Copy code"}
           onClick={handleCopy}
-          className="h-7 px-2 text-xs"
+          className={cn("h-7 px-2 text-xs", copied && "animate-copy-success")}
         >
           {copied ? (
             <>
@@ -155,9 +106,12 @@ function CodeBlockCode({
           lineNumberStyle={{
             minWidth: "2.5em",
             paddingRight: "1em",
-            color: isDarkMode ? "#636d83" : "#9ca3af",
+            color: "var(--code-line-number)",
             userSelect: "none",
+            background: "transparent",
           }}
+          codeTagProps={{ style: { background: "transparent" } }}
+          lineProps={{ style: { background: "transparent" } }}
           wrapLines
           wrapLongLines={false}
         >

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { MotionConfig } from "motion/react"
 import { ErrorBoundary } from "./error-boundary"
 
 interface ProvidersProps {
@@ -14,7 +15,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   // Initialize theme from localStorage on mount
   React.useEffect(() => {
-    const savedTheme = localStorage.getItem("athena_theme")
+    const savedTheme = localStorage.getItem("llmatscale_theme")
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark")
     } else if (savedTheme === "light") {
@@ -27,8 +28,16 @@ export function Providers({ children }: ProvidersProps) {
       }
     }
 
+    // Apply saved color theme
+    const savedColorTheme = localStorage.getItem("llmatscale_color_theme")
+    if (savedColorTheme && savedColorTheme !== "claude") {
+      document.documentElement.setAttribute("data-theme", savedColorTheme)
+    } else {
+      document.documentElement.removeAttribute("data-theme")
+    }
+
     // Apply saved font size
-    const savedFontSize = localStorage.getItem("athena_font_size")
+    const savedFontSize = localStorage.getItem("llmatscale_font_size")
     if (savedFontSize) {
       document.documentElement.style.setProperty("--base-font-size", `${savedFontSize}px`)
     }
@@ -39,7 +48,7 @@ export function Providers({ children }: ProvidersProps) {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
 
     const handleChange = (e: MediaQueryListEvent) => {
-      const savedTheme = localStorage.getItem("athena_theme")
+      const savedTheme = localStorage.getItem("llmatscale_theme")
       if (!savedTheme || savedTheme === "system") {
         if (e.matches) {
           document.documentElement.classList.add("dark")
@@ -55,18 +64,20 @@ export function Providers({ children }: ProvidersProps) {
 
   // SidebarProvider in FullChatApp already has h-svh - no extra wrapper needed
   return (
-    <ErrorBoundary
-      onError={(error, errorInfo) => {
-        // Log to console in development
-        console.error("Application error:", error)
-        console.error("Component stack:", errorInfo.componentStack)
+    <MotionConfig reducedMotion="user">
+      <ErrorBoundary
+        onError={(error, errorInfo) => {
+          // Log to console in development
+          console.error("Application error:", error)
+          console.error("Component stack:", errorInfo.componentStack)
 
-        // In production, you might want to send this to an error tracking service
-        // Example: Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } })
-      }}
-    >
-      {children}
-    </ErrorBoundary>
+          // In production, you might want to send this to an error tracking service
+          // Example: Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } })
+        }}
+      >
+        {children}
+      </ErrorBoundary>
+    </MotionConfig>
   )
 }
 

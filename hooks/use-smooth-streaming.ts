@@ -35,6 +35,13 @@ export function useSmoothStreaming(
     maxCatchUpChars = 20,
   } = options
 
+  // Respect reduced-motion preference: skip character-by-character reveal
+  const prefersReducedMotion = useMemo(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false,
+  [])
+
   const [displayedText, setDisplayedText] = useState("")
   const displayedLengthRef = useRef(0)
   const animationFrameRef = useRef<number | null>(null)
@@ -63,8 +70,9 @@ export function useSmoothStreaming(
       if (adaptiveSpeed) {
         const behind = targetLength - currentLength
         // Speed up proportionally when behind, but cap at maxCatchUpChars
+        // More aggressive catch-up: use behind/5 for faster convergence
         charsToAdd = Math.min(
-          Math.max(charsPerTick, Math.ceil(behind / 8)),
+          Math.max(charsPerTick, Math.ceil(behind / 5)),
           maxCatchUpChars
         )
       }
@@ -78,13 +86,24 @@ export function useSmoothStreaming(
       // Streaming done and we've caught up
       completedRef.current = true
       onComplete?.()
-    } else if (isStreaming) {
-      // Keep animation loop running while streaming
-      animationFrameRef.current = requestAnimationFrame(animate)
+      // Don't schedule another frame -- we're done
     }
+    // When caught up but still streaming, let the loop stop.
+    // The useEffect watching targetText will restart it when new content arrives.
   }, [charsPerTick, tickInterval, isStreaming, onComplete, adaptiveSpeed, maxCatchUpChars])
 
   useEffect(() => {
+    // If user prefers reduced motion, skip animation entirely
+    if (prefersReducedMotion) {
+      displayedLengthRef.current = targetText.length
+      setDisplayedText(targetText)
+      if (!isStreaming && !completedRef.current) {
+        completedRef.current = true
+        onComplete?.()
+      }
+      return
+    }
+
     // Reset completion state when text changes
     if (targetText.length > 0) {
       completedRef.current = false
@@ -98,21 +117,21 @@ export function useSmoothStreaming(
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [animate, targetText])
+  }, [animate, targetText, prefersReducedMotion, isStreaming, onComplete])
 
   // When streaming stops, smoothly catch up to the end
   useEffect(() => {
     if (!isStreaming && displayedLengthRef.current < targetText.length) {
-      // Smooth catch-up with a slight delay for visual effect
-      const timeout = setTimeout(() => {
+      // Use rAF for smoother catch-up instead of fixed delay
+      const raf = requestAnimationFrame(() => {
         displayedLengthRef.current = targetText.length
         setDisplayedText(targetText)
         if (!completedRef.current) {
           completedRef.current = true
           onComplete?.()
         }
-      }, 200)
-      return () => clearTimeout(timeout)
+      })
+      return () => cancelAnimationFrame(raf)
     }
   }, [isStreaming, targetText, onComplete])
 
@@ -133,28 +152,13 @@ export function useSmoothStreaming(
 }
 
 /**
- * Typing cursor effect - blinks when typing
+ * Typing cursor effect - visibility driven by CSS .animate-smooth-blink
+ * No JS interval needed; the CSS animation handles the blink.
  */
-export function useTypingCursor(isTyping: boolean, blinkSpeed: number = 530) {
-  const [showCursor, setShowCursor] = useState(true)
-
-  useEffect(() => {
-    if (!isTyping) {
-      setShowCursor(false)
-      return
-    }
-
-    // Show cursor immediately when typing starts
-    setShowCursor(true)
-
-    const interval = setInterval(() => {
-      setShowCursor((prev) => !prev)
-    }, blinkSpeed)
-
-    return () => clearInterval(interval)
-  }, [isTyping, blinkSpeed])
-
-  return showCursor && isTyping ? "|" : ""
+export function useTypingCursor(isTyping: boolean) {
+  // Cursor visibility is handled by CSS .animate-smooth-blink
+  // No need for a JS setInterval that causes React re-renders every 530ms
+  return isTyping ? "|" : ""
 }
 
 /**
@@ -274,16 +278,25 @@ export function useAutoScroll(
     const container = containerRef.current
     if (!container) return
 
-    const scrollToBottom = () => {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: "smooth",
-      })
+    let rafId: number
+    let lastScrollTime = 0
+
+    const scrollToBottom = (timestamp: number) => {
+      // Throttle to ~15fps for scroll (every 66ms) - smooth enough, less CPU
+      if (timestamp - lastScrollTime > 66) {
+        lastScrollTime = timestamp
+        if (!userScrolledUpRef.current) {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: "smooth",
+          })
+        }
+      }
+      rafId = requestAnimationFrame(scrollToBottom)
     }
 
-    // Throttle scroll updates
-    const interval = setInterval(scrollToBottom, 100)
-    return () => clearInterval(interval)
+    rafId = requestAnimationFrame(scrollToBottom)
+    return () => cancelAnimationFrame(rafId)
   }, [containerRef, isStreaming])
 
   return {

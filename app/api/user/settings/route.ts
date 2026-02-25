@@ -1,5 +1,5 @@
 import { getSessionByToken, updateUser } from '@/lib/storage';
-import { encrypt, decrypt } from '@/lib/encryption';
+import { encrypt } from '@/lib/encryption';
 
 // Helper to get user from request
 async function getUserFromRequest(req: Request) {
@@ -33,8 +33,7 @@ export async function GET(req: Request) {
     return Response.json({
       name: user.name,
       avatarUrl: user.avatarUrl,
-      awsRegion: user.awsRegion,
-      hasAwsCredentials: !!(user.awsAccessKeyEncrypted && user.awsSecretKeyEncrypted),
+      hasAnthropicApiKey: !!user.anthropicApiKeyEncrypted,
       preferences: user.preferences,
     });
   } catch (error) {
@@ -58,22 +57,18 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { name, avatarUrl, awsAccessKey, awsSecretKey, awsRegion, preferences } = body;
+    const { name, avatarUrl, anthropicApiKey, preferences } = body;
 
     // Build update object
     const updates: Record<string, unknown> = {};
 
     if (name !== undefined) updates.name = name;
     if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
-    if (awsRegion !== undefined) updates.awsRegion = awsRegion;
     if (preferences !== undefined) updates.preferences = preferences;
 
-    // Encrypt AWS credentials if provided
-    if (awsAccessKey !== undefined) {
-      updates.awsAccessKeyEncrypted = awsAccessKey ? encrypt(awsAccessKey) : null;
-    }
-    if (awsSecretKey !== undefined) {
-      updates.awsSecretKeyEncrypted = awsSecretKey ? encrypt(awsSecretKey) : null;
+    // Encrypt Anthropic API key if provided
+    if (anthropicApiKey !== undefined) {
+      updates.anthropicApiKeyEncrypted = anthropicApiKey ? encrypt(anthropicApiKey) : null;
     }
 
     // Update user
@@ -89,8 +84,7 @@ export async function PATCH(req: Request) {
     return Response.json({
       name: updatedUser.name,
       avatarUrl: updatedUser.avatarUrl,
-      awsRegion: updatedUser.awsRegion,
-      hasAwsCredentials: !!(updatedUser.awsAccessKeyEncrypted && updatedUser.awsSecretKeyEncrypted),
+      hasAnthropicApiKey: !!updatedUser.anthropicApiKeyEncrypted,
       preferences: updatedUser.preferences,
     });
   } catch (error) {

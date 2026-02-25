@@ -38,7 +38,7 @@ export async function GET(req: Request) {
         name: session.user.name,
         avatarUrl: session.user.avatarUrl,
         preferences: session.user.preferences,
-        awsRegion: session.user.awsRegion,
+        hasAnthropicApiKey: !!session.user.anthropicApiKeyEncrypted,
         emailVerified: session.user.emailVerified,
         createdAt: session.user.createdAt.toISOString(),
       },

@@ -1,4 +1,4 @@
-# Frontend Documentation - Athena MCP
+# Frontend Documentation - LLMatscale.ai
 
 ## Quick Reference
 
@@ -8,7 +8,7 @@
 | **Routing** | Next.js 16 App Router |
 | **Styling** | TailwindCSS v4 + CSS Variables |
 | **Components** | Radix UI + shadcn patterns |
-| **AI Integration** | Vercel AI SDK v6.0.62 (`useChat` hook) |
+| **AI Integration** | Vercel AI SDK v6.0.97 (`useChat` hook) |
 | **Icons** | Lucide React v0.473.0 |
 | **Animations** | Framer Motion (`motion/react`) |
 
@@ -19,7 +19,9 @@ components/
 ├── full-chat-app.tsx           # Main chat application (86KB)
 ├── login-page.tsx              # Authentication UI
 ├── error-boundary.tsx          # Error handling wrapper
-├── prompt-kit/                 # 17 chat-specific components
+├── sandpack-preview.tsx        # Live React code preview via Sandpack
+├── settings-modal.tsx          # Settings modal component (42.7KB)
+├── prompt-kit/                 # 15 chat-specific components
 │   ├── chat-container.tsx     # Layout wrapper with scroll
 │   ├── message.tsx            # Message display + actions
 │   ├── prompt-input.tsx       # Auto-resizing textarea
@@ -32,21 +34,24 @@ components/
 │   ├── reasoning.tsx          # Collapsible thinking blocks
 │   ├── streaming-text.tsx     # Real-time text animation
 │   ├── feedback-bar.tsx       # Thumbs up/down
-│   ├── prompt-suggestion.tsx  # Suggested prompts
 │   ├── system-message.tsx     # System notifications
-│   ├── source.tsx             # Citation display
 │   ├── text-shimmer.tsx       # Loading effect
-│   └── welcome-state.tsx      # Initial state UI
-└── ui/                         # 16 Radix UI wrappers
+│   └── file-card.tsx          # File upload card display
+├── viewers/                    # Document viewer components
+│   ├── pdf-viewer.tsx         # PDF document preview
+│   ├── docx-viewer.tsx        # Word document preview (uses mammoth)
+│   ├── xlsx-viewer.tsx        # Excel spreadsheet preview (uses xlsx)
+│   └── pptx-viewer.tsx        # PowerPoint presentation preview
+└── ui/                         # 15 Radix UI wrappers
     ├── button.tsx             # Variants: default, destructive, outline, ghost, link
     ├── badge.tsx              # Status indicators
     ├── card.tsx               # Card containers
     ├── input.tsx              # Text input
+    ├── claude-style-chat-input.tsx # Custom Claude-style chat input (39.7KB)
     ├── dropdown-menu.tsx      # Menus with items/separators
     ├── dialog.tsx             # Modal dialogs
     ├── sheet.tsx              # Slide-out panels
     ├── sidebar.tsx            # Complex collapsible sidebar (24KB)
-    ├── tabs.tsx               # Tab interface
     ├── switch.tsx             # Toggle switch
     ├── collapsible.tsx        # Expandable sections
     ├── label.tsx              # Form labels
@@ -58,7 +63,8 @@ components/
 hooks/
 ├── use-keyboard-shortcuts.tsx  # Chat shortcuts (Cmd+K, Cmd+Enter)
 ├── use-mobile.tsx              # Mobile viewport detection (<768px)
-└── use-smooth-streaming.ts     # Smooth text streaming animation
+├── use-smooth-streaming.ts     # Smooth text streaming animation
+└── use-file-content.ts         # File content caching and fetching hook
 ```
 
 ## Core Components
@@ -71,26 +77,19 @@ The main chat application component (86KB). Contains two primary sections:
 - New chat button
 - Pinned conversations section
 - Recent conversations list (sorted by updatedAt)
-- Solution type badges on conversations
 - Conversation actions: Pin, Share, Delete
 - User account dropdown (logout, settings)
 - Collapsible mode (icon-only on mobile)
 
 #### ChatContent
-- Model selection dropdown (4 Claude models)
-- Solution type indicator
+- Model selection dropdown (7 Claude models)
 - Web search toggle
-- Voice input button (UI ready)
+- File upload support
+- Document preview (PDF, DOCX, XLSX, PPTX)
+- Settings modal (replaces settings page)
 - Message display with streaming
 - Auto-scrolling during generation
 - Empty state with welcome message
-
-**Key Props:**
-```typescript
-interface FullChatAppProps {
-  initialSolution?: string | null  // From URL param ?solution=
-}
-```
 
 **State Management:**
 ```typescript
@@ -98,12 +97,11 @@ interface FullChatAppProps {
 const [conversations, setConversations] = useState<Conversation[]>([])
 const [selectedId, setSelectedId] = useState<string | null>(null)
 const [selectedModel, setSelectedModel] = useState<ClaudeModelId>(defaultModel)
-const [solutionType, setSolutionType] = useState<string | null>(null)
 const [webSearchEnabled, setWebSearchEnabled] = useState(false)
 
 // useChat hook from Vercel AI SDK
 const { messages, input, handleSubmit, isLoading, stop, setInput, setMessages } = useChat({
-  api: `/api/chat/${solutionType || ''}`,
+  api: `/api/chat`,
   body: { model: selectedModel, webSearch: webSearchEnabled, conversationId },
   onFinish: () => scrollToBottom()
 })
@@ -113,9 +111,9 @@ const { messages, input, handleSubmit, isLoading, stop, setInput, setMessages } 
 
 Authentication UI with sign-in/sign-up modes:
 - Email/password validation with Zod
-- Session stored in localStorage (`athena_auth_token`)
+- Session stored in localStorage (`llmatscale_auth_token`)
 - 30-day session expiry validation
-- Redirects to `/solutions` on success
+- Redirects to `/chat` on success
 
 ### Prompt Kit Components
 
@@ -198,6 +196,12 @@ const displayText = useSmoothStreaming(streamingText, {
 })
 ```
 
+### useFileContent
+```typescript
+// Cache and fetch file content from Anthropic Files API
+const { content, loading, error } = useFileContent(fileId, mimeType)
+```
+
 ## Styling System
 
 ### CSS Variables (`app/globals.css`)
@@ -264,9 +268,9 @@ import { cn } from "@/lib/utils"
 ### Message Sending
 1. User types in `PromptInput`
 2. Submit via Enter or click
-3. If no conversation: `POST /api/conversations` with solutionType
+3. If no conversation: `POST /api/conversations`
 4. `useChat.handleSubmit()` called
-5. `POST /api/chat/{solution}` with streaming
+5. `POST /api/chat` with streaming
 6. Backend streams response
 7. `useChat` updates messages in real-time
 8. On finish, conversation list refreshed
@@ -282,23 +286,15 @@ import { cn } from "@/lib/utils"
 
 ```typescript
 const CLAUDE_MODELS = [
-  { id: "us.anthropic.claude-sonnet-4-5-20250929-v1:0", name: "Claude 4.5 Sonnet" },
-  { id: "us.anthropic.claude-haiku-4-5-20251001-v1:0", name: "Claude 4.5 Haiku" },
-  { id: "us.anthropic.claude-opus-4-5-20251101-v1:0", name: "Claude 4.5 Opus" },
-  { id: "us.anthropic.claude-sonnet-4-20250514-v1:0", name: "Claude 4 Sonnet" },
+  { id: "claude-opus-4-6", name: "Claude 4.6 Opus" },
+  { id: "claude-sonnet-4-6", name: "Claude 4.6 Sonnet" },
+  { id: "claude-sonnet-4-5-20250929", name: "Claude 4.5 Sonnet" },
+  { id: "claude-haiku-4-5-20251001", name: "Claude 4.5 Haiku" },
+  { id: "claude-opus-4-5-20251101", name: "Claude 4.5 Opus" },
+  { id: "claude-opus-4-20250514", name: "Claude 4 Opus" },
+  { id: "claude-sonnet-4-20250514", name: "Claude 4 Sonnet" },
 ]
 ```
-
-## Solution Types
-
-| Solution | URL Param | Badge Color |
-|----------|-----------|-------------|
-| Manufacturing | `?solution=manufacturing` | Blue |
-| Maintenance | `?solution=maintenance` | Green |
-| Support | `?solution=support` | Orange |
-| Change Management | `?solution=change-management` | Purple |
-| Impact Analysis | `?solution=impact-analysis` | Red |
-| Requirements | `?solution=requirements` | Cyan |
 
 ## Accessibility
 
@@ -391,14 +387,6 @@ export function MyComponent({
   )
 }
 ```
-
-## Adding New Solution Types
-
-1. Add solution card to `app/solutions/page.tsx`
-2. Create API route `app/api/chat/[solution]/route.ts`
-3. Add system prompt in `lib/system-prompts.ts`
-4. Update TypeScript types if needed
-5. Test navigation flow: Solutions → Chat → Messages
 
 ## External Resources
 

@@ -90,21 +90,12 @@ const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
 
         case "pulse-dot":
           return (
-            <div className="flex items-center gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "rounded-full bg-current",
-                    sizes.element
-                  )}
-                  style={{
-                    animation: "typing 1.4s infinite ease-in-out",
-                    animationDelay: `${i * 0.15}s`,
-                  }}
-                />
-              ))}
-            </div>
+            <div
+              className={cn("rounded-full bg-current", sizes.element)}
+              style={{
+                animation: "pulse-dot 1.2s ease-in-out infinite",
+              }}
+            />
           )
 
         case "dots":
@@ -321,19 +312,23 @@ function LoadingText({
   text?: string
   className?: string
 }) {
-  const [dots, setDots] = React.useState("")
-
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setDots((prev) => (prev.length >= 3 ? "" : prev + "."))
-    }, 400)
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <span className={cn("text-muted-foreground", className)}>
       {text}
-      <span className="inline-block w-6 text-left">{dots}</span>
+      <span className="inline-flex w-6 text-left">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="inline-block"
+            style={{
+              animation: "loading-dots 1.4s ease-in-out infinite",
+              animationDelay: `${i * 0.2}s`,
+            }}
+          >
+            .
+          </span>
+        ))}
+      </span>
     </span>
   )
 }

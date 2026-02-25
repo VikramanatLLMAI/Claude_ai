@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { AlertTriangle, RefreshCw, Home, Bug, Frown, Coffee, Sparkles, WifiOff, Clock } from "lucide-react"
+import { RefreshCw, Home, Bug, Frown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion } from "motion/react"
@@ -80,7 +80,7 @@ const friendlyMessages = [
 /**
  * Default error fallback UI component with friendly messaging
  */
-export function ErrorFallback({
+function ErrorFallback({
   error,
   errorInfo,
   onRetry,
@@ -105,7 +105,7 @@ export function ErrorFallback({
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.1 }}
               className="mx-auto mb-4 relative"
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-destructive/20 to-destructive/10">
@@ -178,204 +178,5 @@ export function ErrorFallback({
         </Card>
       </motion.div>
     </div>
-  )
-}
-
-/**
- * Chat-specific error fallback with friendly messaging
- */
-export function ChatErrorFallback({
-  error,
-  onRetry,
-}: {
-  error: Error | null
-  onRetry?: () => void
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center p-8 text-center"
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-destructive/20 to-destructive/5"
-      >
-        <Coffee className="h-7 w-7 text-destructive" />
-      </motion.div>
-      <h3 className="mb-2 text-lg font-semibold">Chat needs a coffee break</h3>
-      <p className="mb-4 text-sm text-muted-foreground max-w-sm">
-        {error?.message || "Something went wrong with the chat. Let's give it another try."}
-      </p>
-      {onRetry && (
-        <Button onClick={onRetry} size="sm" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Wake it up
-        </Button>
-      )}
-    </motion.div>
-  )
-}
-
-/**
- * Network error display component with animation
- */
-export function NetworkError({
-  onRetry,
-  message = "Unable to connect. Please check your internet connection.",
-}: {
-  onRetry?: () => void
-  message?: string
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center p-6 text-center"
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="mb-4 relative"
-      >
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500/20 to-orange-500/5">
-          <WifiOff className="h-7 w-7 text-orange-600 dark:text-orange-400" />
-        </div>
-        <motion.div
-          className="absolute inset-0 rounded-full border-2 border-orange-500/30"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      </motion.div>
-      <h3 className="mb-2 font-semibold">Connection Lost</h3>
-      <p className="mb-4 text-sm text-muted-foreground max-w-sm">{message}</p>
-      {onRetry && (
-        <Button onClick={onRetry} variant="outline" size="sm" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Reconnect
-        </Button>
-      )}
-    </motion.div>
-  )
-}
-
-/**
- * Rate limit error display component with countdown
- */
-export function RateLimitError({
-  retryAfter,
-  onRetry,
-}: {
-  retryAfter?: number
-  onRetry?: () => void
-}) {
-  const [countdown, setCountdown] = React.useState(retryAfter || 60)
-
-  React.useEffect(() => {
-    if (countdown <= 0) return
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [countdown])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center p-6 text-center"
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="mb-4"
-      >
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-500/5">
-          <Clock className="h-7 w-7 text-yellow-600 dark:text-yellow-400" />
-        </div>
-      </motion.div>
-      <h3 className="mb-2 font-semibold">Slow down there, speedster!</h3>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Too many requests. Let's take a breather.
-      </p>
-      {countdown > 0 ? (
-        <motion.div
-          key={countdown}
-          initial={{ scale: 1.2, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-3xl font-mono font-bold text-primary"
-        >
-          {countdown}s
-        </motion.div>
-      ) : (
-        onRetry && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Button onClick={onRetry} size="sm" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Try Again
-            </Button>
-          </motion.div>
-        )
-      )}
-    </motion.div>
-  )
-}
-
-/**
- * Empty state component for when there's no data
- */
-export function EmptyState({
-  icon: Icon = Sparkles,
-  title = "Nothing here yet",
-  description = "Start by creating something new.",
-  action,
-  actionLabel = "Get Started",
-}: {
-  icon?: React.ElementType
-  title?: string
-  description?: string
-  action?: () => void
-  actionLabel?: string
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center p-8 text-center"
-    >
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="mb-4"
-      >
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5">
-          <Icon className="h-8 w-8 text-primary/70" />
-        </div>
-      </motion.div>
-      <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-      <p className="mb-4 text-sm text-muted-foreground max-w-sm">{description}</p>
-      {action && (
-        <Button onClick={action} className="gap-2">
-          <Sparkles className="h-4 w-4" />
-          {actionLabel}
-        </Button>
-      )}
-    </motion.div>
   )
 }

@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConversation, updateConversation } from '@/lib/storage';
 import { requireAuth } from '@/lib/auth-middleware';
-import { bedrock } from '@/lib/bedrock';
+import { anthropic } from '@/lib/anthropic';
 import { generateText } from 'ai';
 
 // Generate a concise title for a conversation based on messages
@@ -69,7 +69,7 @@ export async function POST(
 
     // Generate title using Claude (use fast model)
     const { text: generatedTitle } = await generateText({
-      model: bedrock('global.anthropic.claude-haiku-4-5-20251001-v1:0'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       system: 'Generate a concise, descriptive title (3-6 words) for the conversation. The title should capture the main topic or intent. Do not use quotes or punctuation at the end. Only output the title, nothing else.',
       messages: [
         {

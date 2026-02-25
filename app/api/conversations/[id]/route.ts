@@ -75,14 +75,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json();
-    const { title, isPinned, isShared, model, solutionType } = body;
+    const { title, isPinned, isShared, model } = body;
 
     const conversation = await updateConversation(id, {
       title,
       isPinned,
       isShared,
       model,
-      solutionType,
     });
 
     if (!conversation) {

@@ -1,4 +1,4 @@
-// Prisma schema for Athena MCP - Claude Chat Platform
+// Prisma schema for LLMatscale.ai - Claude Chat Platform
 // Based on PRD specification for simplified edition
 
 generator client {
@@ -17,9 +17,7 @@ model User {
   passwordHash           String    @map("password_hash")
   name                   String?
   avatarUrl              String?   @map("avatar_url")
-  awsAccessKeyEncrypted  String?   @map("aws_access_key_encrypted")
-  awsSecretKeyEncrypted  String?   @map("aws_secret_key_encrypted")
-  awsRegion              String    @default("us-east-1") @map("aws_region")
+  anthropicApiKeyEncrypted  String?  @map("anthropic_api_key_encrypted")
   preferences            Json      @default("{\"theme\": \"system\", \"fontSize\": 16, \"codeTheme\": \"github-dark\", \"messageDensity\": \"comfortable\"}")
   createdAt              DateTime  @default(now()) @map("created_at")
   lastLogin              DateTime? @map("last_login")
@@ -58,7 +56,6 @@ model Conversation {
   activeMcpIds Json      @default("[]") @map("active_mcp_ids")
   isPinned     Boolean   @default(false) @map("is_pinned")
   isShared     Boolean   @default(false) @map("is_shared")
-  solutionType String?   @map("solution_type")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   lastMessageAt DateTime? @map("last_message_at")

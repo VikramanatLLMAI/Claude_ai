@@ -37,11 +37,11 @@ export function FeedbackBar({
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-1 items-center justify-start gap-4 py-3 pl-4 pr-4">
             {feedback === "helpful" ? (
-              <ThumbsUp className="size-4 text-green-500" />
+              <ThumbsUp className="size-4 text-status-success animate-success" />
             ) : (
-              <ThumbsDown className="size-4 text-red-500" />
+              <ThumbsDown className="size-4 text-status-error" />
             )}
-            <span className="text-foreground font-medium">Thanks for your feedback!</span>
+            <span className="text-foreground font-medium animate-slide-up-fade">Thanks for your feedback!</span>
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@ export function FeedbackBar({
         <div className="flex items-center justify-center gap-0.5 px-3 py-0">
           <button
             type="button"
-            className="text-muted-foreground hover:text-green-500 flex size-8 items-center justify-center rounded-md transition-colors"
+            className="text-muted-foreground hover:text-status-success flex size-8 items-center justify-center rounded-md transition-colors"
             aria-label="Helpful"
             onClick={() => {
               setFeedback("helpful")
@@ -74,7 +74,7 @@ export function FeedbackBar({
           </button>
           <button
             type="button"
-            className="text-muted-foreground hover:text-red-500 flex size-8 items-center justify-center rounded-md transition-colors"
+            className="text-muted-foreground hover:text-status-error flex size-8 items-center justify-center rounded-md transition-colors"
             aria-label="Not helpful"
             onClick={() => {
               setFeedback("not-helpful")

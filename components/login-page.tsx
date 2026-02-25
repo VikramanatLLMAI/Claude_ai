@@ -20,14 +20,38 @@ import {
 
 type AuthMode = "signin" | "signup"
 
-const AUTH_SESSION_KEY = "athena_auth_session"
-const AUTH_TOKEN_KEY = "athena_auth_token"
+const AUTH_SESSION_KEY = "llmatscale_auth_session"
+const AUTH_TOKEN_KEY = "llmatscale_auth_token"
+
+// Animation variants for staggered capability list
+const capabilitiesContainerVariants = {
+    hidden: {},
+    visible: {
+        transition: {
+            staggerChildren: 0.1,
+        },
+    },
+}
+
+const capabilityItemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            type: "spring" as const,
+            stiffness: 300,
+            damping: 30,
+        },
+    },
+}
 
 export function LoginPage() {
     const router = useRouter()
     const [mode, setMode] = React.useState<AuthMode>("signin")
     const [error, setError] = React.useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = React.useState(false)
+    const [loginSuccess, setLoginSuccess] = React.useState(false)
 
     React.useEffect(() => {
         if (typeof window === "undefined") return
@@ -38,7 +62,7 @@ export function LoginPage() {
             try {
                 const session = JSON.parse(sessionData)
                 if (session.expiresAt && new Date(session.expiresAt) > new Date()) {
-                    router.replace("/solutions")
+                    router.replace("/chat")
                 } else {
                     window.localStorage.removeItem(AUTH_SESSION_KEY)
                     window.localStorage.removeItem(AUTH_TOKEN_KEY)
@@ -63,6 +87,14 @@ export function LoginPage() {
     const handleModeChange = (nextMode: AuthMode) => {
         setMode(nextMode)
         setError(null)
+        setLoginSuccess(false)
+    }
+
+    const navigateAfterSuccess = () => {
+        setLoginSuccess(true)
+        setTimeout(() => {
+            router.push("/chat")
+        }, 400)
     }
 
     const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -96,7 +128,7 @@ export function LoginPage() {
             }
 
             writeSession(data.token, data.user, data.expiresAt)
-            router.push("/solutions")
+            navigateAfterSuccess()
         } catch (err) {
             console.error("Login error:", err)
             setError("Failed to sign in. Please try again.")
@@ -154,7 +186,7 @@ export function LoginPage() {
             }
 
             writeSession(data.token, data.user, data.expiresAt)
-            router.push("/solutions")
+            navigateAfterSuccess()
         } catch (err) {
             console.error("Signup error:", err)
             setError("Failed to create account. Please try again.")
@@ -168,6 +200,47 @@ export function LoginPage() {
         { icon: BarChart3, text: "Generate insights and interactive dashboards" },
         { icon: Lock, text: "Enterprise-grade security and compliance" },
     ]
+
+    // Determine submit button content based on state
+    const getSignInButtonContent = () => {
+        if (loginSuccess) {
+            return (
+                <>
+                    <Check className="mr-2 size-4" />
+                    Success
+                </>
+            )
+        }
+        if (isSubmitting) {
+            return "Signing in..."
+        }
+        return (
+            <>
+                Sign in
+                <ArrowRight className="ml-2 size-4" />
+            </>
+        )
+    }
+
+    const getSignUpButtonContent = () => {
+        if (loginSuccess) {
+            return (
+                <>
+                    <Check className="mr-2 size-4" />
+                    Account created
+                </>
+            )
+        }
+        if (isSubmitting) {
+            return "Creating account..."
+        }
+        return (
+            <>
+                Create account
+                <ArrowRight className="ml-2 size-4" />
+            </>
+        )
+    }
 
     return (
         <div className="relative flex h-screen overflow-hidden bg-background">
@@ -183,11 +256,17 @@ export function LoginPage() {
                 />
 
                 <div className="relative z-10 flex h-full flex-col justify-between p-14">
-                    {/* Product Name */}
+                    {/* Logo */}
                     <div>
-                        <h1 className="text-5xl font-bold tracking-tight text-foreground">
-                            Fab Orchestrator
-                        </h1>
+                        <Image
+                            src="/logos/llmatscale-logo.png"
+                            alt="LLMatscale.ai"
+                            width={220}
+                            height={70}
+                            className="h-[60px] w-auto object-contain"
+                            priority
+                            unoptimized
+                        />
                         <div className="mt-3 flex items-center gap-3">
                             <div className="h-px w-8 bg-primary/60" />
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -209,52 +288,37 @@ export function LoginPage() {
                             and unlock powerful analytics — all in one intelligent platform.
                         </p>
 
-                        {/* Capabilities */}
-                        <div className="mt-10 space-y-4">
+                        {/* Capabilities - staggered entrance */}
+                        <motion.div
+                            className="mt-10 space-y-4"
+                            variants={capabilitiesContainerVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
                             {capabilities.map(({ icon: Icon, text }) => (
-                                <div key={text} className="flex items-center gap-4">
+                                <motion.div
+                                    key={text}
+                                    variants={capabilityItemVariants}
+                                    className="flex items-center gap-4"
+                                >
                                     <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/[0.07] ring-1 ring-primary/10">
                                         <Icon className="size-[18px] text-primary" />
                                     </div>
                                     <span className="text-sm text-foreground/70">{text}</span>
-                                </div>
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     </div>
 
-                    {/* Footer - Badges & Logos */}
-                    <div className="flex items-end justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 ring-1 ring-border">
-                                <Shield className="size-3.5 text-primary/80" />
-                                <span className="text-xs font-medium text-muted-foreground">SOC 2 Compliant</span>
-                            </div>
-                            <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 ring-1 ring-border">
-                                <Zap className="size-3.5 text-primary/80" />
-                                <span className="text-xs font-medium text-muted-foreground">Enterprise Ready</span>
-                            </div>
+                    {/* Footer - Badges with subtle hover scale */}
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 ring-1 ring-border hover:scale-[1.02] transition-transform">
+                            <Shield className="size-3.5 text-primary/80" />
+                            <span className="text-xs font-medium text-muted-foreground">SOC 2 Compliant</span>
                         </div>
-
-                        <div className="flex items-center gap-4">
-                            <Image
-                                src="/logos/athena-logo.jpg"
-                                alt="Athena"
-                                width={170}
-                                height={52}
-                                className="h-[50px] w-auto object-contain opacity-50"
-                                priority
-                                unoptimized
-                            />
-                            <div className="h-10 w-px bg-border" />
-                            <Image
-                                src="/logos/llmatscale-logo.png"
-                                alt="LLM at Scale.AI"
-                                width={200}
-                                height={60}
-                                className="h-[55px] w-auto object-contain opacity-50"
-                                priority
-                                unoptimized
-                            />
+                        <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 ring-1 ring-border hover:scale-[1.02] transition-transform">
+                            <Zap className="size-3.5 text-primary/80" />
+                            <span className="text-xs font-medium text-muted-foreground">Enterprise Ready</span>
                         </div>
                     </div>
                 </div>
@@ -266,7 +330,7 @@ export function LoginPage() {
                     {/* Mobile Logo */}
                     <div className="mb-10 w-full max-w-[400px] lg:hidden">
                         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                            Fab Orchestrator
+                            LLMatscale.ai
                         </h1>
                         <p className="mt-1 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                             Intelligent Enterprise Platform
@@ -364,11 +428,13 @@ export function LoginPage() {
                                         </div>
                                         <Button
                                             type="submit"
-                                            disabled={isSubmitting}
-                                            className="h-12 w-full rounded-lg text-sm font-semibold tracking-wide shadow-md shadow-primary/15 transition-all hover:shadow-lg hover:shadow-primary/20"
+                                            disabled={isSubmitting || loginSuccess}
+                                            className={cn(
+                                                "h-12 w-full rounded-lg text-sm font-semibold tracking-wide shadow-md shadow-primary/15 transition-[box-shadow,colors] hover:shadow-lg hover:shadow-primary/20",
+                                                loginSuccess && "bg-green-600 hover:bg-green-600 shadow-green-600/20"
+                                            )}
                                         >
-                                            {isSubmitting ? "Signing in..." : "Sign in"}
-                                            {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
+                                            {getSignInButtonContent()}
                                         </Button>
                                     </motion.form>
                                 ) : (
@@ -446,11 +512,13 @@ export function LoginPage() {
                                         </label>
                                         <Button
                                             type="submit"
-                                            disabled={isSubmitting}
-                                            className="h-12 w-full rounded-lg text-sm font-semibold tracking-wide shadow-md shadow-primary/15 transition-all hover:shadow-lg hover:shadow-primary/20"
+                                            disabled={isSubmitting || loginSuccess}
+                                            className={cn(
+                                                "h-12 w-full rounded-lg text-sm font-semibold tracking-wide shadow-md shadow-primary/15 transition-[box-shadow,colors] hover:shadow-lg hover:shadow-primary/20",
+                                                loginSuccess && "bg-green-600 hover:bg-green-600 shadow-green-600/20"
+                                            )}
                                         >
-                                            {isSubmitting ? "Creating account..." : "Create account"}
-                                            {!isSubmitting && <ArrowRight className="ml-2 size-4" />}
+                                            {getSignUpButtonContent()}
                                         </Button>
                                     </motion.form>
                                 )}

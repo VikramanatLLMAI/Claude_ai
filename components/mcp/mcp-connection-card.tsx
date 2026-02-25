@@ -71,17 +71,17 @@ export function McpConnectionCard({
 
   const statusConfig = {
     connected: {
-      color: "bg-green-500",
+      color: "bg-status-connected",
       text: "Connected",
       icon: PlugZap,
     },
     disconnected: {
-      color: "bg-gray-400",
+      color: "bg-status-disconnected",
       text: "Disconnected",
       icon: Plug,
     },
     error: {
-      color: "bg-red-500",
+      color: "bg-status-error",
       text: "Error",
       icon: AlertCircle,
     },

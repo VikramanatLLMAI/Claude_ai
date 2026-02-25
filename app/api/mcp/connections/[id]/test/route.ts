@@ -126,7 +126,7 @@ export async function POST(
               tools: {},
             },
             clientInfo: {
-              name: 'athena-mcp',
+              name: 'llmatscale-ai',
               version: '1.0.0',
             },
           },

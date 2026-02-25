@@ -83,7 +83,6 @@ export const AwsCredentialsSchema = z.object({
 export const CreateConversationSchema = z.object({
   title: z.string().max(200).optional(),
   model: z.string().max(100).optional(),
-  solutionType: z.string().max(50).optional().nullable(),
 });
 
 export const UpdateConversationSchema = z.object({
@@ -91,7 +90,6 @@ export const UpdateConversationSchema = z.object({
   isPinned: z.boolean().optional(),
   isShared: z.boolean().optional(),
   model: z.string().max(100).optional(),
-  solutionType: z.string().max(50).optional().nullable(),
 });
 
 // ============================================
@@ -144,10 +142,10 @@ export const UpdateMcpConnectionSchema = z.object({
 
 export const ChatRequestSchema = z.object({
   messages: z.array(z.object({
-    role: MessageRoleSchema,
+    role: z.enum(['user', 'assistant', 'system']),
     content: z.string().optional(),
     parts: z.array(z.unknown()).optional(),
-  })),
+  })).min(1),
   model: z.string().max(100).optional(),
   enableReasoning: z.boolean().optional(),
   conversationId: z.string().uuid().optional().nullable(),

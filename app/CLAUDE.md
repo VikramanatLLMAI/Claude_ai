@@ -6,8 +6,8 @@
 |------|-------|
 | **Framework** | Next.js 16 App Router |
 | **Entry Point** | `page.tsx` (Login) |
-| **Protected Routes** | `/chat`, `/settings` |
-| **Public Routes** | `/`, `/solutions` |
+| **Protected Routes** | `/chat` |
+| **Public Routes** | `/` |
 
 ## Directory Structure
 
@@ -16,13 +16,12 @@ app/
 ├── layout.tsx              # Root layout (fonts, metadata)
 ├── page.tsx                # Login page (entry point)
 ├── globals.css             # Global styles & CSS variables
+├── loading.tsx             # Loading state
 ├── favicon.ico             # Site favicon
 ├── chat/
 │   └── page.tsx           # Chat application (protected)
-├── solutions/
-│   └── page.tsx           # Solutions showcase
 ├── settings/
-│   └── page.tsx           # User settings (protected)
+│   └── page.tsx           # Redirects to /chat (settings now in modal)
 ├── api/                    # Backend routes (see api/CLAUDE.md)
 └── CLAUDE.md              # This file
 ```
@@ -35,55 +34,30 @@ app/
 Entry point - renders `LoginPage` component.
 - Sign-in / sign-up form
 - Session stored in localStorage
-- Redirects to `/solutions` on success
-
-### Solutions Page (`solutions/page.tsx`)
-**Path:** `/solutions`
-
-Showcase of AI solution use cases:
-- 6 solution cards in responsive grid
-- Each card navigates to `/chat?solution={type}`
-
-| Solution | Query Param |
-|----------|-------------|
-| Manufacturing | `?solution=manufacturing` |
-| Maintenance | `?solution=maintenance` |
-| Support | `?solution=support` |
-| Change Management | `?solution=change-management` |
-| Impact Analysis | `?solution=impact-analysis` |
-| Requirements | `?solution=requirements` |
+- Redirects to `/chat` on success
 
 ### Chat Page (`chat/page.tsx`)
-**Path:** `/chat` or `/chat?solution={type}`
+**Path:** `/chat`
 
 Main chat application (protected):
 - Checks session on mount
 - Redirects to `/` if no session
 - Renders `FullChatApp` component
-- Reads `solution` query param for solution-specific chat
 
 ```typescript
 "use client"
 
 export default function ChatPage() {
-  const searchParams = useSearchParams()
-  const solution = searchParams.get('solution')
-
   // Session check...
 
-  return <FullChatApp initialSolution={solution} />
+  return <FullChatApp />
 }
 ```
 
 ### Settings Page (`settings/page.tsx`)
 **Path:** `/settings`
 
-User settings (protected):
-- Theme preferences (light/dark/system)
-- Font size
-- Code theme selection
-- AWS credentials management
-- MCP connection management
+Redirects to `/chat`. Settings functionality has been moved to the `SettingsModal` component within the chat UI.
 
 ## Root Layout (`layout.tsx`)
 
@@ -93,8 +67,8 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 
 export const metadata = {
-  title: "Athena MCP - AI Chat Application",
-  description: "Specialized AI chat application with solution-specific agents",
+  title: "LLMatscale.ai - AI Chat Application",
+  description: "AI chat application powered by Claude models",
 }
 
 export default function RootLayout({ children }) {
@@ -141,23 +115,23 @@ export default function RootLayout({ children }) {
 - Light theme (default)
 - Dark theme via `.dark` class on `<html>`
 - System preference detection via `matchMedia`
-- Theme stored in localStorage (`athena_theme`)
+- Theme stored in localStorage (`llmatscale_theme`)
 
 ## Session Management
 
 ### Token Storage
 ```typescript
 // Set session
-localStorage.setItem('athena_auth_token', token)
-localStorage.setItem('athena_user', JSON.stringify(user))
+localStorage.setItem('llmatscale_auth_token', token)
+localStorage.setItem('llmatscale_user', JSON.stringify(user))
 
 // Get session
-const token = localStorage.getItem('athena_auth_token')
-const user = JSON.parse(localStorage.getItem('athena_user') || '{}')
+const token = localStorage.getItem('llmatscale_auth_token')
+const user = JSON.parse(localStorage.getItem('llmatscale_user') || '{}')
 
 // Clear session
-localStorage.removeItem('athena_auth_token')
-localStorage.removeItem('athena_user')
+localStorage.removeItem('llmatscale_auth_token')
+localStorage.removeItem('llmatscale_user')
 ```
 
 ### Route Protection Pattern
@@ -172,7 +146,7 @@ export default function ProtectedPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('athena_auth_token')
+    const token = localStorage.getItem('llmatscale_auth_token')
     if (!token) {
       router.push('/')
       return
@@ -204,7 +178,7 @@ export default function MyPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem('athena_auth_token')
+    const token = localStorage.getItem('llmatscale_auth_token')
     if (!token) router.push('/')
   }, [router])
 
