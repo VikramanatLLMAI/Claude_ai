@@ -37,6 +37,17 @@ yarn-error.log*
 iam/
 .claude/settings.local.json
 
+# non-essential / generated
+.agents/
+docs/
+scripts/
+app-logs.json
+test-resolve.js
+test-resolve-file.js
+patch-full-chat-app.mjs
+skills-lock.json
+.playwright-mcp/
+
 # vercel
 .vercel
 
