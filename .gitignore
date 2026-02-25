@@ -39,6 +39,7 @@ iam/
 
 # non-essential / generated
 .agents/
+.claude/skills/
 docs/
 scripts/
 app-logs.json
