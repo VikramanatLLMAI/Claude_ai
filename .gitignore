@@ -58,4 +58,5 @@ next-env.d.ts
 
 /lib/generated/prisma
 
-/lib/generated/prisma
+# runtime data (role template overrides, etc.)
+.data/
