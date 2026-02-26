@@ -2,6 +2,11 @@ import { PrismaClient } from './generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
+// IMPORTANT: This is the UNSCOPED Prisma client.
+// For org-scoped queries, use tenantPrisma(orgId) from './tenant.ts'
+// Only use this client for: User lookups, Session management, Super Admin operations,
+// and Organization-level queries (creating orgs, listing orgs, etc.)
+
 // Determine SSL settings based on DATABASE_URL
 // - localhost/127.0.0.1: no SSL (local development)
 // - AWS RDS: no SSL (rds.force_ssl=0 for POC)
