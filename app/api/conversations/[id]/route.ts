@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getConversation,
-  updateConversation,
-  deleteConversation,
-  toConversationResponse,
-  toUIMessage,
-} from '@/lib/storage';
-import { requireAuth } from '@/lib/auth-middleware';
+import { toUIMessage } from '@/lib/storage';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -14,13 +8,20 @@ interface RouteParams {
 
 // GET /api/conversations/[id] - Get single conversation with messages
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const conversation = await getConversation(id);
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
 
     if (!conversation) {
       return NextResponse.json(
@@ -38,7 +39,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({
-      ...toConversationResponse(conversation),
+      id: conversation.id,
+      title: conversation.title,
+      isPinned: conversation.isPinned,
+      isShared: conversation.isShared,
+      model: conversation.model,
+      createdAt: conversation.createdAt.toISOString(),
+      updatedAt: conversation.updatedAt.toISOString(),
       messages: conversation.messages.map(toUIMessage),
     });
   } catch (error) {
@@ -52,15 +59,17 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 // PATCH /api/conversations/[id] - Update conversation
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
 
-    // Verify ownership before updating
-    const existing = await getConversation(id);
+    // Verify ownership before updating (tenantDb already scopes to org)
+    const existing = await tenantDb.conversation.findUnique({
+      where: { id },
+    });
     if (!existing) {
       return NextResponse.json(
         { error: 'Conversation not found' },
@@ -77,21 +86,25 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const body = await req.json();
     const { title, isPinned, isShared, model } = body;
 
-    const conversation = await updateConversation(id, {
-      title,
-      isPinned,
-      isShared,
-      model,
+    const conversation = await tenantDb.conversation.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(isPinned !== undefined && { isPinned }),
+        ...(isShared !== undefined && { isShared }),
+        ...(model !== undefined && { model }),
+      },
     });
 
-    if (!conversation) {
-      return NextResponse.json(
-        { error: 'Failed to update conversation' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(toConversationResponse(conversation));
+    return NextResponse.json({
+      id: conversation.id,
+      title: conversation.title,
+      isPinned: conversation.isPinned,
+      isShared: conversation.isShared,
+      model: conversation.model,
+      createdAt: conversation.createdAt.toISOString(),
+      updatedAt: conversation.updatedAt.toISOString(),
+    });
   } catch (error) {
     console.error('Error updating conversation:', error);
     return NextResponse.json(
@@ -103,15 +116,17 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/conversations/[id] - Delete conversation
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
 
     // Verify ownership before deleting
-    const existing = await getConversation(id);
+    const existing = await tenantDb.conversation.findUnique({
+      where: { id },
+    });
     if (!existing) {
       return NextResponse.json(
         { error: 'Conversation not found' },
@@ -125,14 +140,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const deleted = await deleteConversation(id);
-
-    if (!deleted) {
-      return NextResponse.json(
-        { error: 'Failed to delete conversation' },
-        { status: 500 }
-      );
-    }
+    await tenantDb.conversation.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

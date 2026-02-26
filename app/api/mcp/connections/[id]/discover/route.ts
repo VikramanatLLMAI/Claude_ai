@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { getMcpConnection, updateMcpConnection } from '@/lib/storage';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { decrypt } from '@/lib/encryption';
 
 interface McpTool {
@@ -14,14 +13,13 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const connection = await getMcpConnection(id);
+    const connection = await tenantDb.mcpConnection.findUnique({ where: { id } });
 
     if (!connection) {
       return NextResponse.json(
@@ -143,8 +141,9 @@ export async function POST(
         inputSchema: tool.inputSchema || { type: 'object', properties: {} },
       }));
 
-      await updateMcpConnection(id, {
-        availableTools: toolsWithSchema,
+      await tenantDb.mcpConnection.update({
+        where: { id },
+        data: { availableTools: toolsWithSchema },
       });
 
       return NextResponse.json({

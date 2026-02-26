@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createMcpConnection, getUserMcpConnections } from '@/lib/storage';
 import { encrypt } from '@/lib/encryption';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 
-// GET /api/mcp/connections - List all MCP connections for user
+// GET /api/mcp/connections - List all MCP connections for user in current org
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
-    const connections = await getUserMcpConnections(user.id);
+    const connections = await tenantDb.mcpConnection.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+    });
 
     // Map to response format (exclude encrypted credentials)
     const response = connections.map((conn) => ({
@@ -37,9 +39,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/mcp/connections - Create a new MCP connection
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const body = await req.json();
@@ -73,13 +75,15 @@ export async function POST(req: NextRequest) {
       encryptedCredentials = encrypt(credentialsData);
     }
 
-    // Create connection
-    const connection = await createMcpConnection({
-      userId: user.id,
-      name,
-      serverUrl,
-      authType: authType || 'none',
-      authCredentialsEncrypted: encryptedCredentials,
+    // Create connection (tenant-scoped auto-injects organizationId)
+    const connection = await tenantDb.mcpConnection.create({
+      data: {
+        userId: user.id,
+        name,
+        serverUrl,
+        authType: authType || 'none',
+        authCredentialsEncrypted: encryptedCredentials,
+      },
     });
 
     return NextResponse.json({

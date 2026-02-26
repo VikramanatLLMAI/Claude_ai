@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import {
-  getConversation,
-  addMessage,
-  getMessages,
-  clearMessages,
-  toUIMessage,
-} from '@/lib/storage';
+import { requireOrgAuth } from '@/lib/auth-middleware';
+import { toUIMessage } from '@/lib/storage';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -14,14 +8,15 @@ interface RouteParams {
 
 // GET /api/conversations/[id]/messages - List all messages in conversation
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const conversation = await getConversation(id);
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id },
+    });
 
     if (!conversation) {
       return NextResponse.json(
@@ -38,7 +33,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const messages = await getMessages(id);
+    const messages = await tenantDb.message.findMany({
+      where: { conversationId: id },
+      orderBy: { createdAt: 'asc' },
+    });
     return NextResponse.json(messages.map(toUIMessage));
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -51,14 +49,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 // POST /api/conversations/[id]/messages - Add message to conversation
 export async function POST(req: NextRequest, { params }: RouteParams) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const conversation = await getConversation(id);
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id },
+    });
 
     if (!conversation) {
       return NextResponse.json(
@@ -85,14 +84,21 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const message = await addMessage(id, { role, content, parts });
+    const message = await tenantDb.message.create({
+      data: {
+        conversationId: id,
+        role,
+        content,
+        parts: (parts as object) ?? null,
+        metadata: {},
+      },
+    });
 
-    if (!message) {
-      return NextResponse.json(
-        { error: 'Failed to add message' },
-        { status: 500 }
-      );
-    }
+    // Update conversation's lastMessageAt (non-blocking)
+    tenantDb.conversation.update({
+      where: { id },
+      data: { lastMessageAt: new Date() },
+    }).catch(err => console.error('Error updating lastMessageAt:', err));
 
     return NextResponse.json(toUIMessage(message), { status: 201 });
   } catch (error) {
@@ -106,14 +112,15 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/conversations/[id]/messages - Clear all messages in conversation
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const conversation = await getConversation(id);
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id },
+    });
 
     if (!conversation) {
       return NextResponse.json(
@@ -130,14 +137,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const cleared = await clearMessages(id);
-
-    if (!cleared) {
-      return NextResponse.json(
-        { error: 'Failed to clear messages' },
-        { status: 500 }
-      );
-    }
+    await tenantDb.message.deleteMany({
+      where: { conversationId: id },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

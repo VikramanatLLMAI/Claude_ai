@@ -1,51 +1,73 @@
-import { getSessionByToken } from '@/lib/storage';
+/**
+ * Current User API
+ * GET /api/auth/me - Get current user info with optional org context
+ *
+ * Uses requireAuth (not requireOrgAuth) because this endpoint must work
+ * for both org users and Super Admins.
+ */
 
-export async function GET(req: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-middleware';
+import prisma from '@/lib/db';
+import { resolveOrgSlug } from '@/lib/resolve-org';
+
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
+
   try {
-    // Get token from Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return Response.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.slice(7);
-
-    // Get session with user
-    const session = await getSessionByToken(token);
-
-    if (!session) {
-      return Response.json(
-        { error: 'Invalid or expired session' },
-        { status: 401 }
-      );
-    }
-
-    // Check if session is expired
-    if (session.expiresAt < new Date()) {
-      return Response.json(
-        { error: 'Session expired' },
-        { status: 401 }
-      );
-    }
-
-    return Response.json({
+    // Build base response
+    const response: Record<string, unknown> = {
       user: {
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name,
-        avatarUrl: session.user.avatarUrl,
-        preferences: session.user.preferences,
-        hasAnthropicApiKey: !!session.user.anthropicApiKeyEncrypted,
-        emailVerified: session.user.emailVerified,
-        createdAt: session.user.createdAt.toISOString(),
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatarBase64: user.avatarBase64,
+        preferences: user.preferences,
+        isSuperAdmin: user.isSuperAdmin,
+        createdAt: user.createdAt.toISOString(),
       },
-    });
+    };
+
+    // If org context available and user is not Super Admin, enrich with org info
+    if (!user.isSuperAdmin) {
+      const slug = resolveOrgSlug(req);
+      if (slug) {
+        const orgMember = await prisma.orgMember.findFirst({
+          where: {
+            userId: user.id,
+            organization: {
+              slug,
+              deletedAt: null,
+              status: 'ACTIVE',
+            },
+          },
+          include: {
+            organization: true,
+            role: true,
+          },
+        });
+
+        if (orgMember) {
+          response.organization = {
+            id: orgMember.organization.id,
+            name: orgMember.organization.name,
+            slug: orgMember.organization.slug,
+          };
+          response.role = {
+            id: orgMember.role.id,
+            name: orgMember.role.name,
+            permissions: orgMember.role.permissions,
+          };
+        }
+      }
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Get user error:', error);
-    return Response.json(
+    return NextResponse.json(
       { error: 'Failed to get user' },
       { status: 500 }
     );

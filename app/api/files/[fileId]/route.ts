@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getAnthropicFilesClient } from '@/lib/anthropic-files';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ fileId: string }> }
 ) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
 
   const { fileId } = await params;

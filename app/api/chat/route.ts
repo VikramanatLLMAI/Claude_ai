@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { streamText, convertToModelMessages, stepCountIs, createUIMessageStream, createUIMessageStreamResponse } from 'ai';
 import { anthropic, forwardAnthropicContainerIdFromLastStep } from '@/lib/anthropic';
-import { addMessage } from '@/lib/storage';
 import { loadActiveMcpToolsWithDescriptions } from '@/lib/mcp-client';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getAnthropicFilesClient } from '@/lib/anthropic-files';
 import { buildSystemPromptWithTools } from '@/lib/system-prompts';
 import { fitMessagesToContextWindow } from '@/lib/context-window';
@@ -33,9 +32,9 @@ function getThinkingMode(modelId: string): 'adaptive' | 'manual' | 'none' {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     // Issue 2: Validate request body with Zod schema
@@ -75,11 +74,20 @@ export async function POST(req: NextRequest) {
         .join('') || lastUserMessage.content || '';
 
       if (userContent) {
-        await addMessage(conversationId, {
-          role: 'user',
-          content: userContent,
-          parts: lastUserMessage.parts,
+        await tenantDb.message.create({
+          data: {
+            conversationId,
+            role: 'user',
+            content: userContent,
+            parts: (lastUserMessage.parts as object) ?? null,
+            metadata: {},
+          },
         });
+        // Update conversation's lastMessageAt (non-blocking)
+        tenantDb.conversation.update({
+          where: { id: conversationId },
+          data: { lastMessageAt: new Date() },
+        }).catch(err => console.error('Error updating lastMessageAt:', err));
       }
     }
 
@@ -415,16 +423,24 @@ export async function POST(req: NextRequest) {
             dbParts.push({ type: 'text', text });
           }
 
-          const message = await addMessage(conversationId, {
-            role: 'assistant',
-            content: text || '',
-            parts: dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }],
-            metadata: {
-              reasoning: reasoning || null,
-              stepsCount: steps?.length || 0,
-              model: modelId,
+          await tenantDb.message.create({
+            data: {
+              conversationId,
+              role: 'assistant',
+              content: text || '',
+              parts: dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }],
+              metadata: {
+                reasoning: reasoning || null,
+                stepsCount: steps?.length || 0,
+                model: modelId,
+              },
             },
           });
+          // Update conversation's lastMessageAt (non-blocking)
+          tenantDb.conversation.update({
+            where: { id: conversationId },
+            data: { lastMessageAt: new Date() },
+          }).catch(err => console.error('Error updating lastMessageAt:', err));
 
         } catch (error) {
           console.error('[Chat] Error persisting message:', error);

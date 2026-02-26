@@ -1,5 +1,20 @@
-// Database storage layer for conversations and messages
-// Uses PostgreSQL with Prisma ORM
+/**
+ * Database storage layer - UNSCOPED Prisma client functions.
+ *
+ * Functions in this file use the UNSCOPED Prisma client (global `prisma` singleton).
+ * They are intended for platform-level, non-tenant-scoped operations only:
+ * - User CRUD (User is not org-scoped)
+ * - Session management
+ * - Password reset tokens
+ *
+ * For org-scoped data access (conversations, messages, artifacts, MCP connections, etc.),
+ * use the `tenantDb` client from `requireOrgAuth()` context directly in route handlers.
+ * The tenant client (`tenantPrisma(orgId)` from './tenant') automatically injects
+ * `organizationId` into all queries, ensuring data isolation between organizations.
+ *
+ * @see lib/tenant.ts for the tenant-scoped Prisma client factory
+ * @see lib/auth-middleware.ts for requireOrgAuth() which provides tenantDb
+ */
 
 import prisma from './db';
 import type {
@@ -118,8 +133,10 @@ export async function cleanupExpiredSessions(): Promise<number> {
 
 // ============================================
 // Conversation Operations
+// @deprecated Use tenantDb directly in route handlers for org-scoped data access
 // ============================================
 
+/** @deprecated Use tenantDb.conversation.create() from requireOrgAuth() context */
 export async function createConversation(data: {
   title?: string;
   model?: string;
@@ -134,6 +151,7 @@ export async function createConversation(data: {
   });
 }
 
+/** @deprecated Use tenantDb.conversation.findUnique() from requireOrgAuth() context */
 export async function getConversation(id: string): Promise<(Conversation & { messages: Message[] }) | null> {
   return prisma.conversation.findUnique({
     where: { id },
@@ -145,6 +163,7 @@ export async function getConversation(id: string): Promise<(Conversation & { mes
   });
 }
 
+/** @deprecated Use tenantDb.conversation.findMany() from requireOrgAuth() context */
 export async function getAllConversations(userId: string): Promise<Conversation[]> {
   return prisma.conversation.findMany({
     where: { userId },
@@ -155,6 +174,7 @@ export async function getAllConversations(userId: string): Promise<Conversation[
   });
 }
 
+/** @deprecated Use tenantDb.conversation.update() from requireOrgAuth() context */
 export async function updateConversation(
   id: string,
   data: Record<string, unknown>
@@ -169,6 +189,7 @@ export async function updateConversation(
   }
 }
 
+/** @deprecated Use tenantDb.conversation.delete() from requireOrgAuth() context */
 export async function deleteConversation(id: string): Promise<boolean> {
   try {
     await prisma.conversation.delete({ where: { id } });
@@ -180,6 +201,7 @@ export async function deleteConversation(id: string): Promise<boolean> {
 
 // ============================================
 // Message Operations
+// @deprecated Use tenantDb directly in route handlers for org-scoped data access
 // ============================================
 
 export interface MessageInput {
@@ -189,6 +211,7 @@ export interface MessageInput {
   metadata?: Record<string, unknown>;
 }
 
+/** @deprecated Use tenantDb.message.create() from requireOrgAuth() context */
 export async function addMessage(
   conversationId: string,
   data: MessageInput
@@ -218,6 +241,7 @@ export async function addMessage(
   }
 }
 
+/** @deprecated Use tenantDb.message.findMany() from requireOrgAuth() context */
 export async function getMessages(conversationId: string): Promise<Message[]> {
   return prisma.message.findMany({
     where: { conversationId },
@@ -225,6 +249,7 @@ export async function getMessages(conversationId: string): Promise<Message[]> {
   });
 }
 
+/** @deprecated Use tenantDb.message.deleteMany() from requireOrgAuth() context */
 export async function clearMessages(conversationId: string): Promise<boolean> {
   try {
     await prisma.message.deleteMany({ where: { conversationId } });
@@ -234,6 +259,7 @@ export async function clearMessages(conversationId: string): Promise<boolean> {
   }
 }
 
+/** @deprecated Use tenantDb.message.update() from requireOrgAuth() context */
 export async function updateMessage(
   id: string,
   data: { content?: string; parts?: unknown[]; metadata?: Record<string, unknown> }
@@ -253,6 +279,7 @@ export async function updateMessage(
   }
 }
 
+/** @deprecated Use tenantDb.message.delete() from requireOrgAuth() context */
 export async function deleteMessage(id: string): Promise<boolean> {
   try {
     await prisma.message.delete({ where: { id } });
@@ -264,8 +291,10 @@ export async function deleteMessage(id: string): Promise<boolean> {
 
 // ============================================
 // Artifact Operations
+// @deprecated Use tenantDb directly in route handlers for org-scoped data access
 // ============================================
 
+/** @deprecated Use tenantDb.artifact.create() from requireOrgAuth() context */
 export async function createArtifact(data: {
   conversationId: string;
   messageId: string;
@@ -286,10 +315,12 @@ export async function createArtifact(data: {
   });
 }
 
+/** @deprecated Use tenantDb.artifact.findUnique() from requireOrgAuth() context */
 export async function getArtifact(id: string): Promise<Artifact | null> {
   return prisma.artifact.findUnique({ where: { id } });
 }
 
+/** @deprecated Use tenantDb.artifact.findMany() from requireOrgAuth() context */
 export async function getConversationArtifacts(conversationId: string): Promise<Artifact[]> {
   return prisma.artifact.findMany({
     where: { conversationId },
@@ -297,6 +328,7 @@ export async function getConversationArtifacts(conversationId: string): Promise<
   });
 }
 
+/** @deprecated Use tenantDb.artifact.update() from requireOrgAuth() context */
 export async function updateArtifact(
   id: string,
   data: { title?: string; content?: string }
@@ -311,6 +343,7 @@ export async function updateArtifact(
   }
 }
 
+/** @deprecated Use tenantDb.artifact.delete() from requireOrgAuth() context */
 export async function deleteArtifact(id: string): Promise<boolean> {
   try {
     await prisma.artifact.delete({ where: { id } });
@@ -322,8 +355,10 @@ export async function deleteArtifact(id: string): Promise<boolean> {
 
 // ============================================
 // MCP Connection Operations
+// @deprecated Use tenantDb directly in route handlers for org-scoped data access
 // ============================================
 
+/** @deprecated Use tenantDb.mcpConnection.create() from requireOrgAuth() context */
 export async function createMcpConnection(data: {
   userId: string;
   name: string;
@@ -342,10 +377,12 @@ export async function createMcpConnection(data: {
   });
 }
 
+/** @deprecated Use tenantDb.mcpConnection.findUnique() from requireOrgAuth() context */
 export async function getMcpConnection(id: string): Promise<McpConnection | null> {
   return prisma.mcpConnection.findUnique({ where: { id } });
 }
 
+/** @deprecated Use tenantDb.mcpConnection.findMany() from requireOrgAuth() context */
 export async function getUserMcpConnections(userId: string): Promise<McpConnection[]> {
   return prisma.mcpConnection.findMany({
     where: { userId },
@@ -353,6 +390,7 @@ export async function getUserMcpConnections(userId: string): Promise<McpConnecti
   });
 }
 
+/** @deprecated Use tenantDb.mcpConnection.update() from requireOrgAuth() context */
 export async function updateMcpConnection(
   id: string,
   data: Record<string, unknown>
@@ -367,6 +405,7 @@ export async function updateMcpConnection(
   }
 }
 
+/** @deprecated Use tenantDb.mcpConnection.delete() from requireOrgAuth() context */
 export async function deleteMcpConnection(id: string): Promise<boolean> {
   try {
     await prisma.mcpConnection.delete({ where: { id } });

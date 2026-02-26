@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { getMcpConnection, updateMcpConnection, deleteMcpConnection } from '@/lib/storage';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 
 // GET /api/mcp/connections/[id] - Get a single MCP connection
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const connection = await getMcpConnection(id);
+    const connection = await tenantDb.mcpConnection.findUnique({
+      where: { id },
+    });
 
     if (!connection) {
       return NextResponse.json(
@@ -56,16 +56,17 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
     const body = await req.json();
 
-    const connection = await getMcpConnection(id);
+    const connection = await tenantDb.mcpConnection.findUnique({
+      where: { id },
+    });
     if (!connection) {
       return NextResponse.json(
         { error: 'MCP connection not found' },
@@ -91,14 +92,10 @@ export async function PATCH(
       }
     }
 
-    const updated = await updateMcpConnection(id, updateData);
-
-    if (!updated) {
-      return NextResponse.json(
-        { error: 'Failed to update MCP connection' },
-        { status: 500 }
-      );
-    }
+    const updated = await tenantDb.mcpConnection.update({
+      where: { id },
+      data: updateData,
+    });
 
     return NextResponse.json({
       id: updated.id,
@@ -125,15 +122,16 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
 
-    const connection = await getMcpConnection(id);
+    const connection = await tenantDb.mcpConnection.findUnique({
+      where: { id },
+    });
     if (!connection) {
       return NextResponse.json(
         { error: 'MCP connection not found' },
@@ -149,14 +147,7 @@ export async function DELETE(
       );
     }
 
-    const deleted = await deleteMcpConnection(id);
-
-    if (!deleted) {
-      return NextResponse.json(
-        { error: 'Failed to delete MCP connection' },
-        { status: 500 }
-      );
-    }
+    await tenantDb.mcpConnection.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

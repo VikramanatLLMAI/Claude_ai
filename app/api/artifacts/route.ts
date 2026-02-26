@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getConversationArtifacts, createArtifact, getConversation } from '@/lib/storage';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 
 // GET /api/artifacts?conversationId=xxx - Get all artifacts for a conversation
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const conversationId = req.nextUrl.searchParams.get('conversationId');
@@ -18,8 +17,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Verify user owns this conversation
-    const conversation = await getConversation(conversationId);
+    // Verify user owns this conversation (tenant-scoped)
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id: conversationId },
+    });
     if (!conversation || conversation.userId !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to access this conversation' },
@@ -27,7 +28,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const artifacts = await getConversationArtifacts(conversationId);
+    const artifacts = await tenantDb.artifact.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'desc' },
+    });
 
     return NextResponse.json(
       artifacts.map((a) => ({
@@ -53,9 +57,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/artifacts - Create a new artifact
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const body = await req.json();
@@ -68,8 +72,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify user owns this conversation
-    const conversation = await getConversation(conversationId);
+    // Verify user owns this conversation (tenant-scoped)
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id: conversationId },
+    });
     if (!conversation || conversation.userId !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to access this conversation' },
@@ -77,13 +83,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const artifact = await createArtifact({
-      conversationId,
-      messageId,
-      userId: user.id,
-      type: type || 'html',
-      title,
-      content,
+    const artifact = await tenantDb.artifact.create({
+      data: {
+        conversationId,
+        messageId,
+        userId: user.id,
+        type: type || 'html',
+        title,
+        content,
+      },
     });
 
     return NextResponse.json({

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { getMcpConnection, updateMcpConnection } from '@/lib/storage';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { decrypt } from '@/lib/encryption';
 
 // POST /api/mcp/connections/[id]/test - Test connection to MCP server
@@ -8,14 +7,13 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const connection = await getMcpConnection(id);
+    const connection = await tenantDb.mcpConnection.findUnique({ where: { id } });
 
     if (!connection) {
       return NextResponse.json(
@@ -136,10 +134,13 @@ export async function POST(
 
       if (!response.ok) {
         const errorText = await response.text();
-        await updateMcpConnection(id, {
-          status: 'error',
-          lastError: `HTTP ${response.status}: ${errorText.slice(0, 200)}`,
-          isActive: false,
+        await tenantDb.mcpConnection.update({
+          where: { id },
+          data: {
+            status: 'error',
+            lastError: `HTTP ${response.status}: ${errorText.slice(0, 200)}`,
+            isActive: false,
+          },
         });
 
         return NextResponse.json({
@@ -157,10 +158,13 @@ export async function POST(
 
       // Check for JSON-RPC error
       if (result.error) {
-        await updateMcpConnection(id, {
-          status: 'error',
-          lastError: result.error.message || 'Unknown MCP error',
-          isActive: false,
+        await tenantDb.mcpConnection.update({
+          where: { id },
+          data: {
+            status: 'error',
+            lastError: result.error.message || 'Unknown MCP error',
+            isActive: false,
+          },
         });
 
         return NextResponse.json({
@@ -171,12 +175,15 @@ export async function POST(
       }
 
       // Success - update connection status and store session ID
-      await updateMcpConnection(id, {
-        status: 'connected',
-        lastError: null,
-        isActive: true,
-        lastConnectedAt: new Date(),
-        ...(sessionId && { sessionId }),
+      await tenantDb.mcpConnection.update({
+        where: { id },
+        data: {
+          status: 'connected',
+          lastError: null,
+          isActive: true,
+          lastConnectedAt: new Date(),
+          ...(sessionId && { sessionId }),
+        },
       });
 
       // Auto-discover tools after successful connection
@@ -232,8 +239,9 @@ export async function POST(
             }));
 
             // Store discovered tools
-            await updateMcpConnection(id, {
-              availableTools: discoveredTools,
+            await tenantDb.mcpConnection.update({
+              where: { id },
+              data: { availableTools: discoveredTools },
             });
             console.log('[MCP Test] Stored tools in database');
           } else {
@@ -257,10 +265,13 @@ export async function POST(
     } catch (fetchError) {
       const errorMessage = fetchError instanceof Error ? fetchError.message : 'Connection failed';
 
-      await updateMcpConnection(id, {
-        status: 'error',
-        lastError: errorMessage,
-        isActive: false,
+      await tenantDb.mcpConnection.update({
+        where: { id },
+        data: {
+          status: 'error',
+          lastError: errorMessage,
+          isActive: false,
+        },
       });
 
       return NextResponse.json({

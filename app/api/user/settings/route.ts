@@ -1,44 +1,22 @@
-import { getSessionByToken, updateUser } from '@/lib/storage';
-import { encrypt } from '@/lib/encryption';
-
-// Helper to get user from request
-async function getUserFromRequest(req: Request) {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.slice(7);
-  const session = await getSessionByToken(token);
-
-  if (!session || session.expiresAt < new Date()) {
-    return null;
-  }
-
-  return session.user;
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { requireOrgAuth } from '@/lib/auth-middleware';
+import { updateUser } from '@/lib/storage';
 
 // GET /api/user/settings - Get user settings
-export async function GET(req: Request) {
-  try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return Response.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export async function GET(req: NextRequest) {
+  const auth = await requireOrgAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
 
-    // Don't send encrypted credentials, just indicate if they're set
-    return Response.json({
+  try {
+    return NextResponse.json({
       name: user.name,
-      avatarUrl: user.avatarUrl,
-      hasAnthropicApiKey: !!user.anthropicApiKeyEncrypted,
+      avatarBase64: user.avatarBase64,
       preferences: user.preferences,
     });
   } catch (error) {
     console.error('Get settings error:', error);
-    return Response.json(
+    return NextResponse.json(
       { error: 'Failed to get settings' },
       { status: 500 }
     );
@@ -46,50 +24,40 @@ export async function GET(req: Request) {
 }
 
 // PATCH /api/user/settings - Update user settings
-export async function PATCH(req: Request) {
-  try {
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      return Response.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+export async function PATCH(req: NextRequest) {
+  const auth = await requireOrgAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
 
+  try {
     const body = await req.json();
-    const { name, avatarUrl, anthropicApiKey, preferences } = body;
+    const { name, avatarBase64, preferences } = body;
 
     // Build update object
     const updates: Record<string, unknown> = {};
 
     if (name !== undefined) updates.name = name;
-    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+    if (avatarBase64 !== undefined) updates.avatarBase64 = avatarBase64;
     if (preferences !== undefined) updates.preferences = preferences;
 
-    // Encrypt Anthropic API key if provided
-    if (anthropicApiKey !== undefined) {
-      updates.anthropicApiKeyEncrypted = anthropicApiKey ? encrypt(anthropicApiKey) : null;
-    }
-
-    // Update user
+    // Update user (unscoped — User is not org-scoped)
     const updatedUser = await updateUser(user.id, updates);
 
     if (!updatedUser) {
-      return Response.json(
+      return NextResponse.json(
         { error: 'Failed to update settings' },
         { status: 500 }
       );
     }
 
-    return Response.json({
+    return NextResponse.json({
       name: updatedUser.name,
-      avatarUrl: updatedUser.avatarUrl,
-      hasAnthropicApiKey: !!updatedUser.anthropicApiKeyEncrypted,
+      avatarBase64: updatedUser.avatarBase64,
       preferences: updatedUser.preferences,
     });
   } catch (error) {
     console.error('Update settings error:', error);
-    return Response.json(
+    return NextResponse.json(
       { error: 'Failed to update settings' },
       { status: 500 }
     );

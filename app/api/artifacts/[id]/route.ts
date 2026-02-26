@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getArtifact, updateArtifact, deleteArtifact } from '@/lib/storage';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 
 // GET /api/artifacts/[id] - Get a single artifact with full content
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
-    const artifact = await getArtifact(id);
+    const artifact = await tenantDb.artifact.findUnique({
+      where: { id },
+    });
 
     if (!artifact) {
       return NextResponse.json(
@@ -54,16 +55,18 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
     const body = await req.json();
     const { title, content } = body;
 
-    const artifact = await getArtifact(id);
+    const artifact = await tenantDb.artifact.findUnique({
+      where: { id },
+    });
     if (!artifact) {
       return NextResponse.json(
         { error: 'Artifact not found' },
@@ -79,17 +82,13 @@ export async function PATCH(
       );
     }
 
-    const updated = await updateArtifact(id, {
-      ...(title && { title }),
-      ...(content && { content }),
+    const updated = await tenantDb.artifact.update({
+      where: { id },
+      data: {
+        ...(title && { title }),
+        ...(content && { content }),
+      },
     });
-
-    if (!updated) {
-      return NextResponse.json(
-        { error: 'Failed to update artifact' },
-        { status: 500 }
-      );
-    }
 
     return NextResponse.json({
       id: updated.id,
@@ -115,14 +114,16 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await params;
 
-    const artifact = await getArtifact(id);
+    const artifact = await tenantDb.artifact.findUnique({
+      where: { id },
+    });
     if (!artifact) {
       return NextResponse.json(
         { error: 'Artifact not found' },
@@ -138,14 +139,7 @@ export async function DELETE(
       );
     }
 
-    const deleted = await deleteArtifact(id);
-
-    if (!deleted) {
-      return NextResponse.json(
-        { error: 'Failed to delete artifact' },
-        { status: 500 }
-      );
-    }
+    await tenantDb.artifact.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

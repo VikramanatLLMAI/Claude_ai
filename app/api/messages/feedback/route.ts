@@ -4,9 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { updateMessage, getConversation } from '@/lib/storage';
-import prisma from '@/lib/db';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import {
   MessageFeedbackSchema,
   validate,
@@ -14,10 +12,9 @@ import {
 } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
-  // Require authentication
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const body = await req.json();
@@ -33,8 +30,8 @@ export async function POST(req: NextRequest) {
 
     const { messageId, feedback, comment } = validation.data!;
 
-    // Get current message to preserve existing metadata
-    const message = await prisma.message.findUnique({
+    // Get current message (tenant-scoped)
+    const message = await tenantDb.message.findUnique({
       where: { id: messageId },
       include: { conversation: true },
     });
@@ -47,8 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify the message belongs to a conversation owned by the user
-    const conversation = await getConversation(message.conversationId);
-    if (!conversation || conversation.userId !== user.id) {
+    if (message.conversation.userId !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to provide feedback on this message' },
         { status: 403 }
@@ -66,9 +62,13 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    // Update the message
-    const updatedMessage = await updateMessage(messageId, {
-      metadata: updatedMetadata,
+    // Update the message (tenant-scoped)
+    const updatedMessage = await tenantDb.message.update({
+      where: { id: messageId },
+      data: {
+        metadata: updatedMetadata,
+        editedAt: new Date(),
+      },
     });
 
     if (!updatedMessage) {

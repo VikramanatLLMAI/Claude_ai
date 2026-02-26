@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getConversation, updateConversation } from '@/lib/storage';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { anthropic } from '@/lib/anthropic';
 import { generateText } from 'ai';
 
@@ -14,15 +13,22 @@ export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { user, tenantDb } = auth;
 
   try {
     const { id } = await context.params;
 
-    // Get conversation with messages
-    const conversation = await getConversation(id);
+    // Get conversation with messages (tenant-scoped)
+    const conversation = await tenantDb.conversation.findUnique({
+      where: { id },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
 
     if (!conversation) {
       return NextResponse.json(
@@ -90,9 +96,10 @@ Generate a title:`,
       .replace(/\.$/, '') // Remove trailing period
       .slice(0, 100); // Limit length
 
-    // Update conversation with new title
-    const updatedConversation = await updateConversation(id, {
-      title: cleanTitle,
+    // Update conversation with new title (tenant-scoped)
+    const updatedConversation = await tenantDb.conversation.update({
+      where: { id },
+      data: { title: cleanTitle },
     });
 
     if (!updatedConversation) {

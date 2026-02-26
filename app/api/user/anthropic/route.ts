@@ -1,29 +1,49 @@
+/**
+ * Anthropic API Key Management
+ *
+ * GET /api/user/anthropic - Get API key status (masked)
+ * POST /api/user/anthropic - Save API key
+ *
+ * Note: In the multi-tenant schema, API keys are stored in the PlatformApiKey model
+ * (org-scoped). This route manages the org's Anthropic API key.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { updateUser } from '@/lib/storage';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { encrypt, decrypt } from '@/lib/encryption';
 
 // GET /api/user/anthropic - Get Anthropic API key status (masked)
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { tenantDb } = auth;
 
   try {
-    const hasApiKey = !!user.anthropicApiKeyEncrypted;
+    // Find the org's active Anthropic API key
+    const apiKey = await tenantDb.platformApiKey.findFirst({
+      where: {
+        provider: 'anthropic',
+        isActive: true,
+      },
+    });
 
-    let maskedKey = '';
-    if (hasApiKey && user.anthropicApiKeyEncrypted) {
-      try {
-        const apiKey = decrypt(user.anthropicApiKeyEncrypted);
-        maskedKey = apiKey.slice(0, 7) + '****' + apiKey.slice(-4);
-      } catch {
-        maskedKey = 'sk-ant-****';
-      }
+    if (!apiKey) {
+      return NextResponse.json({
+        hasApiKey: false,
+        maskedKey: '',
+      });
+    }
+
+    let maskedKey = 'sk-ant-****';
+    try {
+      const decryptedKey = decrypt(apiKey.encryptedKey);
+      maskedKey = decryptedKey.slice(0, 7) + '****' + decryptedKey.slice(-4);
+    } catch {
+      // Use default mask on decrypt failure
     }
 
     return NextResponse.json({
-      hasApiKey,
+      hasApiKey: true,
       maskedKey,
     });
   } catch (error) {
@@ -37,9 +57,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/user/anthropic - Save Anthropic API key
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user } = auth;
+  const { tenantDb } = auth;
 
   try {
     const { apiKey } = await req.json();
@@ -59,12 +79,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Encrypt and store
     const encryptedKey = encrypt(apiKey);
 
-    await updateUser(user.id, {
-      anthropicApiKeyEncrypted: encryptedKey,
+    // Upsert the org's Anthropic API key
+    const existing = await tenantDb.platformApiKey.findFirst({
+      where: {
+        provider: 'anthropic',
+        isActive: true,
+      },
     });
+
+    if (existing) {
+      await tenantDb.platformApiKey.update({
+        where: { id: existing.id },
+        data: {
+          encryptedKey,
+          lastTestedAt: null,
+        },
+      });
+    } else {
+      await tenantDb.platformApiKey.create({
+        data: {
+          provider: 'anthropic',
+          name: 'Default Anthropic Key',
+          encryptedKey,
+          isActive: true,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

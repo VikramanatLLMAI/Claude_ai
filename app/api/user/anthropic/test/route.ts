@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireOrgAuth } from '@/lib/auth-middleware';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 
 // POST /api/user/anthropic/test - Test Anthropic API key
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth(req);
+  const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
 
   try {
