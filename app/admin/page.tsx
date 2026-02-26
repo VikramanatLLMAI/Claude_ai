@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Shield, BarChart3, Building2, Users } from "lucide-react"
+import { PageLoadingSkeleton } from "@/components/ui/skeleton-loaders"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -25,23 +26,17 @@ function hasValidSession() {
  */
 export default function SuperAdminDashboardPage() {
   const router = useRouter()
-  const [isAuthed, setIsAuthed] = useState(false)
+  const session = hasValidSession()
 
   useEffect(() => {
     if (typeof window === "undefined") return
     if (!hasValidSession()) {
       router.replace("/admin/login")
-      return
     }
-    setIsAuthed(true)
   }, [router])
 
-  if (!isAuthed) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    )
+  if (!session) {
+    return <PageLoadingSkeleton />
   }
 
   const sections = [
