@@ -28,9 +28,9 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Routing & Multi-Tenancy (ROUTE)
 
-- [ ] **ROUTE-01**: Subdomain-based routing — `admin.llmatscale.ai` for Super Admin panel
-- [ ] **ROUTE-02**: Subdomain-based routing — `{org-slug}.llmatscale.ai` for org user chat access
-- [ ] **ROUTE-03**: Org Admin panel at `{org-slug}.llmatscale.ai/admin` accessible only to Org Admins of that org
+- [x] **ROUTE-01**: Subdomain-based routing — `admin.llmatscale.ai` for Super Admin panel
+- [x] **ROUTE-02**: Subdomain-based routing — `{org-slug}.llmatscale.ai` for org user chat access
+- [x] **ROUTE-03**: Org Admin panel at `{org-slug}.llmatscale.ai/admin` accessible only to Org Admins of that org
 - [ ] **ROUTE-04**: Org slug resolved from subdomain on every request to establish tenant context
 - [ ] **ROUTE-05**: Data isolation enforced — users from Org A cannot access anything from Org B, all data strictly filtered by org
 
@@ -373,9 +373,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Pending |
 | AUTH-07 | Phase 1 | Pending |
-| ROUTE-01 | Phase 1 | Pending |
-| ROUTE-02 | Phase 1 | Pending |
-| ROUTE-03 | Phase 1 | Pending |
+| ROUTE-01 | Phase 1 | Complete |
+| ROUTE-02 | Phase 1 | Complete |
+| ROUTE-03 | Phase 1 | Complete |
 | ROUTE-04 | Phase 1 | Pending |
 | ROUTE-05 | Phase 1 | Pending |
 | SAFE-03 | Phase 1 | Pending |
