@@ -1,78 +1,350 @@
-// Prisma schema for LLMatscale.ai - Claude Chat Platform
-// Based on PRD specification for simplified edition
+// Prisma schema for LLMatscale.ai - Multi-Tenant AI Chat Platform
+// Complete rewrite with RBAC and multi-tenant models
+// Phase 1: Schema and Auth Foundation
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-// Users table - authentication and preferences
-model User {
-  id                     String    @id @default(uuid())
-  email                  String    @unique
-  passwordHash           String    @map("password_hash")
-  name                   String?
-  avatarUrl              String?   @map("avatar_url")
-  anthropicApiKeyEncrypted  String?  @map("anthropic_api_key_encrypted")
-  preferences            Json      @default("{\"theme\": \"system\", \"fontSize\": 16, \"codeTheme\": \"github-dark\", \"messageDensity\": \"comfortable\"}")
-  createdAt              DateTime  @default(now()) @map("created_at")
-  lastLogin              DateTime? @map("last_login")
-  emailVerified          Boolean   @default(false) @map("email_verified")
+// ============================================================================
+// CORE USER & SESSION MODELS (not org-scoped)
+// ============================================================================
 
-  conversations  Conversation[]
-  artifacts      Artifact[]
-  mcpConnections McpConnection[]
-  sessions       Session[]
+// Users table - authentication and preferences
+// NOTE: User is NOT org-scoped. Org membership is via OrgMember junction.
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  avatarBase64 String?   @map("avatar_base64") @db.Text
+  isSuperAdmin Boolean   @default(false) @map("is_super_admin")
+  preferences  Json      @default("{\"themeMode\": \"system\"}")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastLogin    DateTime? @map("last_login")
+
+  sessions        Session[]
+  orgMemberships  OrgMember[]
+  invitationsSent Invitation[] @relation("InvitedByUser")
+  auditLogs       AuditLog[]
+  usageRecords    UsageRecord[]
+  conversations   Conversation[]
+  artifacts       Artifact[]
+  mcpConnections  McpConnection[]
 
   @@index([email])
   @@map("users")
 }
 
-// Sessions table - for session management
+// Sessions table - session management
+// organizationId is nullable (null for Super Admin sessions)
 model Session {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  token          String    @unique
+  organizationId String?   @map("organization_id")
+  userAgent      String?   @map("user_agent")
+  ipAddress      String?   @map("ip_address")
+  expiresAt      DateTime  @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastUsedAt     DateTime? @map("last_used_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
+  @@index([organizationId])
   @@map("sessions")
 }
 
-// Conversations table - chat conversation metadata
-model Conversation {
-  id           String    @id @default(uuid())
-  userId       String    @map("user_id")
-  title        String    @default("New Conversation")
-  model        String
-  activeMcpIds Json      @default("[]") @map("active_mcp_ids")
-  isPinned     Boolean   @default(false) @map("is_pinned")
-  isShared     Boolean   @default(false) @map("is_shared")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  lastMessageAt DateTime? @map("last_message_at")
+// Password reset tokens - not org-scoped
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages  Message[]
-  artifacts Artifact[]
+  @@index([token])
+  @@index([email])
+  @@map("password_reset_tokens")
+}
+
+// ============================================================================
+// ORGANIZATION & RBAC MODELS
+// ============================================================================
+
+// Organization - top-level tenant entity
+// Soft delete via deletedAt (SCHEMA-04)
+// Partial unique index on slug where deletedAt is null (SCHEMA-06)
+model Organization {
+  id              String    @id @default(uuid())
+  name            String
+  slug            String
+  status          String    @default("ACTIVE") // ACTIVE | SUSPENDED
+  logoBase64      String?   @map("logo_base64") @db.Text
+  logoDisplayMode String    @default("PLATFORM_AND_ORG") @map("logo_display_mode") // PLATFORM_AND_ORG | ORG_ONLY
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  members          OrgMember[]
+  roles            Role[]
+  conversations    Conversation[]
+  messages         Message[]
+  artifacts        Artifact[]
+  mcpConnections   McpConnection[]
+  invitations      Invitation[]
+  auditLogs        AuditLog[]
+  usageRecords     UsageRecord[]
+  platformApiKeys  PlatformApiKey[]
+  passwordPolicy   PasswordPolicy?
+  themeAssignments OrgThemeAssignment[]
+  settings         OrgSettings?
+
+  @@unique([slug], where: { deletedAt: null })
+  @@index([status])
+  @@map("organizations")
+}
+
+// OrgMember - junction model connecting User to Organization with a Role (SCHEMA-05)
+// One user per org constraint
+model OrgMember {
+  id                 String    @id @default(uuid())
+  userId             String    @map("user_id")
+  organizationId     String    @map("organization_id")
+  roleId             String    @map("role_id")
+  customInstructions String?   @map("custom_instructions") @db.Text
+  status             String    @default("ACTIVE") // ACTIVE | SUSPENDED
+  joinedAt           DateTime  @default(now()) @map("joined_at")
+  lastActiveAt       DateTime? @map("last_active_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([roleId])
+  @@map("org_members")
+}
+
+// Role - org-scoped role definition with permissions and model access
+model Role {
+  id                         String   @id @default(uuid())
+  organizationId             String   @map("organization_id")
+  name                       String
+  description                String?
+  isSystemRole               Boolean  @default(false) @map("is_system_role")
+  permissions                Json     @default("[]") // array of permission strings
+  allowedModels              Json     @default("[]") @map("allowed_models") // array of model IDs
+  systemInstructions         String?  @map("system_instructions") @db.Text
+  customInstructionsEnabled  Boolean  @default(true) @map("custom_instructions_enabled")
+  customInstructionsMaxLength Int     @default(1000) @map("custom_instructions_max_length")
+  dailyRequestLimit          Int?    @map("daily_request_limit") // null = unlimited
+  dailyTokenLimit            Int?    @map("daily_token_limit") // null = unlimited
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        OrgMember[]
+  mcpConnections McpConnection[]
+  invitations    Invitation[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("roles")
+}
+
+// Invitation - invite users to join an organization
+model Invitation {
+  id             String    @id @default(uuid())
+  organizationId String    @map("organization_id")
+  email          String
+  roleId         String    @map("role_id")
+  invitedById    String    @map("invited_by_id")
+  token          String    @unique
+  status         String    @default("PENDING") // PENDING | ACCEPTED | EXPIRED | REVOKED
+  expiresAt      DateTime  @map("expires_at")
+  acceptedAt     DateTime? @map("accepted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id])
+  invitedBy    User         @relation("InvitedByUser", fields: [invitedById], references: [id])
+
+  @@index([organizationId])
+  @@index([token])
+  @@index([email])
+  @@map("invitations")
+}
+
+// ============================================================================
+// AUDIT & USAGE MODELS
+// ============================================================================
+
+// AuditLog - tracks platform and org-level actions
+model AuditLog {
+  id             String    @id @default(uuid())
+  organizationId String?   @map("organization_id") // null for platform-level actions
+  userId         String?   @map("user_id") // null for system actions
+  action         String    // e.g., "user.created", "org.suspended"
+  targetType     String?   @map("target_type") // e.g., "User", "Organization"
+  targetId       String?   @map("target_id")
+  metadata       Json      @default("{}")
+  ipAddress      String?   @map("ip_address")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// UsageRecord - tracks AI model usage per org/user
+model UsageRecord {
+  id                String   @id @default(uuid())
+  organizationId    String   @map("organization_id")
+  userId            String   @map("user_id")
+  orgMemberId       String   @map("org_member_id")
+  model             String   // Claude model used
+  inputTokens       Int      @map("input_tokens")
+  outputTokens      Int      @map("output_tokens")
+  requestDurationMs Int?     @map("request_duration_ms")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([organizationId, createdAt])
+  @@map("usage_records")
+}
+
+// ============================================================================
+// PLATFORM API KEY & SECURITY MODELS
+// ============================================================================
+
+// PlatformApiKey - encrypted API keys for AI providers
+model PlatformApiKey {
+  id             String    @id @default(uuid())
+  organizationId String?   @map("organization_id") // null = platform-level unassigned key
+  provider       String    @default("anthropic")
+  name           String    // descriptive name
+  encryptedKey   String    @map("encrypted_key") @db.Text
+  lastTestedAt   DateTime? @map("last_tested_at")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([provider])
+  @@map("platform_api_keys")
+}
+
+// PasswordPolicy - per-org password requirements
+model PasswordPolicy {
+  id                  String   @id @default(uuid())
+  organizationId      String   @unique @map("organization_id")
+  minLength           Int      @default(8) @map("min_length")
+  requireUppercase    Boolean  @default(false) @map("require_uppercase")
+  requireLowercase    Boolean  @default(false) @map("require_lowercase")
+  requireNumbers      Boolean  @default(false) @map("require_numbers")
+  requireSpecialChars Boolean  @default(false) @map("require_special_chars")
+  expiryDays          Int?     @map("expiry_days") // null = no expiry
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("password_policies")
+}
+
+// ============================================================================
+// ORG SETTINGS & THEME MODELS
+// ============================================================================
+
+// OrgThemeAssignment - themes assigned to an organization
+model OrgThemeAssignment {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  themeName      String   @map("theme_name") // e.g., "claude", "vercel", "solar-dusk", "twitter", "violet-bloom"
+  isDefault      Boolean  @default(false) @map("is_default") // at most one default per org
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, themeName])
+  @@map("org_theme_assignments")
+}
+
+// OrgSettings - per-org configuration
+model OrgSettings {
+  id                          String   @id @default(uuid())
+  organizationId              String   @unique @map("organization_id")
+  systemInstructions          String?  @map("system_instructions") @db.Text
+  systemInstructionsMaxLength Int      @default(2000) @map("system_instructions_max_length")
+  conversationVisibility      Boolean  @default(false) @map("conversation_visibility")
+  defaultRoleId               String?  @map("default_role_id")
+  createdAt                   DateTime @default(now()) @map("created_at")
+  updatedAt                   DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("org_settings")
+}
+
+// ============================================================================
+// EXISTING DATA MODELS (updated with org scoping)
+// ============================================================================
+
+// Conversations table - chat conversation metadata
+// Now org-scoped via mandatory organizationId (SCHEMA-02)
+model Conversation {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  organizationId String    @map("organization_id")
+  title          String    @default("New Conversation")
+  model          String
+  activeMcpIds   Json      @default("[]") @map("active_mcp_ids")
+  isPinned       Boolean   @default(false) @map("is_pinned")
+  isShared       Boolean   @default(false) @map("is_shared")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  lastMessageAt  DateTime? @map("last_message_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messages     Message[]
+  artifacts    Artifact[]
 
   @@index([userId])
+  @@index([organizationId])
   @@index([userId, updatedAt(sort: Desc)])
   @@map("conversations")
 }
 
 // Messages table - individual chat messages
+// Now org-scoped via mandatory organizationId (SCHEMA-02)
 model Message {
   id             String    @id @default(uuid())
   conversationId String    @map("conversation_id")
+  organizationId String    @map("organization_id")
   role           String    // 'user' | 'assistant' | 'tool'
   content        String    // Text content
   parts          Json?     // UIMessage parts array
@@ -81,19 +353,23 @@ model Message {
   editedAt       DateTime? @map("edited_at")
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   artifacts    Artifact[]
 
   @@index([conversationId, createdAt])
+  @@index([organizationId])
   @@map("messages")
 }
 
 // Artifacts table - HTML artifacts generated by Claude
+// Now org-scoped via mandatory organizationId (SCHEMA-02)
 model Artifact {
   id             String   @id @default(uuid())
   conversationId String   @map("conversation_id")
   messageId      String   @map("message_id")
   userId         String   @map("user_id")
-  type           String   @default("html") // Currently only 'html' supported
+  organizationId String   @map("organization_id")
+  type           String   @default("html") // 'html' | 'code'
   title          String
   content        String   // Full HTML content
   createdAt      DateTime @default(now()) @map("created_at")
@@ -102,45 +378,40 @@ model Artifact {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([messageId])
+  @@index([organizationId])
   @@map("artifacts")
 }
 
 // MCP Connections table - Model Context Protocol server connections
+// Now org-scoped via mandatory organizationId (SCHEMA-02)
+// userId becomes optional (MCP connections can be org-wide or role-assigned)
 model McpConnection {
-  id                        String    @id @default(uuid())
-  userId                    String    @map("user_id")
-  name                      String
-  serverUrl                 String    @map("server_url")
-  authType                  String    @default("none") @map("auth_type") // 'none' | 'api_key' | 'oauth'
-  authCredentialsEncrypted  String?   @map("auth_credentials_encrypted")
-  availableTools            Json      @default("[]") @map("available_tools")
-  isActive                  Boolean   @default(true) @map("is_active")
-  status                    String    @default("disconnected") // 'connected' | 'disconnected' | 'error'
-  lastError                 String?   @map("last_error")
-  sessionId                 String?   @map("session_id") // MCP session ID for stateful servers
-  createdAt                 DateTime  @default(now()) @map("created_at")
-  updatedAt                 DateTime  @updatedAt @map("updated_at")
-  lastConnectedAt           DateTime? @map("last_connected_at")
+  id                       String    @id @default(uuid())
+  userId                   String?   @map("user_id")
+  organizationId           String    @map("organization_id")
+  roleId                   String?   @map("role_id") // null = org-wide, set = role-specific
+  name                     String
+  serverUrl                String    @map("server_url")
+  authType                 String    @default("none") @map("auth_type") // 'none' | 'api_key' | 'oauth'
+  authCredentialsEncrypted String?   @map("auth_credentials_encrypted")
+  availableTools           Json      @default("[]") @map("available_tools")
+  isActive                 Boolean   @default(true) @map("is_active")
+  status                   String    @default("disconnected") // 'connected' | 'disconnected' | 'error'
+  lastError                String?   @map("last_error")
+  sessionId                String?   @map("session_id") // MCP session ID for stateful servers
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+  lastConnectedAt          DateTime? @map("last_connected_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role         Role?        @relation(fields: [roleId], references: [id])
 
   @@index([userId])
+  @@index([organizationId])
   @@map("mcp_connections")
-}
-
-// Password reset tokens
-model PasswordResetToken {
-  id        String   @id @default(uuid())
-  email     String
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  usedAt    DateTime? @map("used_at")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([token])
-  @@index([email])
-  @@map("password_reset_tokens")
 }
