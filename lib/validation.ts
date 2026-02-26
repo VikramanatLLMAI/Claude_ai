@@ -247,6 +247,19 @@ export const UpdateRoleTemplateSchema = z.object({
   dailyTokenLimit: z.number().int().min(1000).nullable().optional(),
 });
 
+// ============================================
+// Phase 2: Invitation Schemas
+// ============================================
+
+export const CreateInvitationSchema = z.object({
+  email: EmailSchema,
+  roleId: z.string().uuid('Invalid role ID'),
+});
+
+export const SetDefaultRoleSchema = z.object({
+  roleId: z.string().uuid('Invalid role ID').nullable(),
+});
+
 // Export types inferred from schemas
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
@@ -269,3 +282,5 @@ export type OrgLogoInput = z.infer<typeof OrgLogoSchema>;
 export type CreateSuperAdminInput = z.infer<typeof CreateSuperAdminSchema>;
 export type UpdateSuperAdminInput = z.infer<typeof UpdateSuperAdminSchema>;
 export type UpdateRoleTemplateInput = z.infer<typeof UpdateRoleTemplateSchema>;
+export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
+export type SetDefaultRoleInput = z.infer<typeof SetDefaultRoleSchema>;
