@@ -32,12 +32,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. API requests to org-scoped routes return 403 unless the session carries valid org membership and role context
   4. API requests to platform routes return 403 unless the session belongs to a Super Admin
   5. Subdomain routing resolves admin.llmatscale.ai to the Super Admin context and {org-slug}.llmatscale.ai to the correct organization context
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Schema rewrite, Prisma 7.4 upgrade, tenant-scoped client, seed script (Wave 1)
+- [ ] 01-02-PLAN.md -- Auth middleware (requireOrgAuth/requireSuperAdmin), org context resolution, API route migration (Wave 2)
+- [ ] 01-03-PLAN.md -- Routing infrastructure (proxy.ts), org-scoped pages, bare domain helper, org login (Wave 2)
 
 ### Phase 2: Organization Management and Invitations
 **Goal**: Super Admin can create organizations, system role templates exist, and users can be invited to and join organizations through a complete email-based invitation flow
@@ -148,7 +148,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema and Auth Foundation | 0/3 | Not started | - |
+| 1. Schema and Auth Foundation | 0/3 | Planned | - |
 | 2. Organization Management and Invitations | 0/3 | Not started | - |
 | 3. Chat Integration and Core RBAC | 0/3 | Not started | - |
 | 4. Role Configuration and Usage Limits | 0/3 | Not started | - |
