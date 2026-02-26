@@ -245,10 +245,10 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Regular User — Authentication & Registration (UATH)
 
-- [ ] **UATH-01**: User can register with email and password via invitation acceptance flow
-- [ ] **UATH-02**: Name is required at registration (used in UI and injected into AI system prompt)
-- [ ] **UATH-03**: Initial-based avatar auto-generated from name at registration (e.g. "JD" for John Doe)
-- [ ] **UATH-04**: User subject to org password policy on registration and password changes
+- [x] **UATH-01**: User can register with email and password via invitation acceptance flow
+- [x] **UATH-02**: Name is required at registration (used in UI and injected into AI system prompt)
+- [x] **UATH-03**: Initial-based avatar auto-generated from name at registration (e.g. "JD" for John Doe)
+- [x] **UATH-04**: User subject to org password policy on registration and password changes
 
 ### Regular User — Profile (UPRF)
 
@@ -398,10 +398,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUSR-09 | Phase 2 | Complete |
 | ODEF-01 | Phase 2 | Complete |
 | ODEF-02 | Phase 2 | Pending |
-| UATH-01 | Phase 2 | Pending |
-| UATH-02 | Phase 2 | Pending |
-| UATH-03 | Phase 2 | Pending |
-| UATH-04 | Phase 2 | Pending |
+| UATH-01 | Phase 2 | Complete |
+| UATH-02 | Phase 2 | Complete |
+| UATH-03 | Phase 2 | Complete |
+| UATH-04 | Phase 2 | Complete |
 | SAFE-01 | Phase 2 | Complete |
 | SAFE-02 | Phase 2 | Complete |
 | SAFE-04 | Phase 2 | Complete |

@@ -78,6 +78,10 @@ Recent decisions affecting current work:
 - [02-02]: SAFE-02 admin check uses in-code permission check (not Prisma JSON filtering) for reliability
 - [02-02]: Lazy expiry: overdue PENDING invitations batch-updated to EXPIRED on list query
 - [02-02]: Org Admin API route pattern: requireOrgAdmin -> Zod validate -> getIpAddress -> service fn -> error mapping
+- [02-03]: Registration stores session using llmatscale_auth_session key (matching org-login-page convention)
+- [02-03]: avatarBase64 left null at registration -- existing chat UI renders initials from user name (UATH-03 resolved)
+- [02-03]: Public auth endpoints use invitation token as authorization proof (no requireAuth needed)
+- [02-03]: Server component validates token directly (no fetch to API) for faster rendering
 
 ### Pending Todos
 
@@ -92,5 +96,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 02-02-PLAN.md
-Resume file: .planning/phases/02-organization-management-and-invitations/02-02-SUMMARY.md
+Stopped at: Completed 02-03-PLAN.md
+Resume file: .planning/phases/02-organization-management-and-invitations/02-03-SUMMARY.md
