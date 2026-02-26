@@ -9,20 +9,20 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Schema & Foundation (SCHEMA)
 
-- [ ] **SCHEMA-01**: Fresh database schema with multi-tenant models (Organization, OrgMember, Role, Invitation, AuditLog, UsageRecord, PlatformApiKey, PasswordPolicy, OrgThemeAssignment, OrgSettings)
-- [ ] **SCHEMA-02**: All existing data tables (Conversation, Message, Artifact, McpConnection) gain mandatory organizationId column for tenant isolation
-- [ ] **SCHEMA-03**: Tenant-scoped Prisma Client Extension auto-injects organizationId into every query — single enforcement point for data isolation
-- [ ] **SCHEMA-04**: Soft delete support on Organization model (deletedAt timestamp, 30-day grace period)
-- [ ] **SCHEMA-05**: OrgMember junction model links User to Organization with role assignment and org-specific custom instructions
-- [ ] **SCHEMA-06**: Partial unique indexes to handle soft-deleted org name conflicts
+- [x] **SCHEMA-01**: Fresh database schema with multi-tenant models (Organization, OrgMember, Role, Invitation, AuditLog, UsageRecord, PlatformApiKey, PasswordPolicy, OrgThemeAssignment, OrgSettings)
+- [x] **SCHEMA-02**: All existing data tables (Conversation, Message, Artifact, McpConnection) gain mandatory organizationId column for tenant isolation
+- [x] **SCHEMA-03**: Tenant-scoped Prisma Client Extension auto-injects organizationId into every query — single enforcement point for data isolation
+- [x] **SCHEMA-04**: Soft delete support on Organization model (deletedAt timestamp, 30-day grace period)
+- [x] **SCHEMA-05**: OrgMember junction model links User to Organization with role assignment and org-specific custom instructions
+- [x] **SCHEMA-06**: Partial unique indexes to handle soft-deleted org name conflicts
 
 ### Authentication & Authorization (AUTH)
 
 - [ ] **AUTH-01**: Enriched auth context returns user + org membership + role + permissions in a single query on every request
 - [ ] **AUTH-02**: `requireOrgAuth()` middleware validates session, org membership, and role context for all org-scoped routes
 - [ ] **AUTH-03**: `requireSuperAdmin()` middleware for all platform-level routes
-- [ ] **AUTH-04**: Session model extended with organizationId and role context
-- [ ] **AUTH-05**: Super Admin seed script (CLI command) creates the first Super Admin — no UI registration path
+- [x] **AUTH-04**: Session model extended with organizationId and role context
+- [x] **AUTH-05**: Super Admin seed script (CLI command) creates the first Super Admin — no UI registration path
 - [ ] **AUTH-06**: Super Admin has no org context and cannot use chat
 - [ ] **AUTH-07**: Authorization enforced at API route handler level (not Next.js middleware) per CVE-2025-29927 defense-in-depth
 
@@ -360,17 +360,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHEMA-01 | Phase 1 | Pending |
-| SCHEMA-02 | Phase 1 | Pending |
-| SCHEMA-03 | Phase 1 | Pending |
-| SCHEMA-04 | Phase 1 | Pending |
-| SCHEMA-05 | Phase 1 | Pending |
-| SCHEMA-06 | Phase 1 | Pending |
+| SCHEMA-01 | Phase 1 | Complete |
+| SCHEMA-02 | Phase 1 | Complete |
+| SCHEMA-03 | Phase 1 | Complete |
+| SCHEMA-04 | Phase 1 | Complete |
+| SCHEMA-05 | Phase 1 | Complete |
+| SCHEMA-06 | Phase 1 | Complete |
 | AUTH-01 | Phase 1 | Pending |
 | AUTH-02 | Phase 1 | Pending |
 | AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Pending |
 | AUTH-07 | Phase 1 | Pending |
 | ROUTE-01 | Phase 1 | Pending |
