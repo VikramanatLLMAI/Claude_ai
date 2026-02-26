@@ -36,22 +36,22 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — Organization Management (SORG)
 
-- [ ] **SORG-01**: Super Admin can create new organizations with name, slug, and initial settings
-- [ ] **SORG-02**: Super Admin can edit organization details
-- [ ] **SORG-03**: Super Admin can suspend an organization (disables all users in that org)
-- [ ] **SORG-04**: Super Admin can activate a suspended organization
-- [ ] **SORG-05**: Super Admin can delete an organization (30-day grace period before permanent deletion)
-- [ ] **SORG-06**: Super Admin can view all organizations with stats (user count, usage, status)
-- [ ] **SORG-07**: Super Admin can upload or update org logo (converted to Base64, stored in database)
+- [x] **SORG-01**: Super Admin can create new organizations with name, slug, and initial settings
+- [x] **SORG-02**: Super Admin can edit organization details
+- [x] **SORG-03**: Super Admin can suspend an organization (disables all users in that org)
+- [x] **SORG-04**: Super Admin can activate a suspended organization
+- [x] **SORG-05**: Super Admin can delete an organization (30-day grace period before permanent deletion)
+- [x] **SORG-06**: Super Admin can view all organizations with stats (user count, usage, status)
+- [x] **SORG-07**: Super Admin can upload or update org logo (converted to Base64, stored in database)
 - [ ] **SORG-08**: Super Admin can assign available themes to each org (from 5 platform themes)
 - [ ] **SORG-09**: Super Admin can set the default theme for each org
 
 ### Super Admin — User Management (SUSR)
 
-- [ ] **SUSR-01**: Super Admin can create other Super Admins
-- [ ] **SUSR-02**: Super Admin can assign Org Admins to specific organizations
-- [ ] **SUSR-03**: Super Admin can edit Super Admin details
-- [ ] **SUSR-04**: Super Admin can delete Super Admins (cannot delete self, must have at least one remaining)
+- [x] **SUSR-01**: Super Admin can create other Super Admins
+- [x] **SUSR-02**: Super Admin can assign Org Admins to specific organizations
+- [x] **SUSR-03**: Super Admin can edit Super Admin details
+- [x] **SUSR-04**: Super Admin can delete Super Admins (cannot delete self, must have at least one remaining)
 
 ### Super Admin — Platform Settings (SSET)
 
@@ -67,9 +67,9 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — System Role Templates (STPL)
 
-- [ ] **STPL-01**: Super Admin can view default system role templates (Technical, Business, Basic)
-- [ ] **STPL-02**: Super Admin can edit default templates that apply platform-wide
-- [ ] **STPL-03**: Super Admin can reset any template back to default
+- [x] **STPL-01**: Super Admin can view default system role templates (Technical, Business, Basic)
+- [x] **STPL-02**: Super Admin can edit default templates that apply platform-wide
+- [x] **STPL-03**: Super Admin can reset any template back to default
 
 ### Super Admin — Platform Analytics (SANA)
 
@@ -135,7 +135,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Default Role (ODEF)
 
-- [ ] **ODEF-01**: Org Admin can set a default role automatically assigned when a new user accepts an invitation without a specified role
+- [x] **ODEF-01**: Org Admin can set a default role automatically assigned when a new user accepts an invitation without a specified role
 - [ ] **ODEF-02**: If the default role is deleted, the field clears automatically and next invitation requires explicit role selection
 
 ### Org Admin — Conversation Visibility (OVIS)
@@ -295,11 +295,11 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Safety & Protection Rules (SAFE)
 
-- [ ] **SAFE-01**: No user can demote, suspend, or delete themselves — enforced at service layer
+- [x] **SAFE-01**: No user can demote, suspend, or delete themselves — enforced at service layer
 - [ ] **SAFE-02**: Must always have at least 1 Org Admin per org
 - [x] **SAFE-03**: Only Super Admin can delete an organization
-- [ ] **SAFE-04**: Org Admin cannot delete their own org
-- [ ] **SAFE-05**: 30-day grace period after org deletion — data recoverable during this window
+- [x] **SAFE-04**: Org Admin cannot delete their own org
+- [x] **SAFE-05**: 30-day grace period after org deletion — data recoverable during this window
 - [x] **SAFE-06**: Must always have at least 1 Super Admin
 - [ ] **SAFE-07**: Audit logs are immutable — cannot be edited or deleted by anyone
 - [ ] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
@@ -380,32 +380,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROUTE-05 | Phase 1 | Complete |
 | SAFE-03 | Phase 1 | Complete |
 | SAFE-06 | Phase 1 | Complete |
-| SORG-01 | Phase 2 | Pending |
-| SORG-02 | Phase 2 | Pending |
-| SORG-03 | Phase 2 | Pending |
-| SORG-04 | Phase 2 | Pending |
-| SORG-05 | Phase 2 | Pending |
-| SORG-06 | Phase 2 | Pending |
-| SORG-07 | Phase 2 | Pending |
-| SUSR-01 | Phase 2 | Pending |
-| SUSR-02 | Phase 2 | Pending |
-| SUSR-03 | Phase 2 | Pending |
-| SUSR-04 | Phase 2 | Pending |
-| STPL-01 | Phase 2 | Pending |
-| STPL-02 | Phase 2 | Pending |
-| STPL-03 | Phase 2 | Pending |
+| SORG-01 | Phase 2 | Complete |
+| SORG-02 | Phase 2 | Complete |
+| SORG-03 | Phase 2 | Complete |
+| SORG-04 | Phase 2 | Complete |
+| SORG-05 | Phase 2 | Complete |
+| SORG-06 | Phase 2 | Complete |
+| SORG-07 | Phase 2 | Complete |
+| SUSR-01 | Phase 2 | Complete |
+| SUSR-02 | Phase 2 | Complete |
+| SUSR-03 | Phase 2 | Complete |
+| SUSR-04 | Phase 2 | Complete |
+| STPL-01 | Phase 2 | Complete |
+| STPL-02 | Phase 2 | Complete |
+| STPL-03 | Phase 2 | Complete |
 | OUSR-01 | Phase 2 | Pending |
 | OUSR-09 | Phase 2 | Pending |
-| ODEF-01 | Phase 2 | Pending |
+| ODEF-01 | Phase 2 | Complete |
 | ODEF-02 | Phase 2 | Pending |
 | UATH-01 | Phase 2 | Pending |
 | UATH-02 | Phase 2 | Pending |
 | UATH-03 | Phase 2 | Pending |
 | UATH-04 | Phase 2 | Pending |
-| SAFE-01 | Phase 2 | Pending |
+| SAFE-01 | Phase 2 | Complete |
 | SAFE-02 | Phase 2 | Pending |
-| SAFE-04 | Phase 2 | Pending |
-| SAFE-05 | Phase 2 | Pending |
+| SAFE-04 | Phase 2 | Complete |
+| SAFE-05 | Phase 2 | Complete |
 | UCHAT-01 | Phase 3 | Pending |
 | UCHAT-02 | Phase 3 | Pending |
 | UCHAT-05 | Phase 3 | Pending |
