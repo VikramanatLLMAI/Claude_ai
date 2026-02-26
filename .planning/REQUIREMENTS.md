@@ -18,21 +18,21 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Authentication & Authorization (AUTH)
 
-- [ ] **AUTH-01**: Enriched auth context returns user + org membership + role + permissions in a single query on every request
-- [ ] **AUTH-02**: `requireOrgAuth()` middleware validates session, org membership, and role context for all org-scoped routes
-- [ ] **AUTH-03**: `requireSuperAdmin()` middleware for all platform-level routes
+- [x] **AUTH-01**: Enriched auth context returns user + org membership + role + permissions in a single query on every request
+- [x] **AUTH-02**: `requireOrgAuth()` middleware validates session, org membership, and role context for all org-scoped routes
+- [x] **AUTH-03**: `requireSuperAdmin()` middleware for all platform-level routes
 - [x] **AUTH-04**: Session model extended with organizationId and role context
 - [x] **AUTH-05**: Super Admin seed script (CLI command) creates the first Super Admin — no UI registration path
-- [ ] **AUTH-06**: Super Admin has no org context and cannot use chat
-- [ ] **AUTH-07**: Authorization enforced at API route handler level (not Next.js middleware) per CVE-2025-29927 defense-in-depth
+- [x] **AUTH-06**: Super Admin has no org context and cannot use chat
+- [x] **AUTH-07**: Authorization enforced at API route handler level (not Next.js middleware) per CVE-2025-29927 defense-in-depth
 
 ### Routing & Multi-Tenancy (ROUTE)
 
 - [x] **ROUTE-01**: Subdomain-based routing — `admin.llmatscale.ai` for Super Admin panel
 - [x] **ROUTE-02**: Subdomain-based routing — `{org-slug}.llmatscale.ai` for org user chat access
 - [x] **ROUTE-03**: Org Admin panel at `{org-slug}.llmatscale.ai/admin` accessible only to Org Admins of that org
-- [ ] **ROUTE-04**: Org slug resolved from subdomain on every request to establish tenant context
-- [ ] **ROUTE-05**: Data isolation enforced — users from Org A cannot access anything from Org B, all data strictly filtered by org
+- [x] **ROUTE-04**: Org slug resolved from subdomain on every request to establish tenant context
+- [x] **ROUTE-05**: Data isolation enforced — users from Org A cannot access anything from Org B, all data strictly filtered by org
 
 ### Super Admin — Organization Management (SORG)
 
@@ -297,10 +297,10 @@ Requirements for initial release. All features from the RBAC specification are v
 
 - [ ] **SAFE-01**: No user can demote, suspend, or delete themselves — enforced at service layer
 - [ ] **SAFE-02**: Must always have at least 1 Org Admin per org
-- [ ] **SAFE-03**: Only Super Admin can delete an organization
+- [x] **SAFE-03**: Only Super Admin can delete an organization
 - [ ] **SAFE-04**: Org Admin cannot delete their own org
 - [ ] **SAFE-05**: 30-day grace period after org deletion — data recoverable during this window
-- [ ] **SAFE-06**: Must always have at least 1 Super Admin
+- [x] **SAFE-06**: Must always have at least 1 Super Admin
 - [ ] **SAFE-07**: Audit logs are immutable — cannot be edited or deleted by anyone
 - [ ] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
 - [ ] **SAFE-09**: Character limits enforced server-side, not just client-side
@@ -366,20 +366,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-04 | Phase 1 | Complete |
 | SCHEMA-05 | Phase 1 | Complete |
 | SCHEMA-06 | Phase 1 | Complete |
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
-| AUTH-06 | Phase 1 | Pending |
-| AUTH-07 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Complete |
+| AUTH-07 | Phase 1 | Complete |
 | ROUTE-01 | Phase 1 | Complete |
 | ROUTE-02 | Phase 1 | Complete |
 | ROUTE-03 | Phase 1 | Complete |
-| ROUTE-04 | Phase 1 | Pending |
-| ROUTE-05 | Phase 1 | Pending |
-| SAFE-03 | Phase 1 | Pending |
-| SAFE-06 | Phase 1 | Pending |
+| ROUTE-04 | Phase 1 | Complete |
+| ROUTE-05 | Phase 1 | Complete |
+| SAFE-03 | Phase 1 | Complete |
+| SAFE-06 | Phase 1 | Complete |
 | SORG-01 | Phase 2 | Pending |
 | SORG-02 | Phase 2 | Pending |
 | SORG-03 | Phase 2 | Pending |
