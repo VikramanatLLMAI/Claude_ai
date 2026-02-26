@@ -150,7 +150,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — User Management (OUSR)
 
-- [ ] **OUSR-01**: Org Admin can invite users to the org via email (Resend API)
+- [x] **OUSR-01**: Org Admin can invite users to the org via email (Resend API)
 - [ ] **OUSR-02**: Org Admin can view all users in the org with their name, role, avatar, and last active date
 - [ ] **OUSR-03**: Org Admin can edit user details (name only — email change not allowed)
 - [ ] **OUSR-04**: Org Admin can change a user's role
@@ -158,7 +158,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **OUSR-06**: Org Admin can suspend a user (blocks access without deleting)
 - [ ] **OUSR-07**: Org Admin can activate a suspended user
 - [ ] **OUSR-08**: Org Admin can delete a user
-- [ ] **OUSR-09**: Org Admin can resend or revoke pending invitations
+- [x] **OUSR-09**: Org Admin can resend or revoke pending invitations
 - [ ] **OUSR-10**: Org Admin can view a user's custom instructions (read-only, for compliance)
 - [ ] **OUSR-11**: Org Admin can force-logout a specific user from all active sessions
 - [ ] **OUSR-12**: Org Admin can view inactive users (users who have not logged in for 30+ days)
@@ -296,7 +296,7 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Safety & Protection Rules (SAFE)
 
 - [x] **SAFE-01**: No user can demote, suspend, or delete themselves — enforced at service layer
-- [ ] **SAFE-02**: Must always have at least 1 Org Admin per org
+- [x] **SAFE-02**: Must always have at least 1 Org Admin per org
 - [x] **SAFE-03**: Only Super Admin can delete an organization
 - [x] **SAFE-04**: Org Admin cannot delete their own org
 - [x] **SAFE-05**: 30-day grace period after org deletion — data recoverable during this window
@@ -394,8 +394,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STPL-01 | Phase 2 | Complete |
 | STPL-02 | Phase 2 | Complete |
 | STPL-03 | Phase 2 | Complete |
-| OUSR-01 | Phase 2 | Pending |
-| OUSR-09 | Phase 2 | Pending |
+| OUSR-01 | Phase 2 | Complete |
+| OUSR-09 | Phase 2 | Complete |
 | ODEF-01 | Phase 2 | Complete |
 | ODEF-02 | Phase 2 | Pending |
 | UATH-01 | Phase 2 | Pending |
@@ -403,7 +403,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UATH-03 | Phase 2 | Pending |
 | UATH-04 | Phase 2 | Pending |
 | SAFE-01 | Phase 2 | Complete |
-| SAFE-02 | Phase 2 | Pending |
+| SAFE-02 | Phase 2 | Complete |
 | SAFE-04 | Phase 2 | Complete |
 | SAFE-05 | Phase 2 | Complete |
 | UCHAT-01 | Phase 3 | Pending |
