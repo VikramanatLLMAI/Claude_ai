@@ -186,6 +186,67 @@ export function formatValidationErrors(errors: z.ZodIssue[]): string {
   return errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
 }
 
+// ============================================
+// Phase 2: Organization Management Schemas
+// ============================================
+
+// Slug validation: lowercase alphanumeric + hyphens, 3-50 chars, no leading/trailing hyphens
+export const OrgSlugSchema = z
+  .string()
+  .min(3, 'Slug must be at least 3 characters')
+  .max(50, 'Slug must be less than 50 characters')
+  .regex(
+    /^[a-z0-9][a-z0-9-]*[a-z0-9]$/,
+    'Slug must be lowercase alphanumeric with hyphens, no leading/trailing hyphens'
+  )
+  .refine((val) => !val.includes('--'), 'Slug cannot contain consecutive hyphens');
+
+export const CreateOrgSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  slug: OrgSlugSchema,
+  logoBase64: z.string().max(500000).optional(), // ~375KB max image
+  logoDisplayMode: z
+    .enum(['PLATFORM_AND_ORG', 'ORG_ONLY'])
+    .default('PLATFORM_AND_ORG'),
+  initialAdminEmail: EmailSchema.optional(), // Email for initial Org Admin invitation
+});
+
+export const UpdateOrgSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  slug: OrgSlugSchema.optional(),
+  logoDisplayMode: z.enum(['PLATFORM_AND_ORG', 'ORG_ONLY']).optional(),
+});
+
+export const OrgLogoSchema = z.object({
+  logoBase64: z
+    .string()
+    .min(1, 'Logo data is required')
+    .max(500000, 'Logo must be less than 375KB'),
+});
+
+export const CreateSuperAdminSchema = z.object({
+  email: EmailSchema,
+  password: PasswordSchema,
+  name: z.string().min(1, 'Name is required').max(100),
+});
+
+export const UpdateSuperAdminSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  email: EmailSchema.optional(),
+});
+
+export const UpdateRoleTemplateSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  description: z.string().max(500).optional(),
+  allowedModels: z.array(z.string()).optional(),
+  permissions: z.array(z.string()).optional(),
+  systemInstructions: z.string().max(5000).optional(),
+  customInstructionsEnabled: z.boolean().optional(),
+  customInstructionsMaxLength: z.number().int().min(100).max(5000).optional(),
+  dailyRequestLimit: z.number().int().min(1).nullable().optional(),
+  dailyTokenLimit: z.number().int().min(1000).nullable().optional(),
+});
+
 // Export types inferred from schemas
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
@@ -202,3 +263,9 @@ export type MessageFeedbackInput = z.infer<typeof MessageFeedbackSchema>;
 export type CreateMcpConnectionInput = z.infer<typeof CreateMcpConnectionSchema>;
 export type UpdateMcpConnectionInput = z.infer<typeof UpdateMcpConnectionSchema>;
 export type ChatRequestInput = z.infer<typeof ChatRequestSchema>;
+export type CreateOrgInput = z.infer<typeof CreateOrgSchema>;
+export type UpdateOrgInput = z.infer<typeof UpdateOrgSchema>;
+export type OrgLogoInput = z.infer<typeof OrgLogoSchema>;
+export type CreateSuperAdminInput = z.infer<typeof CreateSuperAdminSchema>;
+export type UpdateSuperAdminInput = z.infer<typeof UpdateSuperAdminSchema>;
+export type UpdateRoleTemplateInput = z.infer<typeof UpdateRoleTemplateSchema>;
