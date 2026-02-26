@@ -83,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 01-02-PLAN.md (Auth middleware, API route migration) -- Phase 1 all plans complete
-Resume file: .planning/phases/02-org-management/02-01-PLAN.md
+Stopped at: Phase 2 context gathered -- ready for planning
+Resume file: .planning/phases/02-organization-management-and-invitations/02-CONTEXT.md
