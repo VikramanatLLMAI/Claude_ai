@@ -260,6 +260,48 @@ export const SetDefaultRoleSchema = z.object({
   roleId: z.string().uuid('Invalid role ID').nullable(),
 });
 
+// ============================================
+// Model Registry Schemas
+// ============================================
+
+export const CreateModelSchema = z.object({
+  modelId: z.string().min(1, 'Model ID is required').max(100),
+  displayName: z.string().min(1, 'Display name is required').max(200),
+  generationGroup: z.string().min(1, 'Generation group is required').max(50),
+  inputPricePerToken: z.number().nonnegative('Input price must be non-negative'),
+  outputPricePerToken: z.number().nonnegative('Output price must be non-negative'),
+  thinkingPricePerToken: z.number().nonnegative('Thinking price must be non-negative'),
+  cacheWritePricePerToken: z.number().nonnegative('Cache write price must be non-negative'),
+  cacheReadPricePerToken: z.number().nonnegative('Cache read price must be non-negative'),
+  supportsThinking: z.boolean().optional().default(false),
+  supportsVision: z.boolean().optional().default(true),
+  supportsTools: z.boolean().optional().default(true),
+  thinkingType: z.enum(['adaptive', 'extended']).nullable().optional().default(null),
+  maxOutputTokens: z.number().int().positive('Max output tokens must be a positive integer'),
+  contextWindow: z.number().int().positive('Context window must be a positive integer'),
+  status: z.enum(['ACTIVE', 'DEPRECATED']).optional().default('ACTIVE'),
+  sortOrder: z.number().int().optional().default(0),
+});
+
+export const UpdateModelSchema = z.object({
+  modelId: z.string().min(1).max(100).optional(),
+  displayName: z.string().min(1).max(200).optional(),
+  generationGroup: z.string().min(1).max(50).optional(),
+  inputPricePerToken: z.number().nonnegative().optional(),
+  outputPricePerToken: z.number().nonnegative().optional(),
+  thinkingPricePerToken: z.number().nonnegative().optional(),
+  cacheWritePricePerToken: z.number().nonnegative().optional(),
+  cacheReadPricePerToken: z.number().nonnegative().optional(),
+  supportsThinking: z.boolean().optional(),
+  supportsVision: z.boolean().optional(),
+  supportsTools: z.boolean().optional(),
+  thinkingType: z.enum(['adaptive', 'extended']).nullable().optional(),
+  maxOutputTokens: z.number().int().positive().optional(),
+  contextWindow: z.number().int().positive().optional(),
+  status: z.enum(['ACTIVE', 'DEPRECATED']).optional(),
+  sortOrder: z.number().int().optional(),
+});
+
 // Export types inferred from schemas
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
@@ -284,3 +326,5 @@ export type UpdateSuperAdminInput = z.infer<typeof UpdateSuperAdminSchema>;
 export type UpdateRoleTemplateInput = z.infer<typeof UpdateRoleTemplateSchema>;
 export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
 export type SetDefaultRoleInput = z.infer<typeof SetDefaultRoleSchema>;
+export type CreateModelInput = z.infer<typeof CreateModelSchema>;
+export type UpdateModelInput = z.infer<typeof UpdateModelSchema>;
