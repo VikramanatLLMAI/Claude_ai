@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-02-27T10:36:33.285Z"
+last_updated: "2026-02-27T10:44:13Z"
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 17
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -23,18 +23,18 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 3 of 7 (Chat Integration and Core RBAC)
-Plan: 2 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: Executing plans
-Last activity: 2026-02-27 -- Completed 03-02-PLAN.md (Super Admin Dashboard + Model Registry UI)
+Last activity: 2026-02-27 -- Completed 03-05-PLAN.md (Role Model Assignment and Settings)
 
-Progress: [########------------] 41%
+Progress: [##########----------] 53%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 15 min
-- Total execution time: 2.1 hours
+- Total plans completed: 10
+- Average duration: 14 min
+- Total execution time: 2.15 hours
 
 **By Phase:**
 
@@ -42,10 +42,10 @@ Progress: [########------------] 41%
 |-------|-------|-------|----------|
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
-| 03 | 2 | 10 min | 5 min |
+| 03 | 3 | 13 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (8 min), 02-02 (6 min), 02-03 (6 min), 02-04 (4 min), 03-02 (5 min)
+- Last 5 plans: 02-02 (6 min), 02-03 (6 min), 02-04 (4 min), 03-02 (5 min), 03-05 (3 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -92,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase 03]: AdminSidebar accepts variant prop (super-admin | org-admin) for reuse in Plan 04 Org Admin Console
 - [Phase 03]: Model form displays prices as dollar/MTok and converts to per-token before API submission
 - [Phase 03]: Admin layout bypasses sidebar for /admin/login path to avoid auth-guarded sidebar wrapping login page
+- [03-05]: Model assignment uses raw prisma.$transaction (not tenantDb) for Role update by direct roleId
+- [03-05]: RoleModelAssignment fetches from /api/admin/models (platform-level) since Model Registry is not org-scoped
+- [03-05]: Per-section save pattern: model assignment and role settings saved independently with change detection
 
 ### Pending Todos
 
@@ -106,5 +109,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 03-02-PLAN.md (Super Admin Dashboard + Model Registry UI)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-02-SUMMARY.md
+Stopped at: Completed 03-05-PLAN.md (Role Model Assignment and Settings)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-05-SUMMARY.md

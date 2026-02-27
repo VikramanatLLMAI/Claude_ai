@@ -185,7 +185,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Per Role LLM Access (OLLM)
 
-- [ ] **OLLM-01**: Org Admin can select which Anthropic models the role can access (v1: Anthropic only)
+- [x] **OLLM-01**: Org Admin can select which Anthropic models the role can access (v1: Anthropic only)
 - [ ] **OLLM-02**: Users in that role can only use the permitted models
 
 ### Org Admin — Per Role System Instructions (ORSI)
@@ -426,7 +426,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRMT-04 | Phase 3 | Pending |
 | PRMT-05 | Phase 3 | Pending |
 | PRMT-06 | Phase 3 | Pending |
-| OLLM-01 | Phase 3 | Pending |
+| OLLM-01 | Phase 3 | Complete |
 | OLLM-02 | Phase 3 | Pending |
 | OMCP-01 | Phase 3 | Pending |
 | OMCP-02 | Phase 3 | Pending |
