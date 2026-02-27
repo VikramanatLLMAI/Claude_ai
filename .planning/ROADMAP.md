@@ -78,8 +78,13 @@ Plans:
 **Goal**: Org Admins can create custom roles with granular permissions, enforce usage limits with threshold alerts, set password policies, and users can manage their sessions
 **Depends on**: Phase 3
 **Requirements**: OROL-01, OROL-02, OROL-03, OROL-04, OROL-05, OROL-06, OROL-07, OUSE-01, OUSE-02, OUSE-03, OUSE-04, OUSE-05, OALT-01, OALT-02, OALT-03, UCHAT-03, UCHAT-04, SAFE-10, SAFE-11, OPWD-01, OPWD-02, OPWD-03, OPWD-04, OPWD-05, OPWD-06, USES-01, USES-02, UPRF-01, UPRF-02, UPRF-03, UPRF-04
+**Phase 3 handoff notes**:
+  - Org Admin Console shell already exists at `{org-slug}.llmatscale.ai/admin` with shadcn sidebar — Phase 4 adds custom role management pages to the existing console
+  - Model assignment uses the Platform Model Registry from Phase 3 (not hardcoded models) — custom roles configure model access against the registry
+  - Personal MCP server toggle + max count already exists per role from Phase 3 — custom roles inherit this capability
+  - Usage tracking infrastructure (UsageRecord with input/output/thinking/cache tokens) already exists from Phase 3 — Phase 4 adds limit enforcement and alert banners
 **Success Criteria** (what must be TRUE):
-  1. Org Admin can create a custom role with specific model access, MCP assignment, system instructions, and usage limits -- and users assigned that role are constrained accordingly
+  1. Org Admin can create a custom role with specific model access (from Model Registry), MCP assignment, system instructions, and usage limits -- and users assigned that role are constrained accordingly
   2. A user who reaches 80% of their daily request or token limit sees a warning banner in the chat UI, and at 100% the chat input is blocked with a clear message
   3. Org Admin can set password policy (length, complexity, expiry) and users are required to comply on their next login or password change without immediate lockout
   4. Users can view all their active sessions and revoke any specific session, and Org Admin can force-logout a user from all sessions
@@ -95,6 +100,12 @@ Plans:
 **Goal**: Super Admin has a complete management panel at admin.llmatscale.ai with org management, API key management, platform analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts
 **Depends on**: Phase 4
 **Requirements**: SUI-01, SUI-02, SUI-03, SUI-04, SKEY-01, SKEY-02, SKEY-03, SKEY-04, SSET-01, SSET-02, SANA-01, SANA-02, SANA-03, SANA-04, SANA-05, SANA-06, SANA-07, SANA-08, SANA-09, SANA-10, SANA-11, SANA-12, SAUD-01, SAUD-02, SAUD-03
+**Phase 3 handoff notes**:
+  - Super Admin dashboard shell already exists at `admin.llmatscale.ai` with shadcn + Radix UI sidebar — Phase 5 EXTENDS the existing shell, does NOT rebuild from scratch
+  - Model Registry management page already functional from Phase 3 — Phase 5 may polish it with TanStack Table but the core CRUD is done
+  - Sidebar already has all planned sections with "Coming Soon" placeholders — Phase 5 implements the remaining sections (Orgs, Users, API Keys, Settings, Analytics, Audit Logs)
+  - Add Recharts in Phase 5 (not installed in Phase 3) for analytics dashboards
+  - Add TanStack Table in Phase 5 for data tables
 **Success Criteria** (what must be TRUE):
   1. Super Admin can navigate the admin.llmatscale.ai panel using a shadcn sidebar layout and manage organizations, Super Admin users, API keys, and platform settings through shadcn-based forms and modals
   2. Super Admin can add, test, and assign Anthropic API keys to specific organizations, and remove keys that are no longer needed
@@ -112,6 +123,13 @@ Plans:
 **Goal**: Org Admin has a complete management panel at {org-slug}.llmatscale.ai/admin with user management, role management, invitation management, org analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts
 **Depends on**: Phase 5
 **Requirements**: OUI-01, OUI-02, OUI-03, OUI-04, OUSR-02, OUSR-03, OUSR-04, OUSR-05, OUSR-06, OUSR-07, OUSR-08, OUSR-10, OUSR-11, OUSR-12, OAKEY-01, OAKEY-02, OANA-01, OANA-02, OANA-03, OANA-04, OANA-05, OANA-06, OANA-07, OANA-08, OANA-09, OANA-10, OANA-11, OANA-12, OANA-13, OANA-14, OANA-15, OAUD-01, OAUD-02, OAUD-03
+**Phase 3 handoff notes**:
+  - Org Admin console shell already exists at `{org-slug}.llmatscale.ai/admin` with shadcn + Radix UI sidebar — Phase 6 EXTENDS the existing shell, does NOT rebuild from scratch
+  - Functional pages from Phase 3 already exist: MCP management, role model assignment, system instructions (org + role), user custom instruction toggle — Phase 6 polishes these with TanStack Table and refined UX
+  - Sidebar already has all planned sections with "Coming Soon" placeholders — Phase 6 implements remaining sections (Users, Invitations, Analytics, Audit Logs, Settings)
+  - MCP assignment UI (org-wide vs role-specific) already functional from Phase 3 — Phase 6 may refine but core logic is done
+  - Add Recharts in Phase 5/6 for analytics dashboards
+  - Add TanStack Table for data tables (users, invitations, audit logs)
 **Success Criteria** (what must be TRUE):
   1. Org Admin can navigate the {org-slug}.llmatscale.ai/admin panel using a shadcn sidebar layout and manage users, roles, invitations, and org settings through shadcn-based forms and modals
   2. Org Admin can view all users with status, change roles, suspend/activate users, view custom instructions (read-only), force-logout users, and identify inactive users -- all via TanStack Table
@@ -129,11 +147,17 @@ Plans:
 **Goal**: Organizations have visual identity through theme selection and branding, conversation visibility gives Org Admin compliance oversight, user impersonation enables support, and scheduled tasks keep the system clean
 **Depends on**: Phase 6
 **Requirements**: SORG-08, SORG-09, OTHM-01, OTHM-02, OTHM-03, OTHM-04, OTHM-05, OTHM-06, OTHM-07, OBRN-01, OBRN-02, OBRN-03, OBRN-04, UTHEM-01, UTHEM-02, UTHEM-03, OVIS-01, OVIS-02, OVIS-03, OVIS-04, OVIS-05, OVIS-06, OVIS-07, SAUD-04, CRON-01, CRON-02, CRON-03
+**Phase 3 handoff notes**:
+  - Conversation visibility notice decided in Phase 3: handled via user onboarding agreement page (org-customizable), NO in-chat indicator — adjust success criterion #4 accordingly
+  - User onboarding agreement page (org-customizable text, acceptance tracking) may be partially built in Phase 3 or deferred here — check Phase 3 CONTEXT.md for what was implemented
+  - Full logo upload implementation belongs here (Phase 1 laid org logo placeholder foundation, Phase 2 mentioned logoDisplayMode)
+  - Login page customization (tagline, custom content on org login pages) belongs here
+  - Org branding colors applied to login page + org admin console + chat UI
 **Success Criteria** (what must be TRUE):
   1. Super Admin can assign available themes to an org, Org Admin can choose the active theme from assigned themes, and if an assigned theme is removed the system falls back gracefully to the default
   2. Org Admin can set primary and accent brand colors and upload a logo, and branding applies across the entire org UI instantly
   3. Users can toggle between light, dark, and system mode independently from the org theme, and their preference persists across sessions
-  4. Org Admin can enable conversation visibility, gaining read-only access to all org conversations with filtering and export, while users see a clear notice that conversations may be visible
+  4. Org Admin can enable conversation visibility, gaining read-only access to all org conversations with filtering and export, while users acknowledged conversation visibility during onboarding agreement (no in-chat indicator per Phase 3 decision)
   5. Scheduled tasks automatically purge soft-deleted orgs after 30 days, clean up expired invitations, and clean up expired sessions
 **Plans**: TBD
 
