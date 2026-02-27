@@ -2,7 +2,9 @@
  * Org Context Resolution
  *
  * Resolves organization context from the incoming request URL.
- * - Development: path-based routing (`/org/:slug/...`)
+ * - Development: path-based routing for both page and API paths:
+ *   - Page paths: `/org/:slug/...`
+ *   - API paths: `/api/org/:slug/...`
  * - Production: subdomain-based routing (`{slug}.llmatscale.ai/...`)
  *
  * Also detects Super Admin context:
@@ -21,6 +23,9 @@ const PLATFORM_SUBDOMAINS = new Set(['admin', 'www', 'api', 'app']);
 /** Regex for extracting org slug from dev path: /org/:slug/... */
 const DEV_ORG_PATH_REGEX = /^\/org\/([^/]+)/;
 
+/** Regex for extracting org slug from dev API path: /api/org/:slug/... */
+const DEV_API_ORG_PATH_REGEX = /^\/api\/org\/([^/]+)/;
+
 /**
  * Resolve the organization slug from the request URL.
  *
@@ -36,10 +41,15 @@ const DEV_ORG_PATH_REGEX = /^\/org\/([^/]+)/;
  */
 export function resolveOrgSlug(req: NextRequest): string | null {
   if (process.env.NODE_ENV === 'development') {
-    // Development: extract slug from path /org/:slug/...
+    // Development: extract slug from path /org/:slug/... or /api/org/:slug/...
     const pathname = req.nextUrl.pathname;
-    const match = pathname.match(DEV_ORG_PATH_REGEX);
-    return match ? match[1] : null;
+    // Try page path first: /org/:slug/...
+    const pageMatch = pathname.match(DEV_ORG_PATH_REGEX);
+    if (pageMatch) return pageMatch[1];
+    // Try API path: /api/org/:slug/...
+    const apiMatch = pathname.match(DEV_API_ORG_PATH_REGEX);
+    if (apiMatch) return apiMatch[1];
+    return null;
   }
 
   // Production: extract subdomain from host header
