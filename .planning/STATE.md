@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-02-27T10:44:13Z"
+last_updated: "2026-02-27T10:48:02.803Z"
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 17
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -23,18 +23,18 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 3 of 7 (Chat Integration and Core RBAC)
-Plan: 5 of 6 in current phase
+Plan: 6 of 6 in current phase
 Status: Executing plans
-Last activity: 2026-02-27 -- Completed 03-05-PLAN.md (Role Model Assignment and Settings)
+Last activity: 2026-02-27 -- Completed 03-04-PLAN.md (Org Admin Console + System Instructions)
 
-Progress: [##########----------] 53%
+Progress: [############--------] 59%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 14 min
-- Total execution time: 2.15 hours
+- Total plans completed: 11
+- Average duration: 13 min
+- Total execution time: 2.25 hours
 
 **By Phase:**
 
@@ -42,10 +42,10 @@ Progress: [##########----------] 53%
 |-------|-------|-------|----------|
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
-| 03 | 3 | 13 min | 4 min |
+| 03 | 4 | 19 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (6 min), 02-03 (6 min), 02-04 (4 min), 03-02 (5 min), 03-05 (3 min)
+- Last 5 plans: 02-03 (6 min), 02-04 (4 min), 03-02 (5 min), 03-05 (3 min), 03-04 (6 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -95,6 +95,9 @@ Recent decisions affecting current work:
 - [03-05]: Model assignment uses raw prisma.$transaction (not tenantDb) for Role update by direct roleId
 - [03-05]: RoleModelAssignment fetches from /api/admin/models (platform-level) since Model Registry is not org-scoped
 - [03-05]: Per-section save pattern: model assignment and role settings saved independently with change detection
+- [Phase 03-04]: Org Admin layout verifies admin access via org-scoped API call (not auth/me which lacks org context)
+- [Phase 03-04]: Instructions stored as plain text -- sanitization happens at prompt composition time, not save time
+- [Phase 03-04]: InstructionEditor component reusable for org/role/user instruction editing with configurable maxTokens
 
 ### Pending Todos
 
@@ -109,5 +112,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 03-05-PLAN.md (Role Model Assignment and Settings)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-05-SUMMARY.md
+Stopped at: Completed 03-04-PLAN.md (Org Admin Console + System Instructions)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-04-SUMMARY.md

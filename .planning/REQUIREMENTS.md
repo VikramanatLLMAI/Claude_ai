@@ -112,10 +112,10 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — System Instructions (OINST)
 
-- [ ] **OINST-01**: Org Admin can set organization-wide system instructions
-- [ ] **OINST-02**: Token limit enforced at save time (max 700 tokens for org instructions)
-- [ ] **OINST-03**: Org instructions stack on top of platform-level system prompt
-- [ ] **OINST-04**: Org instructions apply to all users in the org unless overridden at role level
+- [x] **OINST-01**: Org Admin can set organization-wide system instructions
+- [x] **OINST-02**: Token limit enforced at save time (max 700 tokens for org instructions)
+- [x] **OINST-03**: Org instructions stack on top of platform-level system prompt
+- [x] **OINST-04**: Org instructions apply to all users in the org unless overridden at role level
 
 ### Org Admin — Logo & Branding (OBRN)
 
@@ -190,10 +190,10 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Per Role System Instructions (ORSI)
 
-- [ ] **ORSI-01**: Org Admin can set role-specific system instructions
-- [ ] **ORSI-02**: Token limit enforced at save time (max 500 tokens for role instructions)
-- [ ] **ORSI-03**: Role instructions stack on top of platform + org level instructions
-- [ ] **ORSI-04**: Role instructions fine-tune AI response behavior for that specific role
+- [x] **ORSI-01**: Org Admin can set role-specific system instructions
+- [x] **ORSI-02**: Token limit enforced at save time (max 500 tokens for role instructions)
+- [x] **ORSI-03**: Role instructions stack on top of platform + org level instructions
+- [x] **ORSI-04**: Role instructions fine-tune AI response behavior for that specific role
 
 ### Org Admin — Per Role MCP Access (OMCP)
 
@@ -433,14 +433,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OMCP-03 | Phase 3 | Pending |
 | OMCP-04 | Phase 3 | Pending |
 | OMCP-05 | Phase 3 | Pending |
-| OINST-01 | Phase 3 | Pending |
-| OINST-02 | Phase 3 | Pending |
-| OINST-03 | Phase 3 | Pending |
-| OINST-04 | Phase 3 | Pending |
-| ORSI-01 | Phase 3 | Pending |
-| ORSI-02 | Phase 3 | Pending |
-| ORSI-03 | Phase 3 | Pending |
-| ORSI-04 | Phase 3 | Pending |
+| OINST-01 | Phase 3 | Complete |
+| OINST-02 | Phase 3 | Complete |
+| OINST-03 | Phase 3 | Complete |
+| OINST-04 | Phase 3 | Complete |
+| ORSI-01 | Phase 3 | Complete |
+| ORSI-02 | Phase 3 | Complete |
+| ORSI-03 | Phase 3 | Complete |
+| ORSI-04 | Phase 3 | Complete |
 | UCUST-01 | Phase 3 | Pending |
 | UCUST-02 | Phase 3 | Pending |
 | UCUST-03 | Phase 3 | Pending |
