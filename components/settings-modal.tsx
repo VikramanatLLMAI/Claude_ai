@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { McpConnectionCard, type McpConnectionData } from "@/components/mcp/mcp-connection-card"
 import { McpAddDialog } from "@/components/mcp/mcp-add-dialog"
+import { InstructionEditor } from "@/components/admin/instruction-editor"
 import { cn } from "@/lib/utils"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -69,9 +70,10 @@ interface SettingsModalProps {
   currentModel?: string
   onDefaultModelChange?: (modelId: string) => void
   permittedModels?: { id: string; name: string }[]
+  orgSlug?: string | null
 }
 
-export function SettingsModal({ open, onClose, defaultTab = "general", currentModel, onDefaultModelChange, permittedModels }: SettingsModalProps) {
+export function SettingsModal({ open, onClose, defaultTab = "general", currentModel, onDefaultModelChange, permittedModels, orgSlug }: SettingsModalProps) {
   // Use permitted models from API if available, otherwise fallback
   const CLAUDE_MODELS = (permittedModels && permittedModels.length > 0) ? permittedModels : FALLBACK_MODELS
   const [activeTab, setActiveTab] = useState<SettingsTab>(defaultTab)
@@ -123,6 +125,8 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
   const [customInstructions, setCustomInstructions] = useState("")
   const [instructionsSaving, setInstructionsSaving] = useState(false)
   const [instructionsMessage, setInstructionsMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [instructionsEnabled, setInstructionsEnabled] = useState(true)
+  const [instructionsLoading, setInstructionsLoading] = useState(false)
 
   // MCP state
   const [connections, setConnections] = useState<McpConnectionData[]>([])
@@ -208,21 +212,63 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
   }
 
   // Instructions
-  const loadCustomInstructions = () => {
-    const saved = localStorage.getItem(INSTRUCTIONS_KEY)
-    if (saved) setCustomInstructions(saved)
+  const loadCustomInstructions = async () => {
+    if (orgSlug) {
+      // Org-backed custom instructions via API
+      setInstructionsLoading(true)
+      try {
+        const res = await fetch(`/api/org/${orgSlug}/user/custom-instructions`, {
+          headers: getAuthHeaders(),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setCustomInstructions(data.customInstructions || "")
+          setInstructionsEnabled(data.enabled !== false)
+        }
+      } catch (error) {
+        console.error("Error loading custom instructions:", error)
+      } finally {
+        setInstructionsLoading(false)
+      }
+    } else {
+      // Fallback: localStorage-based instructions (non-org context)
+      const saved = localStorage.getItem(INSTRUCTIONS_KEY)
+      if (saved) setCustomInstructions(saved)
+    }
   }
 
-  const handleSaveInstructions = () => {
+  const handleSaveInstructions = async () => {
     setInstructionsSaving(true)
     setInstructionsMessage(null)
-    try {
-      localStorage.setItem(INSTRUCTIONS_KEY, customInstructions)
-      setInstructionsMessage({ type: "success", text: "Instructions saved successfully" })
-    } catch {
-      setInstructionsMessage({ type: "error", text: "Failed to save instructions" })
-    } finally {
-      setInstructionsSaving(false)
+    if (orgSlug) {
+      // Save via API
+      try {
+        const res = await fetch(`/api/org/${orgSlug}/user/custom-instructions`, {
+          method: "PATCH",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ customInstructions }),
+        })
+        if (res.ok) {
+          setInstructionsMessage({ type: "success", text: "Instructions saved successfully" })
+        } else {
+          const data = await res.json()
+          setInstructionsMessage({ type: "error", text: data.error || "Failed to save instructions" })
+        }
+      } catch {
+        setInstructionsMessage({ type: "error", text: "Network error. Please try again." })
+      } finally {
+        setInstructionsSaving(false)
+      }
+    } else {
+      // Fallback: save to localStorage
+      try {
+        localStorage.setItem(INSTRUCTIONS_KEY, customInstructions)
+        setInstructionsMessage({ type: "success", text: "Instructions saved successfully" })
+      } catch {
+        setInstructionsMessage({ type: "error", text: "Failed to save instructions" })
+      } finally {
+        setInstructionsSaving(false)
+      }
     }
   }
 
@@ -932,45 +978,66 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      Instructions Tuning
+                      Custom Instructions
                     </h3>
                     <p className="text-sm text-muted-foreground mb-5">
-                      Provide custom instructions that Agent will follow in every conversation. This helps tailor responses to your preferences.
+                      Personalize how the AI responds to you. These instructions are added to every conversation.
                     </p>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">
-                          Custom Instructions
-                        </label>
-                        <textarea
-                          value={customInstructions}
-                          onChange={(e) => setCustomInstructions(e.target.value)}
-                          placeholder="e.g., Always respond in a concise manner. Use code examples when explaining technical concepts. Prefer TypeScript over JavaScript..."
-                          className="w-full min-h-[200px] rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
-                          rows={8}
-                        />
-                        <p className="text-xs text-muted-foreground mt-1.5">
-                          These instructions will be included as context in every new conversation.
-                        </p>
+                    {instructionsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {orgSlug ? (
+                          <InstructionEditor
+                            value={customInstructions}
+                            onChange={setCustomInstructions}
+                            maxTokens={200}
+                            label="Custom Instructions"
+                            description="Personalize how the AI responds to you. These instructions are added to every conversation."
+                            disabled={!instructionsEnabled}
+                            disabledMessage="Custom instructions disabled by your admin."
+                          />
+                        ) : (
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-1.5 block">
+                              Custom Instructions
+                            </label>
+                            <textarea
+                              value={customInstructions}
+                              onChange={(e) => setCustomInstructions(e.target.value)}
+                              placeholder="e.g., Always respond in a concise manner. Use code examples when explaining technical concepts. Prefer TypeScript over JavaScript..."
+                              className="w-full min-h-[200px] rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                              rows={8}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1.5">
+                              These instructions will be included as context in every new conversation.
+                            </p>
+                          </div>
+                        )}
 
-                      {instructionsMessage && (
-                        <div className={cn(
-                          "flex items-center gap-2 rounded-md p-3 text-sm",
-                          instructionsMessage.type === "success"
-                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                            : "bg-destructive/10 text-destructive"
-                        )}>
-                          {instructionsMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
-                          {instructionsMessage.text}
-                        </div>
-                      )}
+                        {instructionsMessage && (
+                          <div className={cn(
+                            "flex items-center gap-2 rounded-md p-3 text-sm",
+                            instructionsMessage.type === "success"
+                              ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                              : "bg-destructive/10 text-destructive"
+                          )}>
+                            {instructionsMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
+                            {instructionsMessage.text}
+                          </div>
+                        )}
 
-                      <Button size="sm" onClick={handleSaveInstructions} disabled={instructionsSaving}>
-                        {instructionsSaving ? "Saving..." : "Save Instructions"}
-                      </Button>
-                    </div>
+                        {/* Hide save button when disabled (org context) */}
+                        {(!orgSlug || instructionsEnabled) && (
+                          <Button size="sm" onClick={handleSaveInstructions} disabled={instructionsSaving}>
+                            {instructionsSaving ? "Saving..." : "Save Instructions"}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -2233,6 +2233,7 @@ function FullChatApp() {
         currentModel={selectedModel}
         onDefaultModelChange={(modelId) => setSelectedModel(modelId as ClaudeModelId)}
         permittedModels={permittedModels.map(m => ({ id: m.id, name: m.name }))}
+        orgSlug={orgSlug}
       />
     </>
   )
