@@ -4,37 +4,17 @@ import { anthropic, forwardAnthropicContainerIdFromLastStep } from '@/lib/anthro
 import { loadActiveMcpToolsWithDescriptions } from '@/lib/mcp-client';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getAnthropicFilesClient } from '@/lib/anthropic-files';
-import { buildSystemPromptWithTools } from '@/lib/system-prompts';
 import { fitMessagesToContextWindow } from '@/lib/context-window';
 import { validate, ChatRequestSchema, formatValidationErrors } from '@/lib/validation';
+import { composeSystemPrompt } from '@/lib/services/system-prompt-service';
+import { getModelByModelId } from '@/lib/services/model-registry-service';
 
 export const maxDuration = 300;
-
-// Models that support adaptive thinking (type: "adaptive" + effort)
-const ADAPTIVE_THINKING_MODELS = [
-  'claude-opus-4-6',
-  'claude-sonnet-4-6',
-];
-
-// Models that support manual thinking (type: "enabled" + budgetTokens)
-const MANUAL_THINKING_MODELS = [
-  'claude-sonnet-4-5-20250929',
-  'claude-haiku-4-5-20251001',
-  'claude-opus-4-5-20251101',
-  'claude-sonnet-4-20250514',
-  'claude-opus-4-20250514',
-];
-
-function getThinkingMode(modelId: string): 'adaptive' | 'manual' | 'none' {
-  if (ADAPTIVE_THINKING_MODELS.includes(modelId)) return 'adaptive';
-  if (MANUAL_THINKING_MODELS.includes(modelId)) return 'manual';
-  return 'none';
-}
 
 export async function POST(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user, tenantDb } = auth;
+  const { user, orgMember, organization, role, tenantDb } = auth;
 
   try {
     // Issue 2: Validate request body with Zod schema
@@ -55,11 +35,31 @@ export async function POST(req: NextRequest) {
       activeMcpIds = [],
     } = validation.data!;
 
-    // Use the model ID directly (frontend sends full Bedrock model IDs)
+    // Use the model ID directly (frontend sends full model IDs)
     const modelId = requestedModel || 'claude-sonnet-4-5-20250929';
 
-    // Check if reasoning should be enabled for this model
-    const thinkingMode = enableReasoning ? getThinkingMode(modelId) : 'none';
+    // A. Model access validation (UCHAT-01, OLLM-02)
+    const permittedModelIds = Array.isArray(role.allowedModels)
+      ? (role.allowedModels as string[])
+      : [];
+
+    if (!permittedModelIds.includes(modelId)) {
+      return NextResponse.json(
+        { error: 'You do not have access to this model' },
+        { status: 403 }
+      );
+    }
+
+    // B. Replace hardcoded model arrays with Model Registry lookup
+    const modelInfo = await getModelByModelId(modelId);
+    const thinkingType = modelInfo?.thinkingType ?? null; // 'adaptive' | 'extended' | null
+
+    // Determine thinking mode from Model Registry
+    let thinkingMode: 'adaptive' | 'manual' | 'none' = 'none';
+    if (enableReasoning) {
+      if (thinkingType === 'adaptive') thinkingMode = 'adaptive';
+      else if (thinkingType === 'extended') thinkingMode = 'manual';
+    }
 
     // Get the last user message to save to database
     const lastUserMessage = uiMessages[uiMessages.length - 1];
@@ -109,14 +109,36 @@ export async function POST(req: NextRequest) {
     // Track MCP tool descriptions for system prompt
     let mcpToolDescriptions: { name: string; description: string }[] = [];
 
+    // C. MCP tool filtering (UCHAT-05, OMCP-04)
+    // Query authorized MCP connections for this user
+    const authorizedMcpConnections = await tenantDb.mcpConnection.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { roleId: null, userId: null },                    // Org-wide
+          { roleId: role.id, userId: null },                 // Role-specific
+          ...(role.personalMcpEnabled
+            ? [{ userId: user.id }]                          // Personal (if role permits)
+            : []),
+        ],
+      },
+      select: { id: true },
+    });
+
+    const authorizedMcpIds = new Set(authorizedMcpConnections.map(c => c.id));
+
+    // Filter client-requested MCP IDs against authorized set
+    const filteredMcpIds = (activeMcpIds || []).filter((id: string) => authorizedMcpIds.has(id));
+
     // DEBUG: Log the activeMcpIds received from frontend
     console.log(`[Chat] activeMcpIds from request:`, JSON.stringify(activeMcpIds));
+    console.log(`[Chat] filteredMcpIds (authorized):`, JSON.stringify(filteredMcpIds));
 
-    // Load MCP tools if any connections are active
-    if (activeMcpIds && activeMcpIds.length > 0) {
-      console.log(`[Chat] Attempting to load MCP tools from ${activeMcpIds.length} connections:`, activeMcpIds);
+    // Load MCP tools if any authorized connections are active
+    if (filteredMcpIds && filteredMcpIds.length > 0) {
+      console.log(`[Chat] Attempting to load MCP tools from ${filteredMcpIds.length} connections:`, filteredMcpIds);
       try {
-        const { tools: mcpTools, descriptions } = await loadActiveMcpToolsWithDescriptions(activeMcpIds);
+        const { tools: mcpTools, descriptions } = await loadActiveMcpToolsWithDescriptions(filteredMcpIds);
         const mcpToolCount = Object.keys(mcpTools).length;
         if (mcpToolCount > 0) {
           Object.assign(tools, mcpTools);
@@ -140,12 +162,31 @@ export async function POST(req: NextRequest) {
     const hasTools = toolNames.length > 0;
     console.log(`[Chat] Available tools (${toolNames.length}):`, toolNames);
 
-    // Build dynamic system prompt with available tools
-    const systemPrompt = buildSystemPromptWithTools(toolNames, mcpToolDescriptions);
-    console.log(`[Chat] System prompt includes ${mcpToolDescriptions.length} MCP tool descriptions`);
+    // D. 4-layer system prompt composition (PRMT-01 through PRMT-06)
+    // Fetch org settings for org-level instructions
+    const orgSettings = await tenantDb.orgSettings.findUnique({
+      where: { organizationId: organization.id },
+    });
+
+    const systemPrompt = composeSystemPrompt(
+      toolNames,
+      mcpToolDescriptions,
+      {
+        orgInstructions: orgSettings?.systemInstructions || null,
+        roleInstructions: role.systemInstructions || null,
+        userName: user.name,
+        roleName: role.name,
+        userCustomInstructions: orgMember.customInstructions || null,
+        customInstructionsEnabled: role.customInstructionsEnabled,
+      }
+    );
+    console.log(`[Chat] System prompt composed with 4-layer stack, ${mcpToolDescriptions.length} MCP tool descriptions`);
 
     // Fit messages within the context window (trim tool results + drop old groups)
     const fittedMessages = fitMessagesToContextWindow(messages, systemPrompt);
+
+    // E. Usage tracking timestamp (UCHAT-02) -- record before streamText
+    const requestStart = Date.now();
 
     // Build streamText configuration
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,7 +194,7 @@ export async function POST(req: NextRequest) {
       model: anthropic(modelId),
       system: systemPrompt,
       messages: fittedMessages,
-      maxTokens: 65536,
+      maxTokens: modelInfo?.maxOutputTokens ?? 65536,
       ...(thinkingMode !== 'none' ? {} : { temperature: 0.7 }),
       // Log tool calls for debugging - this is called after each step (including tool executions)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -445,6 +486,35 @@ export async function POST(req: NextRequest) {
         } catch (error) {
           console.error('[Chat] Error persisting message:', error);
         }
+
+        // E. Usage tracking (UCHAT-02)
+        // Record token usage per chat request. UsageRecord is in TENANT_SCOPED_MODELS so use tenantDb.
+        try {
+          const totalUsage = await result.totalUsage;
+          const requestEnd = Date.now();
+
+          await tenantDb.usageRecord.create({
+            data: {
+              userId: user.id,
+              orgMemberId: orgMember.id,
+              conversationId: conversationId || null,
+              model: modelId,
+              inputTokens: totalUsage.inputTokens ?? 0,
+              outputTokens: totalUsage.outputTokens ?? 0,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              thinkingTokens: (totalUsage as any).reasoningTokens ?? 0,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              cacheCreationTokens: ((totalUsage as any).inputTokenDetails?.cacheWriteTokens) ?? 0,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              cacheReadTokens: ((totalUsage as any).inputTokenDetails?.cacheReadTokens) ?? 0,
+              requestDurationMs: requestEnd - requestStart,
+            },
+          });
+          console.log(`[Chat] Usage recorded: input=${totalUsage.inputTokens}, output=${totalUsage.outputTokens}, model=${modelId}`);
+        } catch (usageError) {
+          console.error('[Chat] Error recording usage:', usageError);
+          // Do NOT fail the chat request if usage recording fails
+        }
       },
       onError: (error) => {
         console.error('[Stream] Error:', error);
@@ -478,7 +548,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET endpoint to return available models
+// DEPRECATED: This endpoint returns hardcoded models.
+// Use GET /api/org/[slug]/models instead, which returns role-filtered models from the Model Registry.
+// Kept for backward compatibility -- will be removed in a future phase.
 export async function GET() {
   const models = [
     {
