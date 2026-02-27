@@ -100,43 +100,26 @@ function getGreeting(): string {
   return "Hey there"
 }
 
-// Claude 4.6 and 4.5 series models
-const CLAUDE_MODELS = [
-  {
-    id: "claude-opus-4-6",
-    name: "Claude 4.6 Opus",
-    description: "Most powerful with adaptive thinking",
-  },
-  {
-    id: "claude-sonnet-4-6",
-    name: "Claude 4.6 Sonnet",
-    description: "Fast and intelligent with adaptive thinking",
-  },
-  {
-    id: "claude-sonnet-4-5-20250929",
-    name: "Claude 4.5 Sonnet",
-    description: "Most intelligent model, best for complex tasks",
-  },
-  {
-    id: "claude-haiku-4-5-20251001",
-    name: "Claude 4.5 Haiku",
-    description: "Fast and efficient for simple tasks",
-  },
-  {
-    id: "claude-opus-4-5-20251101",
-    name: "Claude 4.5 Opus",
-    description: "Best for complex reasoning and analysis",
-  },
-  {
-    id: "claude-sonnet-4-20250514",
-    name: "Claude 4 Sonnet",
-    description: "Balanced performance and speed",
-  },
+// DEPRECATED: Hardcoded CLAUDE_MODELS removed in Phase 3.
+// Models are now fetched dynamically from GET /api/org/[slug]/models.
+// This fallback is only used while the API response is loading.
+const FALLBACK_MODELS = [
+  { id: "claude-sonnet-4-5-20250929", name: "Claude 4.5 Sonnet", description: "Loading models..." },
 ] as const
+
+// Permitted model from API (replaces hardcoded CLAUDE_MODELS)
+interface PermittedModel {
+  id: string
+  name: string
+  description?: string
+  generationGroup?: string
+  supportsThinking?: boolean
+  thinkingType?: string | null
+}
 
 // Tagline removed - welcome state now uses time-based greeting
 
-type ClaudeModelId = (typeof CLAUDE_MODELS)[number]["id"]
+type ClaudeModelId = string
 
 // Database conversation type
 interface Conversation {
@@ -191,6 +174,15 @@ function getUserEmailFromSession(): string {
   }
   return ""
 }
+
+// Helper function to get org slug from URL path (dev routing: /org/:slug/...)
+function getOrgSlugFromUrl(): string | null {
+  if (typeof window === 'undefined') return null
+  const match = window.location.pathname.match(/^\/org\/([^/]+)/)
+  return match ? match[1] : null
+}
+
+// Admin role info is fetched from /api/org/[slug]/models endpoint (isOrgAdmin field)
 
 
 // Badge colors for MCP connection initials
@@ -350,6 +342,8 @@ function ChatSidebar({
   userName,
   userEmail,
   onOpenSettings,
+  isOrgAdmin,
+  orgSlug,
 }: {
   conversations: Conversation[]
   selectedId: string | null
@@ -361,6 +355,8 @@ function ChatSidebar({
   userName: string
   userEmail: string
   onOpenSettings: () => void
+  isOrgAdmin: boolean
+  orgSlug: string | null
 }) {
   const router = useRouter()
 
@@ -584,6 +580,18 @@ function ChatSidebar({
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          {isOrgAdmin && orgSlug && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Admin Console"
+                onClick={() => router.push(`/org/${orgSlug}/admin`)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="!size-4 shrink-0" />
+                <span>Admin Console</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -635,6 +643,7 @@ function ChatContent({
   onConversationCreated,
   userName,
   onOpenMcpSettings,
+  permittedModels,
 }: {
   conversationId: string | null
   selectedModel: ClaudeModelId
@@ -642,6 +651,7 @@ function ChatContent({
   onConversationCreated: (id: string) => void
   userName: string
   onOpenMcpSettings: () => void
+  permittedModels: PermittedModel[]
 }) {
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [thinkingEnabled, setThinkingEnabled] = useState(false)
@@ -1166,7 +1176,7 @@ function ChatContent({
     }
   }, [messages, isLoading, openArtifactPanel, getFileArtifactsFromMessage, getTagArtifactsFromMessage])
 
-  const selectedModelInfo = CLAUDE_MODELS.find((m) => m.id === selectedModel)
+  const selectedModelInfo = permittedModels.find((m) => m.id === selectedModel) || FALLBACK_MODELS[0]
 
   const createOptimisticUserMessage = (text: string) => {
     const nextId = optimisticMessageCounterRef.current++
@@ -1559,6 +1569,7 @@ function ChatContent({
                           <ClaudeChatInput
                             ref={chatInputRef}
                             onSendMessage={handleSendMessage}
+                            models={permittedModels.map(m => ({ id: m.id, name: m.name, description: m.description || m.generationGroup || "" }))}
                             defaultModel={selectedModel}
                             placeholder="How can I help you today?"
                             isLoading={isLoading}
@@ -1958,6 +1969,7 @@ function ChatContent({
                     <ClaudeChatInput
                       ref={chatInputRef}
                       onSendMessage={handleSendMessage}
+                      models={permittedModels.map(m => ({ id: m.id, name: m.name, description: m.description || m.generationGroup || "" }))}
                       defaultModel={selectedModel}
                       placeholder="Reply..."
                       isLoading={isLoading}
@@ -2017,7 +2029,7 @@ function ChatContent({
 function FullChatApp() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
-  const [selectedModel, setSelectedModel] = useState<ClaudeModelId>(CLAUDE_MODELS[0].id)
+  const [selectedModel, setSelectedModel] = useState<ClaudeModelId>(FALLBACK_MODELS[0].id)
   const [isLoading, setIsLoading] = useState(true)
   const [userName, setUserName] = useState<string>("User")
   const [userEmail, setUserEmail] = useState<string>("")
@@ -2026,12 +2038,51 @@ function FullChatApp() {
   // Track the chat key separately - stays stable during new conversation creation
   // Only changes when user explicitly selects an existing conversation
   const [chatKey, setChatKey] = useState<string>('new-chat')
+  // Permitted models fetched from API (replaces hardcoded CLAUDE_MODELS)
+  const [permittedModels, setPermittedModels] = useState<PermittedModel[]>([])
+  const [isOrgAdmin, setIsOrgAdmin] = useState(false)
+  const [orgSlug, setOrgSlug] = useState<string | null>(null)
   const router = useRouter()
 
-  // Load user name and email from session on mount
+  // Load user name, email, and org context from session on mount
   useEffect(() => {
     setUserName(getUserNameFromSession())
     setUserEmail(getUserEmailFromSession())
+    setOrgSlug(getOrgSlugFromUrl())
+  }, [])
+
+  // Fetch permitted models from API (replaces hardcoded CLAUDE_MODELS)
+  useEffect(() => {
+    const slug = getOrgSlugFromUrl()
+    if (!slug) return
+
+    const fetchModels = async () => {
+      try {
+        const response = await fetch(`/api/org/${slug}/models`, {
+          headers: getAuthHeaders(),
+        })
+        if (!response.ok) {
+          console.error("[Chat] Failed to fetch permitted models:", response.status)
+          return
+        }
+        const data = await response.json()
+        if (data.models && Array.isArray(data.models) && data.models.length > 0) {
+          setPermittedModels(data.models)
+          // Set default model to first permitted model if current selection is not permitted
+          const currentModelPermitted = data.models.some((m: PermittedModel) => m.id === selectedModel)
+          if (!currentModelPermitted && data.defaultModel) {
+            setSelectedModel(data.defaultModel)
+          }
+        }
+        if (typeof data.isOrgAdmin === "boolean") {
+          setIsOrgAdmin(data.isOrgAdmin)
+        }
+      } catch (error) {
+        console.error("[Chat] Error fetching permitted models:", error)
+      }
+    }
+    fetchModels()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Fetch conversations
@@ -2159,6 +2210,8 @@ function FullChatApp() {
           userName={userName}
           userEmail={userEmail}
           onOpenSettings={() => setSettingsOpen(true)}
+          isOrgAdmin={isOrgAdmin}
+          orgSlug={orgSlug}
         />
         <SidebarInset className="overflow-hidden">
           <ChatContent
@@ -2169,6 +2222,7 @@ function FullChatApp() {
             onConversationCreated={handleConversationCreated}
             userName={userName}
             onOpenMcpSettings={() => { setSettingsTab("mcp"); setSettingsOpen(true) }}
+            permittedModels={permittedModels}
           />
         </SidebarInset>
       </SidebarProvider>
@@ -2178,6 +2232,7 @@ function FullChatApp() {
         defaultTab={settingsTab}
         currentModel={selectedModel}
         onDefaultModelChange={(modelId) => setSelectedModel(modelId as ClaudeModelId)}
+        permittedModels={permittedModels.map(m => ({ id: m.id, name: m.name }))}
       />
     </>
   )

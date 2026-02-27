@@ -56,13 +56,10 @@ const SETTINGS_TABS: { id: SettingsTab; label: string; icon: React.ElementType }
   { id: "advanced", label: "Advanced", icon: Sliders },
 ]
 
-const CLAUDE_MODELS = [
-  { id: "claude-opus-4-6", name: "Claude 4.6 Opus" },
-  { id: "claude-sonnet-4-6", name: "Claude 4.6 Sonnet" },
+// DEPRECATED: Hardcoded CLAUDE_MODELS replaced by permittedModels prop from API.
+// Kept as fallback for backward compatibility.
+const FALLBACK_MODELS = [
   { id: "claude-sonnet-4-5-20250929", name: "Claude 4.5 Sonnet" },
-  { id: "claude-haiku-4-5-20251001", name: "Claude 4.5 Haiku" },
-  { id: "claude-opus-4-5-20251101", name: "Claude 4.5 Opus" },
-  { id: "claude-sonnet-4-20250514", name: "Claude 4 Sonnet" },
 ]
 
 interface SettingsModalProps {
@@ -71,9 +68,12 @@ interface SettingsModalProps {
   defaultTab?: SettingsTab
   currentModel?: string
   onDefaultModelChange?: (modelId: string) => void
+  permittedModels?: { id: string; name: string }[]
 }
 
-export function SettingsModal({ open, onClose, defaultTab = "general", currentModel, onDefaultModelChange }: SettingsModalProps) {
+export function SettingsModal({ open, onClose, defaultTab = "general", currentModel, onDefaultModelChange, permittedModels }: SettingsModalProps) {
+  // Use permitted models from API if available, otherwise fallback
+  const CLAUDE_MODELS = (permittedModels && permittedModels.length > 0) ? permittedModels : FALLBACK_MODELS
   const [activeTab, setActiveTab] = useState<SettingsTab>(defaultTab)
 
   // Sync activeTab when defaultTab changes (e.g. opening from MCP connectors)
