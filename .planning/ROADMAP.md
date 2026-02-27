@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Schema and Auth Foundation** - Multi-tenant database schema, tenant-scoped Prisma client, enriched auth middleware, routing infrastructure
 - [ ] **Phase 2: Organization Management and Invitations** - Org CRUD, system role templates, invitation flow via Resend, user registration, audit logging foundation
-- [ ] **Phase 3: Chat Integration and Core RBAC** - Role-filtered model access, 4-layer prompt stack, usage tracking, MCP role assignment, org-scoped conversations
+- [x] **Phase 3: Chat Integration and Core RBAC** - Role-filtered model access, 4-layer prompt stack, usage tracking, MCP role assignment, org-scoped conversations
 - [ ] **Phase 4: Role Configuration and Usage Limits** - Custom roles, per-role limits, password policy, session management, usage enforcement with alerts
 - [ ] **Phase 5: Super Admin Dashboard** - Platform admin panel at admin.llmatscale.ai with org management, API keys, analytics, and audit logs
 - [ ] **Phase 6: Org Admin Dashboard** - Org admin panel at {org-slug}.llmatscale.ai/admin with user/role management, org analytics, and audit logs
@@ -176,9 +176,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema and Auth Foundation | 0/3 | Planned | - |
-| 2. Organization Management and Invitations | 0/4 | Not started | - |
-| 3. Chat Integration and Core RBAC | 0/6 | Not started | - |
+| 1. Schema and Auth Foundation | 3/3 | Complete | 2026-02-26 |
+| 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
+| 3. Chat Integration and Core RBAC | 6/6 | Complete | 2026-02-27 |
 | 4. Role Configuration and Usage Limits | 0/3 | Not started | - |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |

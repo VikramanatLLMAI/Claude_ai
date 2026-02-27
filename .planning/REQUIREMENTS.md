@@ -197,11 +197,11 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Per Role MCP Access (OMCP)
 
-- [ ] **OMCP-01**: Org Admin can connect MCP servers (only Org Admin can do this, users cannot)
-- [ ] **OMCP-02**: Org Admin can assign an MCP server to the entire org — all users across all roles get access automatically
-- [ ] **OMCP-03**: Org Admin can assign an MCP server to a specific role only — only users in that role get access
-- [ ] **OMCP-04**: Both assignment types coexist — user's accessible MCP servers = org-wide servers + their role's servers
-- [ ] **OMCP-05**: Org Admin can remove or disconnect MCP servers independently per assignment type
+- [x] **OMCP-01**: Org Admin can connect MCP servers (only Org Admin can do this, users cannot)
+- [x] **OMCP-02**: Org Admin can assign an MCP server to the entire org — all users across all roles get access automatically
+- [x] **OMCP-03**: Org Admin can assign an MCP server to a specific role only — only users in that role get access
+- [x] **OMCP-04**: Both assignment types coexist — user's accessible MCP servers = org-wide servers + their role's servers
+- [x] **OMCP-05**: Org Admin can remove or disconnect MCP servers independently per assignment type
 
 ### Org Admin — API Key Management (OAKEY)
 
@@ -280,10 +280,10 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Regular User — Custom Instructions (UCUST)
 
-- [ ] **UCUST-01**: User can write personal AI behavior preferences in Settings (if enabled by Org Admin for their role)
-- [ ] **UCUST-02**: Live token counter shown while typing (max 200 tokens for user custom instructions)
-- [ ] **UCUST-03**: Instructions are org-specific — do not carry over if user moves to a different org
-- [ ] **UCUST-04**: If Org Admin disables this for the role, the user's saved text is visible but grayed out with "Custom instructions disabled by your admin" message (text preserved in DB for re-enabling)
+- [x] **UCUST-01**: User can write personal AI behavior preferences in Settings (if enabled by Org Admin for their role)
+- [x] **UCUST-02**: Live token counter shown while typing (max 200 tokens for user custom instructions)
+- [x] **UCUST-03**: Instructions are org-specific — do not carry over if user moves to a different org
+- [x] **UCUST-04**: If Org Admin disables this for the role, the user's saved text is visible but grayed out with "Custom instructions disabled by your admin" message (text preserved in DB for re-enabling)
 
 ### Regular User — Chat (UCHAT)
 
@@ -428,11 +428,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRMT-06 | Phase 3 | Complete |
 | OLLM-01 | Phase 3 | Complete |
 | OLLM-02 | Phase 3 | Complete |
-| OMCP-01 | Phase 3 | Pending |
-| OMCP-02 | Phase 3 | Pending |
-| OMCP-03 | Phase 3 | Pending |
-| OMCP-04 | Phase 3 | Pending |
-| OMCP-05 | Phase 3 | Pending |
+| OMCP-01 | Phase 3 | Complete |
+| OMCP-02 | Phase 3 | Complete |
+| OMCP-03 | Phase 3 | Complete |
+| OMCP-04 | Phase 3 | Complete |
+| OMCP-05 | Phase 3 | Complete |
 | OINST-01 | Phase 3 | Complete |
 | OINST-02 | Phase 3 | Complete |
 | OINST-03 | Phase 3 | Complete |
@@ -441,10 +441,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ORSI-02 | Phase 3 | Complete |
 | ORSI-03 | Phase 3 | Complete |
 | ORSI-04 | Phase 3 | Complete |
-| UCUST-01 | Phase 3 | Pending |
-| UCUST-02 | Phase 3 | Pending |
-| UCUST-03 | Phase 3 | Pending |
-| UCUST-04 | Phase 3 | Pending |
+| UCUST-01 | Phase 3 | Complete |
+| UCUST-02 | Phase 3 | Complete |
+| UCUST-03 | Phase 3 | Complete |
+| UCUST-04 | Phase 3 | Complete |
 | SAFE-07 | Phase 3 | Complete |
 | SAFE-08 | Phase 3 | Complete |
 | SAFE-09 | Phase 3 | Complete |

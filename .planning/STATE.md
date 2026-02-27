@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-02-27T10:48:02.803Z"
+last_updated: "2026-02-27T10:59:01.000Z"
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 17
-  completed_plans: 11
+  completed_plans: 14
 ---
 
 # Project State
@@ -22,19 +22,19 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 
 ## Current Position
 
-Phase: 3 of 7 (Chat Integration and Core RBAC)
-Plan: 3 of 6 in current phase
-Status: Executing plans
-Last activity: 2026-02-27 -- Completed 03-03-PLAN.md (Chat Route RBAC Enforcement)
+Phase: 4 of 7 (next phase)
+Plan: 0 of ? in current phase
+Status: Phase 3 complete, ready for Phase 4
+Last activity: 2026-02-27 -- Completed 03-06-PLAN.md (Org MCP Management & User Custom Instructions)
 
-Progress: [############--------] 59%
+Progress: [################----] 82%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 13 min
-- Total execution time: 2.25 hours
+- Total plans completed: 14
+- Average duration: 12 min
+- Total execution time: 2.6 hours
 
 **By Phase:**
 
@@ -42,10 +42,10 @@ Progress: [############--------] 59%
 |-------|-------|-------|----------|
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
-| 03 | 4 | 19 min | 5 min |
+| 03 | 7 | 40 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (6 min), 02-04 (4 min), 03-02 (5 min), 03-05 (3 min), 03-04 (6 min)
+- Last 5 plans: 03-02 (5 min), 03-05 (3 min), 03-04 (6 min), 03-03 (5 min), 03-06 (7 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -102,6 +102,10 @@ Recent decisions affecting current work:
 - [03-03]: Model thinking mode resolved from Model Registry thinkingType field instead of hardcoded arrays
 - [03-03]: Org slug resolved from URL path for frontend API calls (getOrgSlugFromUrl helper)
 - [03-03]: isOrgAdmin flag included in models API response to avoid extra API call for Admin Console visibility
+- [03-06]: Org-managed MCP connections use userId=null to distinguish from personal connections
+- [03-06]: MCP assignment types (org-wide vs role-specific) coexist on same McpConnection model via roleId
+- [03-06]: Custom instructions saved via API when orgSlug available, localStorage fallback for non-org context
+- [03-06]: InstructionEditor renders grayed-out with disabled message when role has customInstructionsEnabled=false
 
 ### Pending Todos
 
@@ -116,5 +120,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 03-03-PLAN.md (Chat Route RBAC Enforcement)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-03-SUMMARY.md
+Stopped at: Completed 03-06-PLAN.md (Org MCP Management & User Custom Instructions) -- Phase 3 complete
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-06-SUMMARY.md
