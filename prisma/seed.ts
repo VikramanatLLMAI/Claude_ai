@@ -323,7 +323,7 @@ async function seedDevData(): Promise<void> {
         'claude-opus-4-20250514',
         'claude-sonnet-4-20250514',
       ],
-      permissions: ['chat', 'mcp', 'artifacts', 'file_upload', 'web_search'],
+      permissions: ['chat', 'mcp', 'artifacts', 'file_upload', 'web_search', 'org_admin'],
     },
   });
   console.log(`  Role "${technicalRole.name}" created (all models, full permissions).`);
