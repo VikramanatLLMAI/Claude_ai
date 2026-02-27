@@ -12,6 +12,11 @@ import {
   BarChart3,
   FileText,
   LogOut,
+  MessageSquare,
+  Users,
+  Plug,
+  Users2,
+  ArrowLeft,
 } from "lucide-react"
 import {
   Sidebar,
@@ -47,6 +52,19 @@ const SUPER_ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "Audit Logs", icon: FileText, href: "/admin/audit-logs", enabled: false },
 ]
 
+function getOrgAdminNavItems(orgSlug: string): NavItem[] {
+  const base = `/org/${orgSlug}/admin`
+  return [
+    { label: "System Instructions", icon: MessageSquare, href: `${base}/instructions`, enabled: true },
+    { label: "Role Settings", icon: Users, href: `${base}/roles`, enabled: true },
+    { label: "MCP Servers", icon: Plug, href: `${base}/mcp`, enabled: true },
+    { label: "Users", icon: Users2, href: `${base}/users`, enabled: false },
+    { label: "Settings", icon: Settings, href: `${base}/settings`, enabled: false },
+    { label: "Analytics", icon: BarChart3, href: `${base}/analytics`, enabled: false },
+    { label: "Audit Logs", icon: FileText, href: `${base}/audit-logs`, enabled: false },
+  ]
+}
+
 interface AdminSidebarProps {
   variant: "super-admin" | "org-admin"
   orgSlug?: string
@@ -81,30 +99,35 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
   const handleSignOut = React.useCallback(() => {
     localStorage.removeItem(AUTH_SESSION_KEY)
     localStorage.removeItem(AUTH_TOKEN_KEY)
-    router.push("/admin/login")
-  }, [router])
+    if (variant === "org-admin" && orgSlug) {
+      router.push(`/org/${orgSlug}/login`)
+    } else {
+      router.push("/admin/login")
+    }
+  }, [router, variant, orgSlug])
 
-  // For now, org-admin variant returns super-admin as placeholder
-  // Will be implemented in Plan 04
-  const navItems = variant === "org-admin" ? SUPER_ADMIN_NAV_ITEMS : SUPER_ADMIN_NAV_ITEMS
-
-  // Suppress unused variable warnings for org-admin props
-  void orgSlug
-  void orgName
+  const isOrgAdmin = variant === "org-admin"
+  const navItems = isOrgAdmin && orgSlug
+    ? getOrgAdminNavItems(orgSlug)
+    : SUPER_ADMIN_NAV_ITEMS
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Shield className="h-5 w-5 text-primary" />
+            {isOrgAdmin ? (
+              <Building2 className="h-5 w-5 text-primary" />
+            ) : (
+              <Shield className="h-5 w-5 text-primary" />
+            )}
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-sidebar-foreground">
-              LLMatscale.ai
+              {isOrgAdmin ? (orgName || "Organization") : "LLMatscale.ai"}
             </span>
             <span className="text-xs text-sidebar-foreground/60">
-              Platform Admin
+              {isOrgAdmin ? "Admin Console" : "Platform Admin"}
             </span>
           </div>
         </div>
@@ -151,12 +174,23 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
         {currentUser && (
           <div className="mb-2">
             <p className="truncate text-sm font-medium text-sidebar-foreground">
-              {currentUser.name || "Super Admin"}
+              {currentUser.name || (isOrgAdmin ? "Admin" : "Super Admin")}
             </p>
             <p className="truncate text-xs text-sidebar-foreground/60">
               {currentUser.email || ""}
             </p>
           </div>
+        )}
+        {isOrgAdmin && orgSlug && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-1 w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            onClick={() => router.push(`/org/${orgSlug}/chat`)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Chat
+          </Button>
         )}
         <Button
           variant="ghost"

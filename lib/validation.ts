@@ -302,6 +302,20 @@ export const UpdateModelSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
+// ============================================
+// Instruction Schemas (Phase 3 Plan 04)
+// ============================================
+
+// Max character limits derived from token limits * ~4 chars/token * server margin
+// These are generous character limits; actual token validation happens server-side
+export const OrgInstructionsSchema = z.object({
+  systemInstructions: z.string().max(Math.ceil(700 * 4 * 1.05), 'Instructions text is too long'),
+});
+
+export const RoleInstructionsSchema = z.object({
+  systemInstructions: z.string().max(Math.ceil(500 * 4 * 1.05), 'Instructions text is too long'),
+});
+
 // Export types inferred from schemas
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
@@ -328,3 +342,5 @@ export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
 export type SetDefaultRoleInput = z.infer<typeof SetDefaultRoleSchema>;
 export type CreateModelInput = z.infer<typeof CreateModelSchema>;
 export type UpdateModelInput = z.infer<typeof UpdateModelSchema>;
+export type OrgInstructionsInput = z.infer<typeof OrgInstructionsSchema>;
+export type RoleInstructionsInput = z.infer<typeof RoleInstructionsSchema>;
