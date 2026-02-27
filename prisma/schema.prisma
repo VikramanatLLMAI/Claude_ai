@@ -29,14 +29,15 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   lastLogin    DateTime? @map("last_login")
 
-  sessions        Session[]
-  orgMemberships  OrgMember[]
-  invitationsSent Invitation[] @relation("InvitedByUser")
-  auditLogs       AuditLog[]
-  usageRecords    UsageRecord[]
-  conversations   Conversation[]
-  artifacts       Artifact[]
-  mcpConnections  McpConnection[]
+  sessions              Session[]
+  orgMemberships        OrgMember[]
+  invitationsSent       Invitation[] @relation("InvitedByUser")
+  auditLogs             AuditLog[]
+  usageRecords          UsageRecord[]
+  onboardingAgreements  OnboardingAgreement[]
+  conversations         Conversation[]
+  artifacts             Artifact[]
+  mcpConnections        McpConnection[]
 
   @@index([email])
   @@map("users")
@@ -95,19 +96,20 @@ model Organization {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
-  members          OrgMember[]
-  roles            Role[]
-  conversations    Conversation[]
-  messages         Message[]
-  artifacts        Artifact[]
-  mcpConnections   McpConnection[]
-  invitations      Invitation[]
-  auditLogs        AuditLog[]
-  usageRecords     UsageRecord[]
-  platformApiKeys  PlatformApiKey[]
-  passwordPolicy   PasswordPolicy?
-  themeAssignments OrgThemeAssignment[]
-  settings         OrgSettings?
+  members              OrgMember[]
+  roles                Role[]
+  conversations        Conversation[]
+  messages             Message[]
+  artifacts            Artifact[]
+  mcpConnections       McpConnection[]
+  invitations          Invitation[]
+  auditLogs            AuditLog[]
+  usageRecords         UsageRecord[]
+  onboardingAgreements OnboardingAgreement[]
+  platformApiKeys      PlatformApiKey[]
+  passwordPolicy       PasswordPolicy?
+  themeAssignments     OrgThemeAssignment[]
+  settings             OrgSettings?
 
   @@unique([slug], where: { deletedAt: null })
   @@index([status])
@@ -126,9 +128,10 @@ model OrgMember {
   joinedAt           DateTime  @default(now()) @map("joined_at")
   lastActiveAt       DateTime? @map("last_active_at")
 
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  role         Role         @relation(fields: [roleId], references: [id])
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role                 Role                  @relation(fields: [roleId], references: [id])
+  onboardingAgreements OnboardingAgreement[]
 
   @@unique([userId, organizationId])
   @@index([organizationId])
@@ -148,6 +151,8 @@ model Role {
   systemInstructions         String?  @map("system_instructions") @db.Text
   customInstructionsEnabled  Boolean  @default(true) @map("custom_instructions_enabled")
   customInstructionsMaxLength Int     @default(1000) @map("custom_instructions_max_length")
+  personalMcpEnabled         Boolean @default(false) @map("personal_mcp_enabled")
+  personalMcpMaxCount        Int     @default(3) @map("personal_mcp_max_count")
   dailyRequestLimit          Int?    @map("daily_request_limit") // null = unlimited
   dailyTokenLimit            Int?    @map("daily_token_limit") // null = unlimited
   createdAt                  DateTime @default(now()) @map("created_at")
@@ -187,6 +192,39 @@ model Invitation {
 }
 
 // ============================================================================
+// PLATFORM MODEL REGISTRY
+// ============================================================================
+
+// Model - platform-level AI model registry (NOT org-scoped)
+// Single source of truth for available Claude models, pricing, and capabilities.
+// Replaces hardcoded model arrays. Super Admin manages via API.
+model Model {
+  id                    String   @id @default(uuid())
+  modelId               String   @unique @map("model_id") // Anthropic API model ID
+  displayName           String   @map("display_name")
+  generationGroup       String   @map("generation_group") // e.g., "Claude 4.6", "Claude 4.5"
+  inputPricePerToken    Decimal  @map("input_price_per_token") @db.Decimal(20, 12)
+  outputPricePerToken   Decimal  @map("output_price_per_token") @db.Decimal(20, 12)
+  thinkingPricePerToken Decimal  @map("thinking_price_per_token") @db.Decimal(20, 12)
+  cacheWritePricePerToken Decimal @map("cache_write_price_per_token") @db.Decimal(20, 12)
+  cacheReadPricePerToken Decimal  @map("cache_read_price_per_token") @db.Decimal(20, 12)
+  supportsThinking      Boolean  @default(false) @map("supports_thinking")
+  supportsVision        Boolean  @default(true) @map("supports_vision")
+  supportsTools         Boolean  @default(true) @map("supports_tools")
+  thinkingType          String?  @map("thinking_type") // "adaptive" | "extended" | null
+  maxOutputTokens       Int      @map("max_output_tokens")
+  contextWindow         Int      @map("context_window")
+  status                String   @default("ACTIVE") // ACTIVE | DEPRECATED
+  sortOrder             Int      @default(0) @map("sort_order")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([generationGroup])
+  @@map("models")
+}
+
+// ============================================================================
 // AUDIT & USAGE MODELS
 // ============================================================================
 
@@ -221,6 +259,10 @@ model UsageRecord {
   model             String   // Claude model used
   inputTokens       Int      @map("input_tokens")
   outputTokens      Int      @map("output_tokens")
+  thinkingTokens    Int      @default(0) @map("thinking_tokens")
+  cacheCreationTokens Int    @default(0) @map("cache_creation_tokens")
+  cacheReadTokens   Int      @default(0) @map("cache_read_tokens")
+  conversationId    String?  @map("conversation_id")
   requestDurationMs Int?     @map("request_duration_ms")
   createdAt         DateTime @default(now()) @map("created_at")
 
@@ -231,7 +273,29 @@ model UsageRecord {
   @@index([userId])
   @@index([createdAt])
   @@index([organizationId, createdAt])
+  @@index([model])
   @@map("usage_records")
+}
+
+// OnboardingAgreement - tracks user acceptance of org-level onboarding agreements (UCHAT-06 minimum)
+// Org-scoped: tracks when a user accepts the org's terms/onboarding notice.
+// Full onboarding UI deferred to Phase 7 per CONTEXT.md.
+model OnboardingAgreement {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  orgMemberId      String   @map("org_member_id")
+  organizationId   String   @map("organization_id")
+  agreementVersion Int      @default(1) @map("agreement_version")
+  acceptedAt       DateTime @default(now()) @map("accepted_at")
+  ipAddress        String?  @map("ip_address")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgMember    OrgMember    @relation(fields: [orgMemberId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([orgMemberId, agreementVersion])
+  @@index([organizationId])
+  @@map("onboarding_agreements")
 }
 
 // ============================================================================
