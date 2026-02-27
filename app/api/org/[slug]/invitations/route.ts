@@ -1,8 +1,8 @@
 /**
  * Org Admin Invitation API - List & Create
  *
- * GET  /api/org/invitations - List all invitations for the organization
- * POST /api/org/invitations - Create a new invitation
+ * GET  /api/org/[slug]/invitations - List all invitations for the organization
+ * POST /api/org/[slug]/invitations - Create a new invitation
  *
  * All routes require Org Admin authentication.
  */
@@ -17,7 +17,7 @@ import {
 } from '@/lib/validation';
 
 /**
- * GET /api/org/invitations
+ * GET /api/org/[slug]/invitations
  * List all invitations for the current organization.
  */
 export async function GET(req: NextRequest) {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/org/invitations
+ * POST /api/org/[slug]/invitations
  * Create a new invitation. Sends email to the invited user.
  */
 export async function POST(req: NextRequest) {

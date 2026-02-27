@@ -1,24 +1,24 @@
 /**
- * Org Admin Invitation Resend API
+ * Org Admin Invitation Revoke API
  *
- * POST /api/org/invitations/[id]/resend - Resend an invitation
+ * POST /api/org/[slug]/invitations/[id]/revoke - Revoke a pending invitation
  *
  * Requires Org Admin authentication.
- * Works for PENDING and EXPIRED invitations. Generates new token and resets expiry.
+ * Includes SAFE-02 guard: cannot revoke if it would leave org with 0 admins.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
-import { resendInvitation } from '@/lib/services/invitation-service';
+import { revokeInvitation } from '@/lib/services/invitation-service';
 
 /**
- * POST /api/org/invitations/[id]/resend
- * Resend an invitation with a new token and reset expiry.
+ * POST /api/org/[slug]/invitations/[id]/revoke
+ * Revoke a pending invitation (status changes to REVOKED).
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
@@ -27,7 +27,7 @@ export async function POST(
     const { id } = await params;
     const ipAddress = getIpAddress(req);
 
-    const invitation = await resendInvitation(
+    const invitation = await revokeInvitation(
       id,
       authResult.organization.id,
       authResult.user.id,
@@ -43,10 +43,16 @@ export async function POST(
           { status: 404 }
         );
       }
-      if (error.message.includes('Cannot resend')) {
+      if (error.message.includes('Only pending')) {
         return NextResponse.json(
           { error: error.message },
           { status: 400 }
+        );
+      }
+      if (error.message.includes('Cannot revoke')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 409 }
         );
       }
     }

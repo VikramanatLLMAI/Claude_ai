@@ -1,8 +1,8 @@
 /**
  * Org Admin Default Role API
  *
- * GET   /api/org/settings/default-role - Get default role for new invitations
- * PATCH /api/org/settings/default-role - Set default role for new invitations
+ * GET   /api/org/[slug]/settings/default-role - Get default role for new invitations
+ * PATCH /api/org/[slug]/settings/default-role - Set default role for new invitations
  *
  * Requires Org Admin authentication.
  * (ODEF-01)
@@ -19,7 +19,7 @@ import {
 } from '@/lib/validation';
 
 /**
- * GET /api/org/settings/default-role
+ * GET /api/org/[slug]/settings/default-role
  * Get the current default role ID for this organization.
  */
 export async function GET(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PATCH /api/org/settings/default-role
+ * PATCH /api/org/[slug]/settings/default-role
  * Set or clear the default role for new invitations.
  */
 export async function PATCH(req: NextRequest) {
