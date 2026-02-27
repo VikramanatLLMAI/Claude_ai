@@ -67,16 +67,23 @@ Plans:
   3. MCP tools shown to the user match exactly their role-assigned tools plus org-wide tools -- no tools from other roles or orgs leak through
   4. Token usage (input + output) is recorded per request and can be queried by org, user, and model
   5. Org-level and role-level system instructions set by Org Admin affect AI behavior in user chat sessions
-**Plans**: 7 plans in 2 waves
+**Plans**: 14 plans in 3 waves
 
 Plans:
-- [ ] 03-01-PLAN.md -- Model Registry schema (Model table + OnboardingAgreement table + UsageRecord extensions + Role extensions), prompt sanitizer, model registry service, seed data, Super Admin CRUD API (Wave 1)
-- [ ] 03-02-PLAN.md -- Super Admin Dashboard shell with sidebar + Model Registry management page with generation grouping (Wave 1)
-- [ ] 03-03-PLAN.md -- Chat route RBAC enforcement: model filtering, 4-layer prompt composition, MCP tool filtering, usage tracking, permitted models API + frontend model selector wiring (Wave 2, depends on 03-01)
-- [ ] 03-04-PLAN.md -- Org Admin Console shell with sidebar + system instructions management page (org + role level) with live token counters (Wave 2, depends on 03-01)
-- [ ] 03-05-PLAN.md -- Role model assignment with generation grouping and role configuration toggles (Wave 2, depends on 03-01)
-- [ ] 03-06-PLAN.md -- MCP server management (org-wide + role-specific) + user custom instructions API and Settings modal integration (Wave 2, depends on 03-01)
-- [ ] 03-07-PLAN.md -- Gap closure: Add org_admin permission to Technical role seed data (UAT Tests 7-13 fix) (Wave 1, standalone)
+- [x] 03-01-PLAN.md -- Model Registry schema (Model table + OnboardingAgreement table + UsageRecord extensions + Role extensions), prompt sanitizer, model registry service, seed data, Super Admin CRUD API (Wave 1)
+- [x] 03-02-PLAN.md -- Super Admin Dashboard shell with sidebar + Model Registry management page with generation grouping (Wave 1)
+- [x] 03-03-PLAN.md -- Chat route RBAC enforcement: model filtering, 4-layer prompt composition, MCP tool filtering, usage tracking, permitted models API + frontend model selector wiring (Wave 2, depends on 03-01)
+- [x] 03-04-PLAN.md -- Org Admin Console shell with sidebar + system instructions management page (org + role level) with live token counters (Wave 2, depends on 03-01)
+- [x] 03-05-PLAN.md -- Role model assignment with generation grouping and role configuration toggles (Wave 2, depends on 03-01)
+- [x] 03-06-PLAN.md -- MCP server management (org-wide + role-specific) + user custom instructions API and Settings modal integration (Wave 2, depends on 03-01)
+- [x] 03-07-PLAN.md -- Gap closure: Add org_admin permission to Technical role seed data (UAT Tests 7-13 fix) (Wave 1, standalone)
+- [ ] 03-08-PLAN.md -- Gap closure: BLOCKER fix (org-scoped models endpoint) + shared UI infrastructure (toast system, AlertDialog, ConfirmationDialog) (Wave 1, standalone)
+- [ ] 03-09-PLAN.md -- Gap closure: MCP server edit dialog, styled delete confirmation, toast notifications, status dots, tooltips (Wave 2, depends on 03-08)
+- [ ] 03-10-PLAN.md -- Gap closure: Instructions/Roles toast notifications, unsaved changes tracking, save button consistency, Ctrl+S, auto-grow textareas, toggle animations (Wave 2, depends on 03-08)
+- [ ] 03-11-PLAN.md -- Gap closure: Breadcrumb navigation, admin dashboard landing page, loading skeletons, redirect toast, sidebar visual polish (Wave 2, depends on 03-08)
+- [ ] 03-12-PLAN.md -- Gap closure: Last-saved timestamps, role card metadata, combined instructions preview, enhanced empty states (Wave 2, depends on 03-08)
+- [ ] 03-13-PLAN.md -- Gap closure: Gear icon fix, MCP empty states with CTAs, remaining visual polish (Wave 2, depends on 03-08)
+- [ ] 03-14-PLAN.md -- Gap closure: Human verification checkpoint for all 27 UAT SaaS readiness items (Wave 3, depends on 03-09 through 03-13)
 
 ### Phase 4: Role Configuration and Usage Limits
 **Goal**: Org Admins can create custom roles with granular permissions, enforce usage limits with threshold alerts, set password policies, and users can manage their sessions
@@ -179,7 +186,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Schema and Auth Foundation | 3/3 | Complete | 2026-02-26 |
 | 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
-| 3. Chat Integration and Core RBAC | 6/7 | Gap closure | - |
+| 3. Chat Integration and Core RBAC | 7/14 | Gap closure (UAT SaaS audit) | - |
 | 4. Role Configuration and Usage Limits | 0/3 | Not started | - |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |
