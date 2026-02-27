@@ -36,7 +36,7 @@ key-decisions:
 patterns-established:
   - "Org API routes use /api/org/[slug]/... path convention (slug in URL for dev-mode resolution)"
 
-requirements-completed: [SORG-01, SORG-02, SORG-03, SORG-04, SORG-05, SORG-06, SORG-07, SUSR-01, SUSR-02, SUSR-03, SUSR-04, STPL-01, STPL-02, STPL-03, OUSR-01, OUSR-09, ODEF-01, ODEF-02, UATH-01, UATH-02, UATH-03, UATH-04, SAFE-01, SAFE-02, SAFE-04, SAFE-05]
+requirements-completed: [SORG-01, SORG-02, SORG-03, SORG-04, SORG-05, SORG-06, SORG-07, SUSR-01, SUSR-02, SUSR-03, SUSR-04, STPL-01, STPL-02, STPL-03, OUSR-01, OUSR-09, ODEF-01, UATH-01, UATH-02, UATH-03, UATH-04, SAFE-01, SAFE-02, SAFE-04, SAFE-05]
 
 # Metrics
 duration: 4min
