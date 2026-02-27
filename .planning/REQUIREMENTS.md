@@ -136,7 +136,7 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — Default Role (ODEF)
 
 - [x] **ODEF-01**: Org Admin can set a default role automatically assigned when a new user accepts an invitation without a specified role
-- [ ] **ODEF-02**: If the default role is deleted, the field clears automatically and next invitation requires explicit role selection
+- [x] **ODEF-02**: If the default role is deleted, the field clears automatically and next invitation requires explicit role selection
 
 ### Org Admin — Conversation Visibility (OVIS)
 
@@ -397,7 +397,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUSR-01 | Phase 2 | Complete |
 | OUSR-09 | Phase 2 | Complete |
 | ODEF-01 | Phase 2 | Complete |
-| ODEF-02 | Phase 2 | Pending |
+| ODEF-02 | Phase 2 | Complete |
 | UATH-01 | Phase 2 | Complete |
 | UATH-02 | Phase 2 | Complete |
 | UATH-03 | Phase 2 | Complete |

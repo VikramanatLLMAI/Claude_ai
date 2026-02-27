@@ -2,26 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-26T17:00:11.093Z"
-progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in-progress
-last_updated: "2026-02-26T16:27:30.000Z"
+last_updated: "2026-02-27T03:09:08.000Z"
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 16
-  completed_plans: 6
+  total_plans: 17
+  completed_plans: 7
 ---
 
 # Project State
@@ -36,28 +23,28 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 2 of 7 (Organization Management and Invitations)
-Plan: 3 of 3 in current phase
+Plan: 4 of 4 in current phase
 Status: Phase Complete
-Last activity: 2026-02-26 -- Completed 02-03 (Registration flow with password policy, invitation acceptance, branded UI)
+Last activity: 2026-02-27 -- Completed 02-04 (Gap closure: dev-mode org API routing fix)
 
-Progress: [########------------] 38%
+Progress: [########------------] 41%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 19 min
-- Total execution time: 1.8 hours
+- Total plans completed: 7
+- Average duration: 17 min
+- Total execution time: 1.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 3 | 91 min | 30 min |
-| 02 | 3 | 20 min | 7 min |
+| 02 | 4 | 24 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (9 min), 01-02 (11 min), 02-01 (8 min), 02-02 (6 min), 02-03 (6 min)
+- Last 5 plans: 01-02 (11 min), 02-01 (8 min), 02-02 (6 min), 02-03 (6 min), 02-04 (4 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -95,6 +82,8 @@ Recent decisions affecting current work:
 - [02-03]: avatarBase64 left null at registration -- existing chat UI renders initials from user name (UATH-03 resolved)
 - [02-03]: Public auth endpoints use invitation token as authorization proof (no requireAuth needed)
 - [02-03]: Server component validates token directly (no fetch to API) for faster rendering
+- [02-04]: resolveOrgSlug tries page path regex first, then API path regex (order ensures no regression)
+- [02-04]: Route handler logic unchanged -- slug consumed via URL by resolveOrgSlug, not from Next.js params
 
 ### Pending Todos
 
@@ -108,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Completed 02-03-PLAN.md
-Resume file: .planning/phases/02-organization-management-and-invitations/02-03-SUMMARY.md
+Last session: 2026-02-27
+Stopped at: Completed 02-04-PLAN.md
+Resume file: .planning/phases/02-organization-management-and-invitations/02-04-SUMMARY.md
