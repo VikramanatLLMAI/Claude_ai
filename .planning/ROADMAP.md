@@ -49,12 +49,13 @@ Plans:
   3. Org Admin can invite a user by email, the user receives an invitation email via Resend, and can register through the acceptance link
   4. System role templates (Technical, Business, Basic) exist in every new organization and Super Admin can view and edit the templates
   5. Safety rules are enforced: cannot delete self, must maintain at least 1 Org Admin per org and 1 Super Admin platform-wide
-**Plans**: 3 plans in 2 waves
+**Plans**: 4 plans in 2 waves
 
 Plans:
 - [ ] 02-01-PLAN.md -- Shared foundation (audit service, role templates, validation schemas) + org CRUD + Super Admin CRUD + role template APIs (Wave 1)
 - [ ] 02-02-PLAN.md -- Email infrastructure (Resend + React Email) + invitation service + Org Admin invitation APIs + default role (Wave 2, depends on 02-01)
 - [ ] 02-03-PLAN.md -- Registration page + invitation acceptance flow + password validation + auto-login (Wave 2, depends on 02-01)
+- [ ] 02-04-PLAN.md -- Gap closure: Fix dev-mode org context resolution for org-scoped API routes (Wave 1, standalone)
 
 ### Phase 3: Chat Integration and Core RBAC
 **Goal**: Users can chat using only the AI models their role permits, with a composed 4-layer system prompt injected on every request, usage tracked per request, and MCP tools filtered by role assignment
@@ -149,7 +150,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Schema and Auth Foundation | 0/3 | Planned | - |
-| 2. Organization Management and Invitations | 0/3 | Not started | - |
+| 2. Organization Management and Invitations | 0/4 | Not started | - |
 | 3. Chat Integration and Core RBAC | 0/3 | Not started | - |
 | 4. Role Configuration and Usage Limits | 0/3 | Not started | - |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
