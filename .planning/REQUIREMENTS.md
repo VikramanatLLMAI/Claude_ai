@@ -113,7 +113,7 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — System Instructions (OINST)
 
 - [ ] **OINST-01**: Org Admin can set organization-wide system instructions
-- [ ] **OINST-02**: Character limit enforced (default 2000 characters)
+- [ ] **OINST-02**: Token limit enforced at save time (max 700 tokens for org instructions)
 - [ ] **OINST-03**: Org instructions stack on top of platform-level system prompt
 - [ ] **OINST-04**: Org instructions apply to all users in the org unless overridden at role level
 
@@ -155,7 +155,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **OVIS-03**: Org Admin can filter conversations by user, date, or model
 - [ ] **OVIS-04**: Org Admin can export conversations for compliance purposes
 - [ ] **OVIS-05**: Org Admin cannot modify or delete user conversations
-- [ ] **OVIS-06**: When enabled, users see a clear notice in the chat UI that their conversations may be visible to their admin
+- [ ] **OVIS-06**: When enabled, users acknowledge conversation visibility during org-customizable onboarding agreement (no in-chat indicator per Phase 3 decision)
 - [ ] **OVIS-07**: Visibility setting change is logged in audit logs
 
 ### Org Admin — User Management (OUSR)
@@ -181,7 +181,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **OROL-04**: Org Admin can delete custom roles only (system roles cannot be deleted)
 - [ ] **OROL-05**: Org Admin can view which users are assigned to each role
 - [ ] **OROL-06**: Org Admin can enable or disable custom instructions per role
-- [ ] **OROL-07**: Org Admin can set character limit for user custom instructions per role (e.g. 500–1000 characters)
+- [ ] **OROL-07**: User custom instructions limited to 200 tokens per role (token budget enforced at save time with live counter)
 
 ### Org Admin — Per Role LLM Access (OLLM)
 
@@ -191,7 +191,7 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — Per Role System Instructions (ORSI)
 
 - [ ] **ORSI-01**: Org Admin can set role-specific system instructions
-- [ ] **ORSI-02**: Character limit enforced (default 2000 characters)
+- [ ] **ORSI-02**: Token limit enforced at save time (max 500 tokens for role instructions)
 - [ ] **ORSI-03**: Role instructions stack on top of platform + org level instructions
 - [ ] **ORSI-04**: Role instructions fine-tune AI response behavior for that specific role
 
@@ -281,9 +281,9 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Regular User — Custom Instructions (UCUST)
 
 - [ ] **UCUST-01**: User can write personal AI behavior preferences in Settings (if enabled by Org Admin for their role)
-- [ ] **UCUST-02**: Character limit shown with live counter (limit set by Org Admin per role)
+- [ ] **UCUST-02**: Live token counter shown while typing (max 200 tokens for user custom instructions)
 - [ ] **UCUST-03**: Instructions are org-specific — do not carry over if user moves to a different org
-- [ ] **UCUST-04**: If Org Admin disables this for the role, the option is completely hidden
+- [ ] **UCUST-04**: If Org Admin disables this for the role, the user's saved text is visible but grayed out with "Custom instructions disabled by your admin" message (text preserved in DB for re-enabling)
 
 ### Regular User — Chat (UCHAT)
 
@@ -292,15 +292,15 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **UCHAT-03**: User sees warning banner at 80% of their limit
 - [ ] **UCHAT-04**: User is blocked with a clear message at 100% of their limit
 - [ ] **UCHAT-05**: User cannot configure MCP servers — access determined entirely by Org Admin
-- [ ] **UCHAT-06**: If conversation visibility is enabled in their org, a notice is shown in the chat UI
+- [ ] **UCHAT-06**: If conversation visibility is enabled, user acknowledges it during onboarding agreement (no in-chat indicator)
 
 ### System Prompt Stack (PRMT)
 
 - [ ] **PRMT-01**: Platform prompt hardcoded at code level — no one can edit via UI
-- [ ] **PRMT-02**: Org system instructions stack on top of platform prompt (2000 char limit)
-- [ ] **PRMT-03**: Role system instructions stack on top of org instructions (2000 char limit)
-- [ ] **PRMT-04**: User layer auto-injected: user's full name, role name, custom instructions (if enabled)
-- [ ] **PRMT-05**: All 4 layers combined enforced against system prompt token budget (2000 tokens) at server level on every chat request
+- [ ] **PRMT-02**: Org system instructions stack on top of platform prompt (max 700 tokens, enforced at save time)
+- [ ] **PRMT-03**: Role system instructions stack on top of org instructions (max 500 tokens, enforced at save time)
+- [ ] **PRMT-04**: User layer auto-injected: user's full name, role name, custom instructions (max 200 tokens, if enabled)
+- [ ] **PRMT-05**: Per-layer token budgets enforced at save time (platform: uncapped/hardcoded, org: 700, role: 500, user: 200) — no combined budget check at chat time
 - [ ] **PRMT-06**: XML-delimited sections for injection prevention, sanitization of untrusted inputs
 
 ### Safety & Protection Rules (SAFE)
@@ -359,7 +359,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | Email notifications for alerts | In-app dashboard alerts and chat UI banners sufficient for v1 |
 | Public API | No external API contract until internal patterns stabilize |
 | Mobile native app | Web-only; responsive design covers mobile browsers |
-| User-configurable MCP servers | Security risk; Org Admin controls tool surface area |
+| Unrestricted user MCP servers | Org Admin controls tool surface area; users can add personal MCP servers only if role permits (toggle + max count per role) |
 | Per-user API keys | Complicates tracking/billing; platform keys assigned to orgs |
 | ABAC (attribute-based access) | Overkill for fixed 3-level hierarchy at this scale |
 | Chat UI rebuild | Existing promptkit-based chat UI is fully working; RBAC layers on top |
@@ -580,4 +580,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after roadmap creation*
+*Last updated: 2026-02-27 after Phase 3 discuss-phase (token budgets, model registry, MCP personal servers, visibility notice)*

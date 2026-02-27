@@ -63,7 +63,7 @@ Plans:
 **Requirements**: UCHAT-01, UCHAT-02, UCHAT-05, UCHAT-06, PRMT-01, PRMT-02, PRMT-03, PRMT-04, PRMT-05, PRMT-06, OLLM-01, OLLM-02, OMCP-01, OMCP-02, OMCP-03, OMCP-04, OMCP-05, OINST-01, OINST-02, OINST-03, OINST-04, ORSI-01, ORSI-02, ORSI-03, ORSI-04, UCUST-01, UCUST-02, UCUST-03, UCUST-04, SAFE-07, SAFE-08, SAFE-09, MODL-01, MODL-02, MODL-03, MODL-04, MODL-05, MODL-06, MODL-07
 **Success Criteria** (what must be TRUE):
   1. A user assigned the "Basic" role sees only the models permitted for that role in the model selector -- no other models are accessible via UI or API
-  2. Every chat request composes and injects the 4-layer system prompt (platform + org + role + user) with XML delimiters, and the combined prompt stays within the 2000-token budget
+  2. Every chat request composes and injects the 4-layer system prompt (platform + org + role + user) with descriptive XML delimiters, with per-layer token budgets enforced at save time (org: 700, role: 500, user: 200)
   3. MCP tools shown to the user match exactly their role-assigned tools plus org-wide tools -- no tools from other roles or orgs leak through
   4. Token usage (input + output) is recorded per request and can be queried by org, user, and model
   5. Org-level and role-level system instructions set by Org Admin affect AI behavior in user chat sessions
