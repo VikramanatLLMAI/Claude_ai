@@ -67,13 +67,13 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — Platform Model Registry (MODL)
 
-- [ ] **MODL-01**: Super Admin can add AI models to the platform registry through the UI (no code changes for new models)
-- [ ] **MODL-02**: Each model entry includes: model ID, display name, generation group, pricing (input/output/thinking/cache-write/cache-read per token), capability flags (thinking, vision, tools), limits (max output tokens, context window), and active/deprecated status
-- [ ] **MODL-03**: Super Admin can edit existing model entries (pricing, capabilities, status)
-- [ ] **MODL-04**: Super Admin can deprecate a model — deprecated models cannot be assigned to new roles but existing assignments continue temporarily
-- [ ] **MODL-05**: Model Registry is the single source of truth for available models — Org Admin model assignment UI reads from the registry
-- [ ] **MODL-06**: Seed script pre-populates all 7 current Claude models with correct pricing, capabilities, and context windows
-- [ ] **MODL-07**: Models grouped by generation (Claude 4.6, 4.5, 4) for Org Admin configuration — group toggle + individual model toggle with mixed-state checkbox
+- [x] **MODL-01**: Super Admin can add AI models to the platform registry through the UI (no code changes for new models)
+- [x] **MODL-02**: Each model entry includes: model ID, display name, generation group, pricing (input/output/thinking/cache-write/cache-read per token), capability flags (thinking, vision, tools), limits (max output tokens, context window), and active/deprecated status
+- [x] **MODL-03**: Super Admin can edit existing model entries (pricing, capabilities, status)
+- [x] **MODL-04**: Super Admin can deprecate a model — deprecated models cannot be assigned to new roles but existing assignments continue temporarily
+- [x] **MODL-05**: Model Registry is the single source of truth for available models — Org Admin model assignment UI reads from the registry
+- [x] **MODL-06**: Seed script pre-populates all 7 current Claude models with correct pricing, capabilities, and context windows
+- [x] **MODL-07**: Models grouped by generation (Claude 4.6, 4.5, 4) for Org Admin configuration — group toggle + individual model toggle with mixed-state checkbox
 
 ### Super Admin — System Role Templates (STPL)
 
@@ -292,7 +292,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **UCHAT-03**: User sees warning banner at 80% of their limit
 - [ ] **UCHAT-04**: User is blocked with a clear message at 100% of their limit
 - [ ] **UCHAT-05**: User cannot configure MCP servers — access determined entirely by Org Admin
-- [ ] **UCHAT-06**: If conversation visibility is enabled, user acknowledges it during onboarding agreement (no in-chat indicator)
+- [x] **UCHAT-06**: If conversation visibility is enabled, user acknowledges it during onboarding agreement (no in-chat indicator)
 
 ### System Prompt Stack (PRMT)
 
@@ -311,9 +311,9 @@ Requirements for initial release. All features from the RBAC specification are v
 - [x] **SAFE-04**: Org Admin cannot delete their own org
 - [x] **SAFE-05**: 30-day grace period after org deletion — data recoverable during this window
 - [x] **SAFE-06**: Must always have at least 1 Super Admin
-- [ ] **SAFE-07**: Audit logs are immutable — cannot be edited or deleted by anyone
+- [x] **SAFE-07**: Audit logs are immutable — cannot be edited or deleted by anyone
 - [ ] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
-- [ ] **SAFE-09**: Character limits enforced server-side, not just client-side
+- [x] **SAFE-09**: Character limits enforced server-side, not just client-side
 - [ ] **SAFE-10**: Role-level daily limits and org-level monthly limits enforced — requests hard rejected when exceeded
 - [ ] **SAFE-11**: Org Admin conversation access is read-only — no edit or delete
 
@@ -419,7 +419,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UCHAT-01 | Phase 3 | Pending |
 | UCHAT-02 | Phase 3 | Pending |
 | UCHAT-05 | Phase 3 | Pending |
-| UCHAT-06 | Phase 3 | Pending |
+| UCHAT-06 | Phase 3 | Complete |
 | PRMT-01 | Phase 3 | Pending |
 | PRMT-02 | Phase 3 | Pending |
 | PRMT-03 | Phase 3 | Pending |
@@ -445,16 +445,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UCUST-02 | Phase 3 | Pending |
 | UCUST-03 | Phase 3 | Pending |
 | UCUST-04 | Phase 3 | Pending |
-| SAFE-07 | Phase 3 | Pending |
+| SAFE-07 | Phase 3 | Complete |
 | SAFE-08 | Phase 3 | Pending |
-| SAFE-09 | Phase 3 | Pending |
-| MODL-01 | Phase 3 | Pending |
-| MODL-02 | Phase 3 | Pending |
-| MODL-03 | Phase 3 | Pending |
-| MODL-04 | Phase 3 | Pending |
-| MODL-05 | Phase 3 | Pending |
-| MODL-06 | Phase 3 | Pending |
-| MODL-07 | Phase 3 | Pending |
+| SAFE-09 | Phase 3 | Complete |
+| MODL-01 | Phase 3 | Complete |
+| MODL-02 | Phase 3 | Complete |
+| MODL-03 | Phase 3 | Complete |
+| MODL-04 | Phase 3 | Complete |
+| MODL-05 | Phase 3 | Complete |
+| MODL-06 | Phase 3 | Complete |
+| MODL-07 | Phase 3 | Complete |
 | OROL-01 | Phase 4 | Pending |
 | OROL-02 | Phase 4 | Pending |
 | OROL-03 | Phase 4 | Pending |
