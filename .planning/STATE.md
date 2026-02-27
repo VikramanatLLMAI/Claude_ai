@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 3 of 7 (Chat Integration and Core RBAC)
-Plan: 6 of 6 in current phase
+Plan: 3 of 6 in current phase
 Status: Executing plans
-Last activity: 2026-02-27 -- Completed 03-04-PLAN.md (Org Admin Console + System Instructions)
+Last activity: 2026-02-27 -- Completed 03-03-PLAN.md (Chat Route RBAC Enforcement)
 
 Progress: [############--------] 59%
 
@@ -98,6 +98,10 @@ Recent decisions affecting current work:
 - [Phase 03-04]: Org Admin layout verifies admin access via org-scoped API call (not auth/me which lacks org context)
 - [Phase 03-04]: Instructions stored as plain text -- sanitization happens at prompt composition time, not save time
 - [Phase 03-04]: InstructionEditor component reusable for org/role/user instruction editing with configurable maxTokens
+- [03-03]: UsageRecord uses tenantDb (not raw prisma) since it is in TENANT_SCOPED_MODELS
+- [03-03]: Model thinking mode resolved from Model Registry thinkingType field instead of hardcoded arrays
+- [03-03]: Org slug resolved from URL path for frontend API calls (getOrgSlugFromUrl helper)
+- [03-03]: isOrgAdmin flag included in models API response to avoid extra API call for Admin Console visibility
 
 ### Pending Todos
 
@@ -112,5 +116,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 03-04-PLAN.md (Org Admin Console + System Instructions)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-04-SUMMARY.md
+Stopped at: Completed 03-03-PLAN.md (Chat Route RBAC Enforcement)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-03-SUMMARY.md

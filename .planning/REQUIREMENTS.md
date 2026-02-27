@@ -186,7 +186,7 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — Per Role LLM Access (OLLM)
 
 - [x] **OLLM-01**: Org Admin can select which Anthropic models the role can access (v1: Anthropic only)
-- [ ] **OLLM-02**: Users in that role can only use the permitted models
+- [x] **OLLM-02**: Users in that role can only use the permitted models
 
 ### Org Admin — Per Role System Instructions (ORSI)
 
@@ -287,21 +287,21 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Regular User — Chat (UCHAT)
 
-- [ ] **UCHAT-01**: User can chat with AI using role-permitted Anthropic models only
-- [ ] **UCHAT-02**: User subject to daily request and token limits set by Org Admin
+- [x] **UCHAT-01**: User can chat with AI using role-permitted Anthropic models only
+- [x] **UCHAT-02**: User subject to daily request and token limits set by Org Admin
 - [ ] **UCHAT-03**: User sees warning banner at 80% of their limit
 - [ ] **UCHAT-04**: User is blocked with a clear message at 100% of their limit
-- [ ] **UCHAT-05**: User cannot configure MCP servers — access determined entirely by Org Admin
+- [x] **UCHAT-05**: User cannot configure MCP servers — access determined entirely by Org Admin
 - [x] **UCHAT-06**: If conversation visibility is enabled, user acknowledges it during onboarding agreement (no in-chat indicator)
 
 ### System Prompt Stack (PRMT)
 
-- [ ] **PRMT-01**: Platform prompt hardcoded at code level — no one can edit via UI
-- [ ] **PRMT-02**: Org system instructions stack on top of platform prompt (max 700 tokens, enforced at save time)
-- [ ] **PRMT-03**: Role system instructions stack on top of org instructions (max 500 tokens, enforced at save time)
-- [ ] **PRMT-04**: User layer auto-injected: user's full name, role name, custom instructions (max 200 tokens, if enabled)
-- [ ] **PRMT-05**: Per-layer token budgets enforced at save time (platform: uncapped/hardcoded, org: 700, role: 500, user: 200) — no combined budget check at chat time
-- [ ] **PRMT-06**: XML-delimited sections for injection prevention, sanitization of untrusted inputs
+- [x] **PRMT-01**: Platform prompt hardcoded at code level — no one can edit via UI
+- [x] **PRMT-02**: Org system instructions stack on top of platform prompt (max 700 tokens, enforced at save time)
+- [x] **PRMT-03**: Role system instructions stack on top of org instructions (max 500 tokens, enforced at save time)
+- [x] **PRMT-04**: User layer auto-injected: user's full name, role name, custom instructions (max 200 tokens, if enabled)
+- [x] **PRMT-05**: Per-layer token budgets enforced at save time (platform: uncapped/hardcoded, org: 700, role: 500, user: 200) — no combined budget check at chat time
+- [x] **PRMT-06**: XML-delimited sections for injection prevention, sanitization of untrusted inputs
 
 ### Safety & Protection Rules (SAFE)
 
@@ -312,7 +312,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [x] **SAFE-05**: 30-day grace period after org deletion — data recoverable during this window
 - [x] **SAFE-06**: Must always have at least 1 Super Admin
 - [x] **SAFE-07**: Audit logs are immutable — cannot be edited or deleted by anyone
-- [ ] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
+- [x] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
 - [x] **SAFE-09**: Character limits enforced server-side, not just client-side
 - [ ] **SAFE-10**: Role-level daily limits and org-level monthly limits enforced — requests hard rejected when exceeded
 - [ ] **SAFE-11**: Org Admin conversation access is read-only — no edit or delete
@@ -416,18 +416,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAFE-02 | Phase 2 | Complete |
 | SAFE-04 | Phase 2 | Complete |
 | SAFE-05 | Phase 2 | Complete |
-| UCHAT-01 | Phase 3 | Pending |
-| UCHAT-02 | Phase 3 | Pending |
-| UCHAT-05 | Phase 3 | Pending |
+| UCHAT-01 | Phase 3 | Complete |
+| UCHAT-02 | Phase 3 | Complete |
+| UCHAT-05 | Phase 3 | Complete |
 | UCHAT-06 | Phase 3 | Complete |
-| PRMT-01 | Phase 3 | Pending |
-| PRMT-02 | Phase 3 | Pending |
-| PRMT-03 | Phase 3 | Pending |
-| PRMT-04 | Phase 3 | Pending |
-| PRMT-05 | Phase 3 | Pending |
-| PRMT-06 | Phase 3 | Pending |
+| PRMT-01 | Phase 3 | Complete |
+| PRMT-02 | Phase 3 | Complete |
+| PRMT-03 | Phase 3 | Complete |
+| PRMT-04 | Phase 3 | Complete |
+| PRMT-05 | Phase 3 | Complete |
+| PRMT-06 | Phase 3 | Complete |
 | OLLM-01 | Phase 3 | Complete |
-| OLLM-02 | Phase 3 | Pending |
+| OLLM-02 | Phase 3 | Complete |
 | OMCP-01 | Phase 3 | Pending |
 | OMCP-02 | Phase 3 | Pending |
 | OMCP-03 | Phase 3 | Pending |
@@ -446,7 +446,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UCUST-03 | Phase 3 | Pending |
 | UCUST-04 | Phase 3 | Pending |
 | SAFE-07 | Phase 3 | Complete |
-| SAFE-08 | Phase 3 | Pending |
+| SAFE-08 | Phase 3 | Complete |
 | SAFE-09 | Phase 3 | Complete |
 | MODL-01 | Phase 3 | Complete |
 | MODL-02 | Phase 3 | Complete |
