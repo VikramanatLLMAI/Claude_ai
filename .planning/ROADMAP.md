@@ -60,7 +60,7 @@ Plans:
 ### Phase 3: Chat Integration and Core RBAC
 **Goal**: Users can chat using only the AI models their role permits, with a composed 4-layer system prompt injected on every request, usage tracked per request, and MCP tools filtered by role assignment
 **Depends on**: Phase 2
-**Requirements**: UCHAT-01, UCHAT-02, UCHAT-05, UCHAT-06, PRMT-01, PRMT-02, PRMT-03, PRMT-04, PRMT-05, PRMT-06, OLLM-01, OLLM-02, OMCP-01, OMCP-02, OMCP-03, OMCP-04, OMCP-05, OINST-01, OINST-02, OINST-03, OINST-04, ORSI-01, ORSI-02, ORSI-03, ORSI-04, UCUST-01, UCUST-02, UCUST-03, UCUST-04, SAFE-07, SAFE-08, SAFE-09
+**Requirements**: UCHAT-01, UCHAT-02, UCHAT-05, UCHAT-06, PRMT-01, PRMT-02, PRMT-03, PRMT-04, PRMT-05, PRMT-06, OLLM-01, OLLM-02, OMCP-01, OMCP-02, OMCP-03, OMCP-04, OMCP-05, OINST-01, OINST-02, OINST-03, OINST-04, ORSI-01, ORSI-02, ORSI-03, ORSI-04, UCUST-01, UCUST-02, UCUST-03, UCUST-04, SAFE-07, SAFE-08, SAFE-09, MODL-01, MODL-02, MODL-03, MODL-04, MODL-05, MODL-06, MODL-07
 **Success Criteria** (what must be TRUE):
   1. A user assigned the "Basic" role sees only the models permitted for that role in the model selector -- no other models are accessible via UI or API
   2. Every chat request composes and injects the 4-layer system prompt (platform + org + role + user) with XML delimiters, and the combined prompt stays within the 2000-token budget
