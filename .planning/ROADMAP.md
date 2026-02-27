@@ -67,7 +67,7 @@ Plans:
   3. MCP tools shown to the user match exactly their role-assigned tools plus org-wide tools -- no tools from other roles or orgs leak through
   4. Token usage (input + output) is recorded per request and can be queried by org, user, and model
   5. Org-level and role-level system instructions set by Org Admin affect AI behavior in user chat sessions
-**Plans**: 6 plans in 2 waves
+**Plans**: 7 plans in 2 waves
 
 Plans:
 - [ ] 03-01-PLAN.md -- Model Registry schema (Model table + OnboardingAgreement table + UsageRecord extensions + Role extensions), prompt sanitizer, model registry service, seed data, Super Admin CRUD API (Wave 1)
@@ -76,6 +76,7 @@ Plans:
 - [ ] 03-04-PLAN.md -- Org Admin Console shell with sidebar + system instructions management page (org + role level) with live token counters (Wave 2, depends on 03-01)
 - [ ] 03-05-PLAN.md -- Role model assignment with generation grouping and role configuration toggles (Wave 2, depends on 03-01)
 - [ ] 03-06-PLAN.md -- MCP server management (org-wide + role-specific) + user custom instructions API and Settings modal integration (Wave 2, depends on 03-01)
+- [ ] 03-07-PLAN.md -- Gap closure: Add org_admin permission to Technical role seed data (UAT Tests 7-13 fix) (Wave 1, standalone)
 
 ### Phase 4: Role Configuration and Usage Limits
 **Goal**: Org Admins can create custom roles with granular permissions, enforce usage limits with threshold alerts, set password policies, and users can manage their sessions
@@ -178,7 +179,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Schema and Auth Foundation | 3/3 | Complete | 2026-02-26 |
 | 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
-| 3. Chat Integration and Core RBAC | 6/6 | Complete | 2026-02-27 |
+| 3. Chat Integration and Core RBAC | 6/7 | Gap closure | - |
 | 4. Role Configuration and Usage Limits | 0/3 | Not started | - |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |
