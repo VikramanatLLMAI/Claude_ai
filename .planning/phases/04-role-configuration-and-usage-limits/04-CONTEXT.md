@@ -58,7 +58,7 @@ Phase 4 does NOT include: full analytics dashboards (Phase 6), theming/branding 
   - Security (Password Policy, Sessions)
   - Users (Members, Invitations)
 - **Consistent shadcn + Radix UI** throughout all admin pages — no mixed patterns
-- **SaaS-grade UI/UX is the #1 priority** — study best-in-class admin panels (Linear, Clerk, Vercel dashboard) for inspiration
+- **SaaS-grade UI/UX is the #1 priority** — Vercel's admin dashboard is the design reference. Match that level of polish, spacing, typography, and clean minimalism.
 
 ### Claude's Discretion
 - Exact chart library/components for usage trends (Recharts likely since Phase 5/6 will use it)
@@ -73,7 +73,7 @@ Phase 4 does NOT include: full analytics dashboards (Phase 6), theming/branding 
 <specifics>
 ## Specific Ideas
 
-- Admin dashboard should look like best-in-class SaaS products — Linear, Clerk, Vercel dashboard quality
+- Admin dashboard should look like Vercel's dashboard — that's the sole design reference. Clean, minimal, excellent spacing and typography.
 - Settings modal pattern (with sidebar navigation inside) should be the design reference for in-modal navigation
 - Charts and data visualization should be included from the start, not deferred
 - The rolling 24-hour window is user-specific — each user's limit window is independent based on their activity
