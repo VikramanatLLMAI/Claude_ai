@@ -32,9 +32,9 @@ Progress: [##################--] 90%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 18
 - Average duration: 11 min
-- Total execution time: 2.8 hours
+- Total execution time: 3.0 hours
 
 **By Phase:**
 
@@ -110,9 +110,17 @@ Recent decisions affecting current work:
 - [03-08]: Org admin models endpoint returns raw Model objects (same shape as super-admin endpoint) for component compatibility
 - [03-08]: RoleModelAssignment now fetches from /api/org/${slug}/admin/models instead of /api/admin/models (fixes 403 blocker)
 - [03-08]: Toast and AlertDialog components follow existing Radix UI wrapper patterns (dialog.tsx, tooltip.tsx)
+- [03-10]: Simplified SaveStatus to idle|saving since toast handles feedback (removed saved|error inline states)
+- [03-10]: Dirty state uses value comparison (savedValue vs currentValue) not form library
+- [03-10]: MCP min server count enforced on blur not onChange to allow natural typing
+- [03-10]: Switch animation enhancement is duration-200 ease-in-out on existing transitions
 - [03-11]: Breadcrumb wrapper included inside AdminBreadcrumb component (returns null on root, no empty div rendered)
 - [03-11]: Coming Soon badge text shortened to 'Soon' for minimal visual weight with outline variant
 - [03-11]: Admin dashboard reads org name from session synchronously (no extra API call)
+- [03-09]: Extended PATCH endpoint schema for MCP connections to support authType, authCredentials, assignmentType, roleId (was limited to name/serverUrl/isActive)
+- [03-09]: Extracted shared McpConnectionFormFields component for Add/Edit dialog reuse
+- [03-09]: Edit dialog leaves credential fields empty (encrypted server-side) with hint to keep existing values
+- [03-09]: Used existing DropdownMenu from Radix UI for styled role selector (consistent with codebase patterns)
 - [03-13]: Top-level MCP empty state handled inside McpAssignmentPanel (owns connection data, avoids lifting state to page)
 - [03-13]: AddOrgMcpDialog accepts defaultAssignmentType prop with useEffect sync on dialog open for CTA pre-selection
 - [03-13]: Gear icon fix uses minimal pl-0.5 (2px) on SidebarMenuItem -- single class on 86KB file
@@ -130,5 +138,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-11-PLAN.md (Admin Console Navigation and Polish)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-11-SUMMARY.md
+Stopped at: Completed 03-10-PLAN.md (Instructions & Role Settings UX Polish)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-10-SUMMARY.md
