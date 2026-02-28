@@ -110,6 +110,9 @@ Recent decisions affecting current work:
 - [03-08]: Org admin models endpoint returns raw Model objects (same shape as super-admin endpoint) for component compatibility
 - [03-08]: RoleModelAssignment now fetches from /api/org/${slug}/admin/models instead of /api/admin/models (fixes 403 blocker)
 - [03-08]: Toast and AlertDialog components follow existing Radix UI wrapper patterns (dialog.tsx, tooltip.tsx)
+- [03-11]: Breadcrumb wrapper included inside AdminBreadcrumb component (returns null on root, no empty div rendered)
+- [03-11]: Coming Soon badge text shortened to 'Soon' for minimal visual weight with outline variant
+- [03-11]: Admin dashboard reads org name from session synchronously (no extra API call)
 - [03-13]: Top-level MCP empty state handled inside McpAssignmentPanel (owns connection data, avoids lifting state to page)
 - [03-13]: AddOrgMcpDialog accepts defaultAssignmentType prop with useEffect sync on dialog open for CTA pre-selection
 - [03-13]: Gear icon fix uses minimal pl-0.5 (2px) on SidebarMenuItem -- single class on 86KB file
@@ -127,5 +130,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-13-PLAN.md (Visual Polish - Gear Icon and MCP Empty States)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-13-SUMMARY.md
+Stopped at: Completed 03-11-PLAN.md (Admin Console Navigation and Polish)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-11-SUMMARY.md

@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
+import { encrypt } from '@/lib/encryption';
 import { getIpAddress, auditLog } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 import { z } from 'zod';
@@ -18,6 +19,14 @@ import { formatValidationErrors } from '@/lib/validation';
 const UpdateOrgMcpConnectionSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   serverUrl: z.string().url().optional(),
+  authType: z.enum(['none', 'api_key', 'oauth']).optional(),
+  authCredentials: z.object({
+    apiKey: z.string().optional(),
+    clientId: z.string().optional(),
+    clientSecret: z.string().optional(),
+  }).optional(),
+  assignmentType: z.enum(['org-wide', 'role-specific']).optional(),
+  roleId: z.string().uuid('Invalid role ID').nullable().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -110,12 +119,50 @@ export async function PATCH(
       );
     }
 
+    const { authCredentials, assignmentType, ...restData } = parsed.data;
+
+    // Build update data
+    const updateData: Record<string, unknown> = { ...restData };
+
+    // Handle assignment type change
+    if (assignmentType === 'org-wide') {
+      updateData.roleId = null;
+    } else if (assignmentType === 'role-specific' && parsed.data.roleId) {
+      // Verify role belongs to this org
+      const role = await auth.tenantDb.role.findUnique({ where: { id: parsed.data.roleId } });
+      if (!role) {
+        return NextResponse.json(
+          { error: 'Role not found in this organization' },
+          { status: 404 }
+        );
+      }
+      updateData.roleId = parsed.data.roleId;
+    }
+
+    // Handle credential encryption
+    const authType = parsed.data.authType ?? existing.authType;
+    if (authCredentials) {
+      if (authType === 'api_key' && authCredentials.apiKey) {
+        updateData.authCredentialsEncrypted = encrypt(JSON.stringify({ apiKey: authCredentials.apiKey }));
+      } else if (authType === 'oauth' && authCredentials.clientId && authCredentials.clientSecret) {
+        updateData.authCredentialsEncrypted = encrypt(JSON.stringify({
+          clientId: authCredentials.clientId,
+          clientSecret: authCredentials.clientSecret,
+        }));
+      }
+    }
+    // Clear credentials if switching to 'none'
+    if (parsed.data.authType === 'none') {
+      updateData.authCredentialsEncrypted = null;
+    }
+
     const ipAddress = getIpAddress(req);
 
     const updated = await prisma.$transaction(async (tx) => {
       const conn = await tx.mcpConnection.update({
         where: { id, organizationId: auth.organization.id },
-        data: parsed.data,
+        data: updateData,
+        include: { role: { select: { id: true, name: true } } },
       });
 
       await auditLog.record(tx, {
@@ -125,7 +172,7 @@ export async function PATCH(
         targetId: id,
         organizationId: auth.organization.id,
         ipAddress,
-        metadata: { changes: parsed.data },
+        metadata: { changes: Object.keys(parsed.data) },
       });
 
       return conn;
@@ -139,6 +186,7 @@ export async function PATCH(
       status: updated.status,
       isActive: updated.isActive,
       roleId: updated.roleId,
+      roleName: updated.role?.name || null,
       assignmentType: updated.roleId ? 'role-specific' : 'org-wide',
     });
   } catch (error) {
