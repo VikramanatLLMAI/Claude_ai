@@ -77,13 +77,13 @@ Plans:
 - [x] 03-05-PLAN.md -- Role model assignment with generation grouping and role configuration toggles (Wave 2, depends on 03-01)
 - [x] 03-06-PLAN.md -- MCP server management (org-wide + role-specific) + user custom instructions API and Settings modal integration (Wave 2, depends on 03-01)
 - [x] 03-07-PLAN.md -- Gap closure: Add org_admin permission to Technical role seed data (UAT Tests 7-13 fix) (Wave 1, standalone)
-- [ ] 03-08-PLAN.md -- Gap closure: BLOCKER fix (org-scoped models endpoint) + shared UI infrastructure (toast system, AlertDialog, ConfirmationDialog) (Wave 1, standalone)
-- [ ] 03-09-PLAN.md -- Gap closure: MCP server edit dialog, styled delete confirmation, toast notifications, status dots, tooltips (Wave 2, depends on 03-08)
-- [ ] 03-10-PLAN.md -- Gap closure: Instructions/Roles toast notifications, unsaved changes tracking, save button consistency, Ctrl+S, auto-grow textareas, toggle animations (Wave 2, depends on 03-08)
-- [ ] 03-11-PLAN.md -- Gap closure: Breadcrumb navigation, admin dashboard landing page, loading skeletons, redirect toast, sidebar visual polish (Wave 2, depends on 03-08)
-- [ ] 03-12-PLAN.md -- Gap closure: Last-saved timestamps, role card metadata, combined instructions preview, enhanced empty states (Wave 2, depends on 03-08)
-- [ ] 03-13-PLAN.md -- Gap closure: Gear icon fix, MCP empty states with CTAs, remaining visual polish (Wave 2, depends on 03-08)
-- [ ] 03-14-PLAN.md -- Gap closure: Human verification checkpoint for all 27 UAT SaaS readiness items (Wave 3, depends on 03-09 through 03-13)
+- [x] 03-08-PLAN.md -- Gap closure: BLOCKER fix (org-scoped models endpoint) + shared UI infrastructure (toast system, AlertDialog, ConfirmationDialog) (Wave 1, standalone)
+- [x] 03-09-PLAN.md -- Gap closure: MCP server edit dialog, styled delete confirmation, toast notifications, status dots, tooltips (Wave 2, depends on 03-08)
+- [x] 03-10-PLAN.md -- Gap closure: Instructions/Roles toast notifications, unsaved changes tracking, save button consistency, Ctrl+S, auto-grow textareas, toggle animations (Wave 2, depends on 03-08)
+- [x] 03-11-PLAN.md -- Gap closure: Breadcrumb navigation, admin dashboard landing page, loading skeletons, redirect toast, sidebar visual polish (Wave 2, depends on 03-08)
+- [x] 03-12-PLAN.md -- Gap closure: Last-saved timestamps, role card metadata, combined instructions preview, enhanced empty states (Wave 2, depends on 03-08)
+- [x] 03-13-PLAN.md -- Gap closure: Gear icon fix, MCP empty states with CTAs, remaining visual polish (Wave 2, depends on 03-08)
+- [x] 03-14-PLAN.md -- Gap closure: Human verification checkpoint for all 27 UAT SaaS readiness items (Wave 3, depends on 03-09 through 03-13)
 
 ### Phase 4: Role Configuration and Usage Limits
 **Goal**: Org Admins can create custom roles with granular permissions, enforce usage limits with threshold alerts, set password policies, and users can manage their sessions
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Schema and Auth Foundation | 3/3 | Complete | 2026-02-26 |
 | 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
-| 3. Chat Integration and Core RBAC | 7/14 | Gap closure (UAT SaaS audit) | - |
+| 3. Chat Integration and Core RBAC | 14/14 | Complete | 2026-02-28 |
 | 4. Role Configuration and Usage Limits | 0/3 | Not started | - |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |
