@@ -8,6 +8,7 @@ import { fitMessagesToContextWindow } from '@/lib/context-window';
 import { validate, ChatRequestSchema, formatValidationErrors } from '@/lib/validation';
 import { composeSystemPrompt } from '@/lib/services/system-prompt-service';
 import { getModelByModelId } from '@/lib/services/model-registry-service';
+import { checkUserUsageLimits, getOrgMonthlyUsage, checkOrgMonthlyCeiling } from '@/lib/services/usage-service';
 
 export const maxDuration = 300;
 
@@ -59,6 +60,31 @@ export async function POST(req: NextRequest) {
     if (enableReasoning) {
       if (thinkingType === 'adaptive') thinkingMode = 'adaptive';
       else if (thinkingType === 'extended') thinkingMode = 'manual';
+    }
+
+    // C. Usage limit enforcement (SAFE-10)
+    const usageStatus = await checkUserUsageLimits(tenantDb, user.id, role);
+    if (!usageStatus.allowed) {
+      return NextResponse.json({
+        error: 'You have reached your daily usage limit. Please wait for the limit to reset.',
+        code: 'USAGE_LIMIT_EXCEEDED',
+        resetAt: usageStatus.resetAt,
+        requestStatus: usageStatus.requestStatus,
+        tokenStatus: usageStatus.tokenStatus,
+      }, { status: 429 });
+    }
+
+    // D. Org monthly ceiling check
+    if (organization.monthlyRequestCeiling || organization.monthlyTokenCeiling) {
+      const orgSettings = await tenantDb.orgSettings.findUnique({ where: { organizationId: organization.id } });
+      const monthlyUsage = await getOrgMonthlyUsage(tenantDb, organization.id);
+      const ceilingStatus = checkOrgMonthlyCeiling(organization, orgSettings, monthlyUsage);
+      if (!ceilingStatus.allowed) {
+        return NextResponse.json({
+          error: 'Your organization has reached its monthly usage limit. Contact your administrator.',
+          code: 'ORG_CEILING_EXCEEDED',
+        }, { status: 429 });
+      }
     }
 
     // Get the last user message to save to database

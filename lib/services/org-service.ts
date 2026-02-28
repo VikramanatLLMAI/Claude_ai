@@ -29,6 +29,8 @@ interface UpdateOrgInput {
   name?: string;
   slug?: string;
   logoDisplayMode?: string;
+  monthlyRequestCeiling?: number | null;
+  monthlyTokenCeiling?: number | null;
 }
 
 // ============================================
@@ -177,6 +179,12 @@ export async function updateOrganization(
           ...(data.logoDisplayMode !== undefined && {
             logoDisplayMode: data.logoDisplayMode,
           }),
+          ...(data.monthlyRequestCeiling !== undefined && {
+            monthlyRequestCeiling: data.monthlyRequestCeiling,
+          }),
+          ...(data.monthlyTokenCeiling !== undefined && {
+            monthlyTokenCeiling: data.monthlyTokenCeiling,
+          }),
         },
       });
 
@@ -188,8 +196,20 @@ export async function updateOrganization(
         organizationId: orgId,
         ipAddress,
         metadata: {
-          before: { name: before.name, slug: before.slug, logoDisplayMode: before.logoDisplayMode },
-          after: { name: updated.name, slug: updated.slug, logoDisplayMode: updated.logoDisplayMode },
+          before: {
+            name: before.name,
+            slug: before.slug,
+            logoDisplayMode: before.logoDisplayMode,
+            monthlyRequestCeiling: before.monthlyRequestCeiling,
+            monthlyTokenCeiling: before.monthlyTokenCeiling,
+          },
+          after: {
+            name: updated.name,
+            slug: updated.slug,
+            logoDisplayMode: updated.logoDisplayMode,
+            monthlyRequestCeiling: updated.monthlyRequestCeiling,
+            monthlyTokenCeiling: updated.monthlyTokenCeiling,
+          },
         },
       });
 

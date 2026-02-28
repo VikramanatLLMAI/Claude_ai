@@ -215,6 +215,8 @@ export const UpdateOrgSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   slug: OrgSlugSchema.optional(),
   logoDisplayMode: z.enum(['PLATFORM_AND_ORG', 'ORG_ONLY']).optional(),
+  monthlyRequestCeiling: z.number().int().positive('Monthly request ceiling must be a positive integer').nullable().optional(),
+  monthlyTokenCeiling: z.number().int().positive('Monthly token ceiling must be a positive integer').nullable().optional(),
 });
 
 export const OrgLogoSchema = z.object({
