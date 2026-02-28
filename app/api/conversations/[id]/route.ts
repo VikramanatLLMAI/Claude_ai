@@ -76,9 +76,12 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         { status: 404 }
       );
     }
+    // SAFE-11: Org Admin conversation access is read-only.
+    // This ownership check MUST remain even when Phase 7 adds Org Admin read access to all conversations.
+    // Org Admins may read others' conversations but MUST NOT edit or delete them.
     if (existing.userId !== user.id) {
       return NextResponse.json(
-        { error: 'Not authorized to update this conversation' },
+        { error: 'Not authorized to modify this conversation' },
         { status: 403 }
       );
     }
@@ -133,9 +136,12 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         { status: 404 }
       );
     }
+    // SAFE-11: Org Admin conversation access is read-only.
+    // This ownership check MUST remain even when Phase 7 adds Org Admin read access to all conversations.
+    // Org Admins may read others' conversations but MUST NOT edit or delete them.
     if (existing.userId !== user.id) {
       return NextResponse.json(
-        { error: 'Not authorized to delete this conversation' },
+        { error: 'Not authorized to modify this conversation' },
         { status: 403 }
       );
     }

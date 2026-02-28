@@ -17,6 +17,8 @@ import {
   Plug,
   Users2,
   ArrowLeft,
+  Lock,
+  Mail,
 } from "lucide-react"
 import {
   Sidebar,
@@ -42,6 +44,11 @@ interface NavItem {
   enabled: boolean
 }
 
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
 const SUPER_ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "Models", icon: Cpu, href: "/admin/models", enabled: true },
   { label: "Organizations", icon: Building2, href: "/admin/organizations", enabled: false },
@@ -52,16 +59,36 @@ const SUPER_ADMIN_NAV_ITEMS: NavItem[] = [
   { label: "Audit Logs", icon: FileText, href: "/admin/audit-logs", enabled: false },
 ]
 
-function getOrgAdminNavItems(orgSlug: string): NavItem[] {
+function getOrgAdminNavGroups(orgSlug: string): NavGroup[] {
   const base = `/org/${orgSlug}/admin`
   return [
-    { label: "System Instructions", icon: MessageSquare, href: `${base}/instructions`, enabled: true },
-    { label: "Role Settings", icon: Users, href: `${base}/roles`, enabled: true },
-    { label: "MCP Servers", icon: Plug, href: `${base}/mcp`, enabled: true },
-    { label: "Users", icon: Users2, href: `${base}/users`, enabled: false },
-    { label: "Settings", icon: Settings, href: `${base}/settings`, enabled: false },
-    { label: "Analytics", icon: BarChart3, href: `${base}/analytics`, enabled: false },
-    { label: "Audit Logs", icon: FileText, href: `${base}/audit-logs`, enabled: false },
+    {
+      label: "Configuration",
+      items: [
+        { label: "Roles", icon: Users, href: `${base}/roles`, enabled: true },
+        { label: "Instructions", icon: MessageSquare, href: `${base}/instructions`, enabled: true },
+        { label: "MCP Servers", icon: Plug, href: `${base}/mcp`, enabled: true },
+      ],
+    },
+    {
+      label: "Monitoring",
+      items: [
+        { label: "Usage", icon: BarChart3, href: `${base}/usage`, enabled: true },
+      ],
+    },
+    {
+      label: "Security",
+      items: [
+        { label: "Password Policy", icon: Lock, href: `${base}/security`, enabled: true },
+      ],
+    },
+    {
+      label: "People",
+      items: [
+        { label: "Members", icon: Users2, href: `${base}/users`, enabled: false },
+        { label: "Invitations", icon: Mail, href: `${base}/invitations`, enabled: false },
+      ],
+    },
   ]
 }
 
@@ -107,9 +134,37 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
   }, [router, variant, orgSlug])
 
   const isOrgAdmin = variant === "org-admin"
-  const navItems = isOrgAdmin && orgSlug
-    ? getOrgAdminNavItems(orgSlug)
-    : SUPER_ADMIN_NAV_ITEMS
+
+  // Helper to render a single nav item
+  const renderNavItem = (item: NavItem) => {
+    const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+    const Icon = item.icon
+
+    return (
+      <SidebarMenuItem key={item.href}>
+        {item.enabled ? (
+          <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
+            <Link href={item.href}>
+              <Icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          </SidebarMenuButton>
+        ) : (
+          <SidebarMenuButton
+            disabled
+            className="cursor-not-allowed opacity-60"
+            tooltip={`${item.label} - Coming Soon`}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="flex-1">{item.label}</span>
+            <Badge variant="outline" className="ml-auto text-[10px] px-1.5 py-0 text-muted-foreground/60 border-muted-foreground/20 bg-transparent font-normal">
+              Soon
+            </Badge>
+          </SidebarMenuButton>
+        )}
+      </SidebarMenuItem>
+    )
+  }
 
   return (
     <Sidebar>
@@ -134,40 +189,25 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarMenu>
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-              const Icon = item.icon
-
-              return (
-                <SidebarMenuItem key={item.href}>
-                  {item.enabled ? (
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-                      <Link href={item.href}>
-                        <Icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  ) : (
-                    <SidebarMenuButton
-                      disabled
-                      className="cursor-not-allowed opacity-60"
-                      tooltip={`${item.label} - Coming Soon`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="flex-1">{item.label}</span>
-                      <Badge variant="outline" className="ml-auto text-[10px] px-1.5 py-0 text-muted-foreground/60 border-muted-foreground/20 bg-transparent font-normal">
-                        Soon
-                      </Badge>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              )
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
+        {isOrgAdmin && orgSlug ? (
+          // Org Admin: Grouped navigation
+          getOrgAdminNavGroups(orgSlug).map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarMenu>
+                {group.items.map(renderNavItem)}
+              </SidebarMenu>
+            </SidebarGroup>
+          ))
+        ) : (
+          // Super Admin: Flat navigation (unchanged)
+          <SidebarGroup>
+            <SidebarGroupLabel>Management</SidebarGroupLabel>
+            <SidebarMenu>
+              {SUPER_ADMIN_NAV_ITEMS.map(renderNavItem)}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border px-4 py-3">
