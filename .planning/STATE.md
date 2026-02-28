@@ -151,6 +151,10 @@ Recent decisions affecting current work:
 - [04-04]: Force password change page fetches policy from admin API with graceful 403 fallback to defaults
 - [04-04]: Login route re-queries orgMember for forcePasswordChange after session creation (lightweight single-field select)
 - [04-04]: Change-password endpoint validates against org policy before accepting new password
+- [04-02]: RoleModelAssignment reused in modal with in-memory state (no per-section save in modal)
+- [04-02]: MCP assignment noted in Models tab rather than duplicating panel in role modal
+- [04-02]: SAFE-11 comments as forward-looking guard against relaxing ownership checks
+- [04-02]: Modal CRUD pattern: read-only card grid + Dialog modal replaces inline editing
 
 ### Pending Todos
 

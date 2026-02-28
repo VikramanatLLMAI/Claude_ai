@@ -175,13 +175,13 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Role Management (OROL)
 
-- [ ] **OROL-01**: Org Admin can view all roles (system roles + custom roles)
-- [ ] **OROL-02**: Org Admin can create custom roles
-- [ ] **OROL-03**: Org Admin can edit any role including system roles (name, description, system prompt, model access, permissions)
-- [ ] **OROL-04**: Org Admin can delete custom roles only (system roles cannot be deleted)
-- [ ] **OROL-05**: Org Admin can view which users are assigned to each role
-- [ ] **OROL-06**: Org Admin can enable or disable custom instructions per role
-- [ ] **OROL-07**: User custom instructions limited to 200 tokens per role (token budget enforced at save time with live counter)
+- [x] **OROL-01**: Org Admin can view all roles (system roles + custom roles)
+- [x] **OROL-02**: Org Admin can create custom roles
+- [x] **OROL-03**: Org Admin can edit any role including system roles (name, description, system prompt, model access, permissions)
+- [x] **OROL-04**: Org Admin can delete custom roles only (system roles cannot be deleted)
+- [x] **OROL-05**: Org Admin can view which users are assigned to each role
+- [x] **OROL-06**: Org Admin can enable or disable custom instructions per role
+- [x] **OROL-07**: User custom instructions limited to 200 tokens per role (token budget enforced at save time with live counter)
 
 ### Org Admin — Per Role LLM Access (OLLM)
 
@@ -210,7 +210,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Usage & Limits (OUSE)
 
-- [ ] **OUSE-01**: Org Admin can configure usage limits per role (daily requests, daily tokens)
+- [x] **OUSE-01**: Org Admin can configure usage limits per role (daily requests, daily tokens)
 - [x] **OUSE-02**: Org Admin can view org-wide usage statistics
 - [x] **OUSE-03**: Org Admin can view per-user usage
 - [x] **OUSE-04**: Org Admin can monitor users approaching or exceeding limits
@@ -315,7 +315,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [x] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
 - [x] **SAFE-09**: Character limits enforced server-side, not just client-side
 - [x] **SAFE-10**: Role-level daily limits and org-level monthly limits enforced — requests hard rejected when exceeded
-- [ ] **SAFE-11**: Org Admin conversation access is read-only — no edit or delete
+- [x] **SAFE-11**: Org Admin conversation access is read-only — no edit or delete
 
 ### Scheduled Tasks (CRON)
 
@@ -455,14 +455,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-05 | Phase 3 | Complete |
 | MODL-06 | Phase 3 | Complete |
 | MODL-07 | Phase 3 | Complete |
-| OROL-01 | Phase 4 | Pending |
-| OROL-02 | Phase 4 | Pending |
-| OROL-03 | Phase 4 | Pending |
-| OROL-04 | Phase 4 | Pending |
-| OROL-05 | Phase 4 | Pending |
-| OROL-06 | Phase 4 | Pending |
-| OROL-07 | Phase 4 | Pending |
-| OUSE-01 | Phase 4 | Pending |
+| OROL-01 | Phase 4 | Complete |
+| OROL-02 | Phase 4 | Complete |
+| OROL-03 | Phase 4 | Complete |
+| OROL-04 | Phase 4 | Complete |
+| OROL-05 | Phase 4 | Complete |
+| OROL-06 | Phase 4 | Complete |
+| OROL-07 | Phase 4 | Complete |
+| OUSE-01 | Phase 4 | Complete |
 | OUSE-02 | Phase 4 | Complete |
 | OUSE-03 | Phase 4 | Complete |
 | OUSE-04 | Phase 4 | Complete |
@@ -473,7 +473,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UCHAT-03 | Phase 4 | Complete |
 | UCHAT-04 | Phase 4 | Complete |
 | SAFE-10 | Phase 4 | Complete |
-| SAFE-11 | Phase 4 | Pending |
+| SAFE-11 | Phase 4 | Complete |
 | OPWD-01 | Phase 4 | Complete |
 | OPWD-02 | Phase 4 | Complete |
 | OPWD-03 | Phase 4 | Complete |

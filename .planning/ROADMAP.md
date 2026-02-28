@@ -104,7 +104,7 @@ Plans:
 
 Plans:
 - [ ] 04-01-PLAN.md -- Schema changes + service layer foundation + Tabs UI + dependency installation (Wave 1)
-- [ ] 04-02-PLAN.md -- Admin sidebar redesign + role CRUD API + refactored roles page + role create/edit modal with 4 tabs (Wave 2, depends on 04-01)
+- [x] 04-02-PLAN.md -- Admin sidebar redesign + role CRUD API + refactored roles page + role create/edit modal with 4 tabs (Wave 2, depends on 04-01)
 - [ ] 04-03-PLAN.md -- Usage limit enforcement in chat route + chat UI banners + usage monitoring dashboard with Recharts + org ceiling API (Wave 2, depends on 04-01)
 - [x] 04-04-PLAN.md -- Password policy management + force password reset + forced password change page + login integration (Wave 2, depends on 04-01)
 - [ ] 04-05-PLAN.md -- User profile management + session management in settings modal + force-logout API (Wave 2, depends on 04-01)
