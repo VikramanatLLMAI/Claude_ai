@@ -89,6 +89,7 @@ import { ToolTimeline } from "@/components/prompt-kit/tool-timeline"
 import { FileCard } from "@/components/prompt-kit/file-card"
 import { ClaudeChatInput, type ClaudeChatInputHandle } from "@/components/ui/claude-style-chat-input"
 import { SettingsModal } from "@/components/settings-modal"
+import { UsageBanner } from "@/components/chat/usage-banner"
 // Image import removed - welcome state no longer uses logo
 
 // Time-based greeting helper
@@ -644,6 +645,7 @@ function ChatContent({
   userName,
   onOpenMcpSettings,
   permittedModels,
+  orgSlug,
 }: {
   conversationId: string | null
   selectedModel: ClaudeModelId
@@ -652,10 +654,12 @@ function ChatContent({
   userName: string
   onOpenMcpSettings: () => void
   permittedModels: PermittedModel[]
+  orgSlug: string | null
 }) {
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [thinkingEnabled, setThinkingEnabled] = useState(false)
   const [activeMcpIds, setActiveMcpIds] = useState<string[]>([])
+  const [usageBlocked, setUsageBlocked] = useState(false)
   const mcpLoadedRef = useRef(false) // Track if MCP connections have been loaded
 
   // Load connected MCP connections and enable them by default
@@ -1338,7 +1342,7 @@ function ChatContent({
   const onSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     const text = input.trim()
-    if (!text || isLoading) return
+    if (!text || isLoading || usageBlocked) return
 
     setInput("")
     setWaitingForResponse(true)
@@ -1513,6 +1517,12 @@ function ChatContent({
           </div>
         ) : (
         <ChatContainerRoot className={cn("h-full", isWelcomeVisible && "!overflow-hidden")}>
+              {/* Usage limit banner - rendered above scrollable chat content */}
+              {orgSlug && !isWelcomeVisible && (
+                <div className="px-5 pt-2">
+                  <UsageBanner orgSlug={orgSlug} onBlockedChange={setUsageBlocked} />
+                </div>
+              )}
               <ChatContainerContent className={cn("space-y-0 px-5 transition-[padding] duration-300", isWelcomeVisible ? "h-full py-0" : "py-12")}>
                 <AnimatePresence mode="popLayout" onExitComplete={handleWelcomeExitComplete}>
                   {/* Error Display */}
@@ -2223,6 +2233,7 @@ function FullChatApp() {
             userName={userName}
             onOpenMcpSettings={() => { setSettingsTab("mcp"); setSettingsOpen(true) }}
             permittedModels={permittedModels}
+            orgSlug={orgSlug}
           />
         </SidebarInset>
       </SidebarProvider>
