@@ -287,6 +287,7 @@ export default function InstructionsPage() {
             maxTokens={TOKEN_LIMITS.org}
             label="Organization Instructions"
             description="Set guidelines, rules, or context that applies to all users."
+            placeholder="Write instructions that will guide AI behavior for all users in this organization..."
           />
 
           <div className="flex items-center gap-3">
@@ -302,6 +303,12 @@ export default function InstructionsPage() {
               )}
             </Button>
           </div>
+          {orgLastSaved && (
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              Last saved: {formatRelativeTime(orgLastSaved)}
+            </p>
+          )}
         </section>
 
         {/* Separator */}
@@ -320,13 +327,22 @@ export default function InstructionsPage() {
           </div>
 
           {roles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No roles configured for this organization.
-            </p>
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-12">
+              <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
+              <div className="text-center">
+                <p className="text-sm font-medium text-muted-foreground">
+                  No roles configured
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground/70">
+                  Create roles in Role Settings to add role-specific instructions.
+                </p>
+              </div>
+            </div>
           ) : (
             roles.map((role) => {
               const saveStatus = roleSaveStatuses[role.id] || "idle"
               const isDirty = roleDirtyMap[role.id] || false
+              const lastSaved = roleLastSaved[role.id] || null
 
               return (
                 <div key={role.id} className="space-y-3 rounded-lg border border-border p-4">
@@ -342,9 +358,8 @@ export default function InstructionsPage() {
                     saving={saveStatus === "saving"}
                     maxTokens={TOKEN_LIMITS.role}
                     label={role.name}
-                    description={
-                      role.description || `System instructions for the ${role.name} role.`
-                    }
+                    description={`These instructions are included in addition to organization instructions for users with the ${role.name} role.`}
+                    placeholder={`Write role-specific instructions to fine-tune AI responses for ${role.name} users...`}
                   />
 
                   <div className="flex items-center gap-3">
@@ -360,6 +375,19 @@ export default function InstructionsPage() {
                       )}
                     </Button>
                   </div>
+                  {lastSaved && (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      Last saved: {formatRelativeTime(lastSaved)}
+                    </p>
+                  )}
+
+                  {/* Combined Instructions Preview */}
+                  <InstructionsPreview
+                    orgInstructions={orgInstructions}
+                    roleInstructions={roleInstructions[role.id] || ""}
+                    roleName={role.name}
+                  />
                 </div>
               )
             })
