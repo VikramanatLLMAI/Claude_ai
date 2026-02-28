@@ -334,6 +334,8 @@ export default function OrgAdminRolesPage() {
                     </h3>
                     <RoleModelAssignment
                       roleId={role.id}
+                      roleName={role.name}
+                      orgSlug={slug}
                       allowedModels={Array.isArray(role.allowedModels) ? role.allowedModels as string[] : []}
                       onSave={(modelIds) => handleSaveModels(role.id, modelIds)}
                     />

@@ -3,7 +3,9 @@
 import * as React from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Loader2, Save } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Loader2, Save, AlertCircle, RefreshCw } from "lucide-react"
+import { toast } from "@/components/ui/toast"
 
 /**
  * Model from the platform Model Registry.
@@ -20,6 +22,8 @@ interface RegistryModel {
 
 interface RoleModelAssignmentProps {
   roleId: string
+  roleName?: string
+  orgSlug: string
   allowedModels: string[]
   onSave: (modelIds: string[]) => Promise<void>
 }
@@ -32,9 +36,13 @@ interface RoleModelAssignmentProps {
  * Clicking a group checkbox toggles all models in that group.
  * Individual model checkboxes toggle single models.
  * Save button is disabled when no models are selected.
+ *
+ * Fetches models from the org-scoped admin endpoint: /api/org/[slug]/admin/models
  */
 export function RoleModelAssignment({
   roleId,
+  roleName,
+  orgSlug,
   allowedModels,
   onSave,
 }: RoleModelAssignmentProps) {
@@ -51,30 +59,32 @@ export function RoleModelAssignment({
     setSelectedModels(new Set(allowedModels))
   }, [allowedModels])
 
-  // Fetch active models from the admin models endpoint
-  React.useEffect(() => {
-    async function fetchModels() {
-      try {
-        const token = localStorage.getItem("llmatscale_auth_token")
-        const res = await fetch("/api/admin/models?status=ACTIVE", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+  // Fetch active models from the org-scoped admin models endpoint
+  const fetchModels = React.useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("llmatscale_auth_token")
+      const res = await fetch(`/api/org/${orgSlug}/admin/models`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch models")
-        }
-
-        const data: RegistryModel[] = await res.json()
-        setAvailableModels(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load models")
-      } finally {
-        setLoading(false)
+      if (!res.ok) {
+        throw new Error("Failed to fetch models")
       }
-    }
 
+      const data: RegistryModel[] = await res.json()
+      setAvailableModels(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load models")
+    } finally {
+      setLoading(false)
+    }
+  }, [orgSlug])
+
+  React.useEffect(() => {
     fetchModels()
-  }, [])
+  }, [fetchModels])
 
   // Group models by generationGroup
   const groupedModels = React.useMemo(() => {
@@ -152,12 +162,19 @@ export function RoleModelAssignment({
     setError(null)
     try {
       await onSave(modelIds)
+      toast.success(
+        roleName
+          ? `Models saved for ${roleName}`
+          : "Models saved successfully"
+      )
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save")
+      const message = err instanceof Error ? err.message : "Failed to save models"
+      setError(message)
+      toast.error(message)
     } finally {
       setSaving(false)
     }
-  }, [selectedModels, onSave])
+  }, [selectedModels, onSave, roleName])
 
   // Check if selection has changed from original
   const hasChanges = React.useMemo(() => {
@@ -187,7 +204,26 @@ export function RoleModelAssignment({
 
   if (error && availableModels.length === 0) {
     return (
-      <div className="text-sm text-destructive">{error}</div>
+      <Card className="border-destructive/50 bg-destructive/5 p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div className="flex-1 space-y-2">
+            <p className="text-sm font-medium text-destructive">
+              Failed to load models
+            </p>
+            <p className="text-xs text-muted-foreground">{error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchModels}
+              className="mt-1"
+            >
+              <RefreshCw className="mr-2 h-3 w-3" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      </Card>
     )
   }
 
