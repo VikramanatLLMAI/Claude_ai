@@ -100,6 +100,10 @@ export default function InstructionsPage() {
 
   const anyDirty = orgDirty || Object.values(roleDirtyMap).some(Boolean)
 
+  // Ref to track dirty state in event handlers without re-registering
+  const anyDirtyRef = React.useRef(anyDirty)
+  React.useEffect(() => { anyDirtyRef.current = anyDirty }, [anyDirty])
+
   // beforeunload warning when any section is dirty
   React.useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -110,6 +114,54 @@ export default function InstructionsPage() {
     window.addEventListener("beforeunload", handler)
     return () => window.removeEventListener("beforeunload", handler)
   }, [anyDirty])
+
+  // Intercept client-side navigation (Next.js Link clicks) when dirty
+  React.useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!anyDirtyRef.current) return
+
+      const target = (e.target as HTMLElement).closest('a[href]')
+      if (!target) return
+
+      const href = (target as HTMLAnchorElement).getAttribute('href')
+      if (!href) return
+
+      // Only intercept internal navigation away from this page
+      const currentPath = window.location.pathname
+      if (href === currentPath || href === '#') return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to leave this page?'
+      )
+      if (confirmed) {
+        window.location.href = href
+      }
+    }
+
+    document.addEventListener('click', handleClick, true)
+    return () => document.removeEventListener('click', handleClick, true)
+  }, [])
+
+  // Intercept browser back/forward navigation when dirty
+  React.useEffect(() => {
+    const handlePopState = () => {
+      if (!anyDirtyRef.current) return
+
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to leave this page?'
+      )
+      if (!confirmed) {
+        // Push the current URL back to undo the navigation
+        window.history.pushState(null, '', window.location.href)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Fetch org instructions and roles on mount
   React.useEffect(() => {
