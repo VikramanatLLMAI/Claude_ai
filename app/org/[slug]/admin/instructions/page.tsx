@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Save, MessageSquare } from "lucide-react"
+import { Save, MessageSquare, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { InstructionEditor } from "@/components/admin/instruction-editor"
+import { InstructionsPreview } from "@/components/admin/instructions-preview"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { TOKEN_LIMITS } from "@/lib/token-counter"
 import { toast } from "@/components/ui/toast"
@@ -21,6 +22,20 @@ function getAuthHeaders(): HeadersInit {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   }
+}
+
+/**
+ * Format a Date into a relative time string.
+ * Examples: "just now", "15 seconds ago", "2 minutes ago", "1 hour ago"
+ */
+function formatRelativeTime(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 10) return "just now"
+  if (seconds < 60) return `${seconds} seconds ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`
+  const hours = Math.floor(minutes / 60)
+  return `${hours} hour${hours > 1 ? "s" : ""} ago`
 }
 
 interface RoleData {
@@ -61,6 +76,17 @@ export default function InstructionsPage() {
 
   // Loading state
   const [loading, setLoading] = React.useState(true)
+
+  // Last-saved timestamps
+  const [orgLastSaved, setOrgLastSaved] = React.useState<Date | null>(null)
+  const [roleLastSaved, setRoleLastSaved] = React.useState<Record<string, Date | null>>({})
+
+  // Tick counter to force re-render of relative timestamps every 30s
+  const [, setTick] = React.useState(0)
+  React.useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Dirty state tracking
   const orgDirty = orgInstructions !== orgSavedValue
@@ -151,6 +177,7 @@ export default function InstructionsPage() {
 
       if (res.ok) {
         setOrgSavedValue(orgInstructions)
+        setOrgLastSaved(new Date())
         setOrgSaveStatus("idle")
         toast.success("Organization instructions saved")
       } else {
@@ -187,6 +214,7 @@ export default function InstructionsPage() {
             ...prev,
             [roleId]: roleInstructions[roleId] || "",
           }))
+          setRoleLastSaved((prev) => ({ ...prev, [roleId]: new Date() }))
           setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "idle" }))
           toast.success(`Instructions saved for ${roleName} role`)
         } else {

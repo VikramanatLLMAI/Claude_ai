@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RoleModelAssignment } from "@/components/admin/role-model-assignment"
-import { AdminRoleCardsSkeleton } from "@/components/ui/skeleton-loaders"
+import { toast } from "@/components/ui/toast"
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -45,33 +46,13 @@ interface RoleData {
 }
 
 /**
- * Default descriptions for system roles when no description is set.
- */
-const SYSTEM_ROLE_DESCRIPTIONS: Record<string, string> = {
-  Technical: "Full access to all AI capabilities and development tools",
-  Business: "Standard access to AI models for business workflows",
-  Basic: "Essential AI access with limited model selection",
-}
-
-/**
- * Get role description, falling back to system defaults or generic text.
- */
-function getRoleDescription(role: RoleData): string {
-  if (role.description) return role.description
-  if (role.isSystemRole && SYSTEM_ROLE_DESCRIPTIONS[role.name]) {
-    return SYSTEM_ROLE_DESCRIPTIONS[role.name]
-  }
-  return "Custom role"
-}
-
-/**
  * Org Admin Role Settings Page
  *
- * Displays all roles for the organization with:
- * - Model assignment section (RoleModelAssignment component)
- * - Custom instructions toggle
- * - Personal MCP servers toggle with max count setting
- * - Role descriptions and member counts
+ * Features:
+ * - Toast notifications on save success/error
+ * - Confirmation dialog when disabling features
+ * - Max MCP server count enforces min 1 when enabled
+ * - Toggle switch CSS transition animation
  *
  * Route: /org/[slug]/admin/roles
  */
@@ -95,6 +76,15 @@ export default function OrgAdminRolesPage() {
       personalMcpMaxCount: number
     }>
   >({})
+
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = React.useState<{
+    open: boolean
+    roleId: string
+    roleName: string
+    featureName: string
+    field: string
+  }>({ open: false, roleId: "", roleName: "", featureName: "", field: "" })
 
   React.useEffect(() => {
     if (typeof window === "undefined") return
@@ -185,12 +175,46 @@ export default function OrgAdminRolesPage() {
     []
   )
 
+  // Handle toggle with confirmation for disabling features
+  const handleToggle = React.useCallback(
+    (roleId: string, roleName: string, field: string, featureName: string, checked: boolean) => {
+      if (!checked) {
+        // Disabling a feature -- show confirmation dialog
+        setConfirmDialog({
+          open: true,
+          roleId,
+          roleName,
+          featureName,
+          field,
+        })
+      } else {
+        // Enabling a feature -- no confirmation needed
+        updateLocalSetting(roleId, field, true)
+        if (field === "personalMcpEnabled") {
+          // Default max count to 3 when toggling on
+          const role = roles.find((r) => r.id === roleId)
+          if (role && !role.personalMcpEnabled) {
+            updateLocalSetting(roleId, "personalMcpMaxCount", 3)
+          }
+        }
+      }
+    },
+    [updateLocalSetting, roles]
+  )
+
+  // Confirm disabling a feature
+  const handleConfirmDisable = React.useCallback(() => {
+    updateLocalSetting(confirmDialog.roleId, confirmDialog.field, false)
+    setConfirmDialog((prev) => ({ ...prev, open: false }))
+  }, [confirmDialog, updateLocalSetting])
+
   // Save settings for a role
   const handleSaveSettings = React.useCallback(
     async (roleId: string) => {
       const settings = localSettings[roleId]
       if (!settings) return
 
+      const roleName = roles.find((r) => r.id === roleId)?.name || "role"
       setSavingSettings((prev) => ({ ...prev, [roleId]: true }))
 
       try {
@@ -234,13 +258,16 @@ export default function OrgAdminRolesPage() {
             personalMcpMaxCount: updated.personalMcpMaxCount,
           },
         }))
+
+        toast.success(`Settings saved for ${roleName} role`)
       } catch (err) {
-        console.error("Error saving settings:", err)
+        const message = err instanceof Error ? err.message : "Failed to save settings"
+        toast.error(`Failed to save settings for ${roleName} role: ${message}`)
       } finally {
         setSavingSettings((prev) => ({ ...prev, [roleId]: false }))
       }
     },
-    [slug, localSettings]
+    [slug, localSettings, roles]
   )
 
   // Check if settings have changed for a role
@@ -260,7 +287,18 @@ export default function OrgAdminRolesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <AdminRoleCardsSkeleton />
+        <div className="mx-auto max-w-4xl px-6 py-8">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="h-10 w-10 animate-pulse rounded-lg bg-muted" />
+            <div className="space-y-1">
+              <div className="h-6 w-48 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="mb-6 h-64 animate-pulse rounded-2xl border bg-muted/30" />
+          ))}
+        </div>
       </div>
     )
   }
@@ -325,14 +363,14 @@ export default function OrgAdminRolesPage() {
                           </Badge>
                         )}
                       </CardTitle>
-                      <CardDescription>{getRoleDescription(role)}</CardDescription>
+                      {role.description && (
+                        <CardDescription>{role.description}</CardDescription>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Users className="h-4 w-4" />
-                      <span className={role._count.members === 0 ? "italic text-muted-foreground/60" : ""}>
-                        {role._count.members === 0
-                          ? "No members"
-                          : `${role._count.members} member${role._count.members !== 1 ? "s" : ""}`}
+                      <span>
+                        {role._count.members} member{role._count.members !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>
@@ -375,7 +413,7 @@ export default function OrgAdminRolesPage() {
                         id={`ci-${role.id}`}
                         checked={local?.customInstructionsEnabled ?? role.customInstructionsEnabled}
                         onCheckedChange={(checked) =>
-                          updateLocalSetting(role.id, "customInstructionsEnabled", checked)
+                          handleToggle(role.id, role.name, "customInstructionsEnabled", "Custom Instructions", checked)
                         }
                       />
                     </div>
@@ -403,34 +441,43 @@ export default function OrgAdminRolesPage() {
                       <Switch
                         id={`mcp-${role.id}`}
                         checked={local?.personalMcpEnabled ?? role.personalMcpEnabled}
-                        onCheckedChange={(checked) => {
-                          updateLocalSetting(role.id, "personalMcpEnabled", checked)
-                          // Default max count to 3 when toggling on
-                          if (checked && !role.personalMcpEnabled) {
-                            updateLocalSetting(role.id, "personalMcpMaxCount", 3)
-                          }
-                        }}
+                        onCheckedChange={(checked) =>
+                          handleToggle(role.id, role.name, "personalMcpEnabled", "Personal MCP Servers", checked)
+                        }
                       />
                     </div>
                     {local?.personalMcpEnabled && (
-                      <div className="ml-0 mt-2 flex items-center gap-3">
-                        <Label htmlFor={`mcp-max-${role.id}`} className="text-sm whitespace-nowrap">
-                          Max servers per user
-                        </Label>
-                        <Input
-                          id={`mcp-max-${role.id}`}
-                          type="number"
-                          min={0}
-                          max={20}
-                          className="w-20"
-                          value={local.personalMcpMaxCount}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10)
-                            if (!isNaN(val) && val >= 0 && val <= 20) {
-                              updateLocalSetting(role.id, "personalMcpMaxCount", val)
-                            }
-                          }}
-                        />
+                      <div className="ml-0 mt-2 space-y-1">
+                        <div className="flex items-center gap-3">
+                          <Label htmlFor={`mcp-max-${role.id}`} className="text-sm whitespace-nowrap">
+                            Max servers per user
+                          </Label>
+                          <Input
+                            id={`mcp-max-${role.id}`}
+                            type="number"
+                            min={1}
+                            max={20}
+                            className="w-20"
+                            value={local.personalMcpMaxCount}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10)
+                              if (!isNaN(val) && val >= 0 && val <= 20) {
+                                updateLocalSetting(role.id, "personalMcpMaxCount", val)
+                              }
+                            }}
+                            onBlur={() => {
+                              // Enforce min 1 when MCP is enabled
+                              if (local.personalMcpMaxCount < 1) {
+                                updateLocalSetting(role.id, "personalMcpMaxCount", 1)
+                              }
+                            }}
+                          />
+                        </div>
+                        {local.personalMcpMaxCount < 1 && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                            Minimum 1 server when enabled
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -465,6 +512,17 @@ export default function OrgAdminRolesPage() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog for disabling features */}
+      <ConfirmationDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+        title={`Disable ${confirmDialog.featureName}?`}
+        description={`This will disable ${confirmDialog.featureName} for all users with the ${confirmDialog.roleName} role. Their existing settings will be preserved but inactive.`}
+        confirmLabel="Disable"
+        variant="warning"
+        onConfirm={handleConfirmDisable}
+      />
     </div>
   )
 }
