@@ -391,6 +391,7 @@ function McpAdminCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7"
+                    aria-label="Test connection"
                     onClick={() => handleAction("test", onTest)}
                     disabled={actionLoading !== null}>
                     {actionLoading === "test"
@@ -404,6 +405,7 @@ function McpAdminCard({
                 <TooltipTrigger asChild>
                   <span tabIndex={isDiscoverDisabled ? 0 : undefined}>
                     <Button variant="ghost" size="icon" className="h-7 w-7"
+                      aria-label={connection.status !== "connected" ? "Test connection first to discover tools" : "Discover tools"}
                       onClick={() => handleAction("discover", onDiscover)}
                       disabled={isDiscoverDisabled}>
                       {actionLoading === "discover"
@@ -421,6 +423,7 @@ function McpAdminCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7"
+                    aria-label="Edit connection"
                     onClick={() => onEdit(connection)}
                     disabled={actionLoading !== null}>
                     <Pencil className="h-3.5 w-3.5" />
@@ -432,6 +435,7 @@ function McpAdminCard({
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon"
                     className="h-7 w-7 text-destructive hover:text-destructive"
+                    aria-label="Delete connection"
                     onClick={() => onDelete(connection.id)}
                     disabled={actionLoading !== null}>
                     <Trash2 className="h-3.5 w-3.5" />
