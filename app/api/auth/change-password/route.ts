@@ -1,6 +1,9 @@
 /**
  * Change Password API (for logged-in users)
  * POST /api/auth/change-password - Change password while authenticated
+ *
+ * Enhanced for OPWD-04: validates against org policy, clears forcePasswordChange,
+ * and updates passwordChangedAt timestamp.
  */
 
 import { updateUser } from '@/lib/storage';
@@ -12,6 +15,11 @@ import {
   formatValidationErrors,
 } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/db';
+import {
+  getPasswordPolicy,
+  validatePasswordAgainstPolicy,
+} from '@/lib/services/password-policy-service';
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,11 +65,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Find user's org membership to validate against org policy
+    const orgMember = await prisma.orgMember.findFirst({
+      where: {
+        userId: user.id,
+        status: 'ACTIVE',
+        organization: { deletedAt: null, status: 'ACTIVE' },
+      },
+      select: {
+        id: true,
+        organizationId: true,
+        forcePasswordChange: true,
+      },
+    });
+
+    // Validate new password against org policy (if user belongs to an org)
+    if (orgMember) {
+      const policy = await getPasswordPolicy(orgMember.organizationId);
+      const policyResult = validatePasswordAgainstPolicy(newPassword, policy);
+
+      if (!policyResult.valid) {
+        return NextResponse.json(
+          { error: policyResult.errors.join('. ') },
+          { status: 400 }
+        );
+      }
+    }
+
     // Hash new password
     const passwordHash = await hashPassword(newPassword);
 
-    // Update user's password
-    await updateUser(user.id, { passwordHash });
+    // Update user's password and passwordChangedAt
+    await updateUser(user.id, {
+      passwordHash,
+      passwordChangedAt: new Date(),
+    });
+
+    // Clear forcePasswordChange flag if it was set
+    if (orgMember?.forcePasswordChange) {
+      await prisma.orgMember.update({
+        where: { id: orgMember.id },
+        data: { forcePasswordChange: false },
+      });
+    }
 
     return NextResponse.json({
       message: 'Password changed successfully',

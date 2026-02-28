@@ -11,6 +11,10 @@ import { getUserByEmail, updateUser } from '@/lib/storage';
 import { verifyPassword, generateToken } from '@/lib/encryption';
 import prisma from '@/lib/db';
 import { resolveOrgSlug } from '@/lib/resolve-org';
+import {
+  getPasswordPolicy,
+  checkPasswordChangeRequired,
+} from '@/lib/services/password-policy-service';
 
 export async function POST(req: NextRequest) {
   try {
@@ -118,6 +122,40 @@ export async function POST(req: NextRequest) {
         expiresAt: expiresAt.toISOString(),
         isSuperAdmin: true,
       });
+    }
+
+    // Check if password change is required (OPWD-05: only on login, no immediate lockout)
+    if (organizationId) {
+      const orgMember = await prisma.orgMember.findFirst({
+        where: { userId: user.id, organizationId },
+        select: { forcePasswordChange: true },
+      });
+
+      if (orgMember) {
+        const policy = await getPasswordPolicy(organizationId);
+        const changeRequired = checkPasswordChangeRequired(
+          user,
+          orgMember,
+          policy
+        );
+
+        if (changeRequired.required) {
+          return Response.json({
+            user: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              avatarBase64: user.avatarBase64,
+              preferences: user.preferences,
+            },
+            token,
+            expiresAt: expiresAt.toISOString(),
+            ...(orgInfo ? { organization: orgInfo } : {}),
+            forcePasswordChange: true,
+            reason: changeRequired.reason,
+          });
+        }
+      }
     }
 
     return Response.json({

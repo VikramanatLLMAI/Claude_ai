@@ -267,6 +267,27 @@ export async function requireOrgAuth(
     );
   }
 
+  // 5b. Check forcePasswordChange guard (OPWD-04)
+  // If user must change password, block all API access except exempted paths
+  if (orgMember.forcePasswordChange) {
+    const pathname = req.nextUrl.pathname;
+    const isExemptPath =
+      pathname.endsWith('/change-password') ||
+      pathname.endsWith('/logout') ||
+      pathname.includes('/force-password-change');
+
+    if (!isExemptPath) {
+      return NextResponse.json(
+        {
+          error: 'Password change required',
+          code: 'FORCE_PASSWORD_CHANGE',
+          redirectTo: `/org/${slug}/force-password-change`,
+        },
+        { status: 403 }
+      );
+    }
+  }
+
   // 6. Build enriched context
   const permissions = Array.isArray(orgMember.role.permissions)
     ? (orgMember.role.permissions as string[])

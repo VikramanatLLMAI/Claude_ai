@@ -112,8 +112,18 @@ export function OrgLoginPage({ org }: OrgLoginPageProps) {
           user: data.user,
           signedInAt: new Date().toISOString(),
           expiresAt: data.expiresAt,
+          ...(data.organization ? { organization: data.organization } : {}),
         })
       )
+
+      // Check if forced password change is required
+      if (data.forcePasswordChange) {
+        setLoginSuccess(true)
+        setTimeout(() => {
+          router.push(`/org/${org.slug}/force-password-change?reason=${data.reason || 'admin_forced'}`)
+        }, 400)
+        return
+      }
 
       setLoginSuccess(true)
       setTimeout(() => {
