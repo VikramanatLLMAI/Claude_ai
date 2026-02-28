@@ -28,6 +28,7 @@ model User {
   preferences  Json      @default("{\"themeMode\": \"system\"}")
   createdAt    DateTime  @default(now()) @map("created_at")
   lastLogin    DateTime? @map("last_login")
+  passwordChangedAt DateTime? @map("password_changed_at")
 
   sessions              Session[]
   orgMemberships        OrgMember[]
@@ -95,6 +96,8 @@ model Organization {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
+  monthlyRequestCeiling  Int?    @map("monthly_request_ceiling")
+  monthlyTokenCeiling    Int?    @map("monthly_token_ceiling")
 
   members              OrgMember[]
   roles                Role[]
@@ -127,6 +130,7 @@ model OrgMember {
   status             String    @default("ACTIVE") // ACTIVE | SUSPENDED
   joinedAt           DateTime  @default(now()) @map("joined_at")
   lastActiveAt       DateTime? @map("last_active_at")
+  forcePasswordChange Boolean  @default(false) @map("force_password_change")
 
   user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -273,6 +277,7 @@ model UsageRecord {
   @@index([userId])
   @@index([createdAt])
   @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
   @@index([model])
   @@map("usage_records")
 }
@@ -365,6 +370,8 @@ model OrgSettings {
   systemInstructionsMaxLength Int      @default(2000) @map("system_instructions_max_length")
   conversationVisibility      Boolean  @default(false) @map("conversation_visibility")
   defaultRoleId               String?  @map("default_role_id")
+  monthlyRequestLimit         Int?     @map("monthly_request_limit")
+  monthlyTokenLimit           Int?     @map("monthly_token_limit")
   createdAt                   DateTime @default(now()) @map("created_at")
   updatedAt                   DateTime @updatedAt @map("updated_at")
 
