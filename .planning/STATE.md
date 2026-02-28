@@ -124,6 +124,9 @@ Recent decisions affecting current work:
 - [03-13]: Top-level MCP empty state handled inside McpAssignmentPanel (owns connection data, avoids lifting state to page)
 - [03-13]: AddOrgMcpDialog accepts defaultAssignmentType prop with useEffect sync on dialog open for CTA pre-selection
 - [03-13]: Gear icon fix uses minimal pl-0.5 (2px) on SidebarMenuItem -- single class on 86KB file
+- [03-12]: Timestamps only show after save in current session (not persisted across reloads)
+- [03-12]: InstructionsPreview shows org + role layers only; info note explains platform + user layers also exist
+- [03-12]: System role description fallbacks use hardcoded map for Technical/Business/Basic roles
 
 ### Pending Todos
 
@@ -138,5 +141,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-09-PLAN.md (MCP Panel UX Polish)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-09-SUMMARY.md
+Stopped at: Completed 03-12-PLAN.md (Instructions Polish and Preview)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-12-SUMMARY.md
