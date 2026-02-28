@@ -16,6 +16,16 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
+/**
+ * Fallback descriptions for system roles when database description is null.
+ * Per STATE.md decision [03-12]: hardcoded map for Technical/Business/Basic roles.
+ */
+const SYSTEM_ROLE_DESCRIPTIONS: Record<string, string> = {
+  Technical: 'Full access to all AI capabilities and development tools. For developers, engineers, and technical power users.',
+  Business: 'Balanced access with Sonnet and Haiku models. For business users, analysts, and project managers.',
+  Basic: 'Essential AI chat access with lightweight models. For general users with standard needs.',
+}
+
 function hasValidSession() {
   if (typeof window === "undefined") return false
   const session = window.localStorage.getItem(AUTH_SESSION_KEY)
@@ -363,8 +373,10 @@ export default function OrgAdminRolesPage() {
                           </Badge>
                         )}
                       </CardTitle>
-                      {role.description && (
-                        <CardDescription>{role.description}</CardDescription>
+                      {(role.description || (role.isSystemRole && SYSTEM_ROLE_DESCRIPTIONS[role.name])) && (
+                        <CardDescription>
+                          {role.description || SYSTEM_ROLE_DESCRIPTIONS[role.name]}
+                        </CardDescription>
                       )}
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
