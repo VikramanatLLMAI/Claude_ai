@@ -211,16 +211,16 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — Usage & Limits (OUSE)
 
 - [ ] **OUSE-01**: Org Admin can configure usage limits per role (daily requests, daily tokens)
-- [ ] **OUSE-02**: Org Admin can view org-wide usage statistics
-- [ ] **OUSE-03**: Org Admin can view per-user usage
-- [ ] **OUSE-04**: Org Admin can monitor users approaching or exceeding limits
-- [ ] **OUSE-05**: Org Admin can view inactive users (not logged in for 30+ days) for seat cleanup
+- [x] **OUSE-02**: Org Admin can view org-wide usage statistics
+- [x] **OUSE-03**: Org Admin can view per-user usage
+- [x] **OUSE-04**: Org Admin can monitor users approaching or exceeding limits
+- [x] **OUSE-05**: Org Admin can view inactive users (not logged in for 30+ days) for seat cleanup
 
 ### Org Admin — Usage Limit Alerts (OALT)
 
-- [ ] **OALT-01**: Dashboard alert when a user reaches 80% of their limit
-- [ ] **OALT-02**: Dashboard alert when a user is hard blocked at 100%
-- [ ] **OALT-03**: Alerts persist until the usage period resets or limit is increased
+- [x] **OALT-01**: Dashboard alert when a user reaches 80% of their limit
+- [x] **OALT-02**: Dashboard alert when a user is hard blocked at 100%
+- [x] **OALT-03**: Alerts persist until the usage period resets or limit is increased
 
 ### Org Admin — Org Analytics (OANA)
 
@@ -262,15 +262,15 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Regular User — Profile (UPRF)
 
-- [ ] **UPRF-01**: User can update display name
-- [ ] **UPRF-02**: User can upload profile avatar (converted to Base64, stored in database, max 200KB, PNG/JPG only)
-- [ ] **UPRF-03**: User cannot change own email (Org Admin action required)
-- [ ] **UPRF-04**: User cannot change own role
+- [x] **UPRF-01**: User can update display name
+- [x] **UPRF-02**: User can upload profile avatar (converted to Base64, stored in database, max 200KB, PNG/JPG only)
+- [x] **UPRF-03**: User cannot change own email (Org Admin action required)
+- [x] **UPRF-04**: User cannot change own role
 
 ### Regular User — Session Management (USES)
 
 - [x] **USES-01**: User can view all active sessions (device, last active)
-- [ ] **USES-02**: User can manually revoke any specific session (logout from a specific device)
+- [x] **USES-02**: User can manually revoke any specific session (logout from a specific device)
 
 ### Regular User — Theme Preference (UTHEM)
 
@@ -289,8 +289,8 @@ Requirements for initial release. All features from the RBAC specification are v
 
 - [x] **UCHAT-01**: User can chat with AI using role-permitted Anthropic models only
 - [x] **UCHAT-02**: User subject to daily request and token limits set by Org Admin
-- [ ] **UCHAT-03**: User sees warning banner at 80% of their limit
-- [ ] **UCHAT-04**: User is blocked with a clear message at 100% of their limit
+- [x] **UCHAT-03**: User sees warning banner at 80% of their limit
+- [x] **UCHAT-04**: User is blocked with a clear message at 100% of their limit
 - [x] **UCHAT-05**: User cannot configure MCP servers — access determined entirely by Org Admin
 - [x] **UCHAT-06**: If conversation visibility is enabled, user acknowledges it during onboarding agreement (no in-chat indicator)
 
@@ -463,7 +463,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OROL-06 | Phase 4 | Pending |
 | OROL-07 | Phase 4 | Pending |
 | OUSE-01 | Phase 4 | Pending |
-| OUSE-02 | Phase 4 | Pending |
+| OUSE-02 | Phase 4 | Complete |
 | OUSE-03 | Phase 4 | Pending |
 | OUSE-04 | Phase 4 | Pending |
 | OUSE-05 | Phase 4 | Pending |
@@ -481,11 +481,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OPWD-05 | Phase 4 | Pending |
 | OPWD-06 | Phase 4 | Pending |
 | USES-01 | Phase 4 | Complete |
-| USES-02 | Phase 4 | Pending |
-| UPRF-01 | Phase 4 | Pending |
-| UPRF-02 | Phase 4 | Pending |
-| UPRF-03 | Phase 4 | Pending |
-| UPRF-04 | Phase 4 | Pending |
+| USES-02 | Phase 4 | Complete |
+| UPRF-01 | Phase 4 | Complete |
+| UPRF-02 | Phase 4 | Complete |
+| UPRF-03 | Phase 4 | Complete |
+| UPRF-04 | Phase 4 | Complete |
 | SUI-01 | Phase 5 | Pending |
 | SUI-02 | Phase 5 | Pending |
 | SUI-03 | Phase 5 | Pending |

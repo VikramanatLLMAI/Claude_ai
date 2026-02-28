@@ -23,18 +23,18 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 4 of 7 (in progress)
-Plan: 1 of 6 in current phase (1 complete)
-Status: Phase 4 plan 01 complete -- schema, services, and UI components foundation
-Last activity: 2026-02-28 -- Completed 04-01-PLAN.md (Schema, Services, UI Foundation)
+Plan: 5 of 6 in current phase (4 complete, 2 pending)
+Status: Phase 4 plan 05 complete -- user profile and session management
+Last activity: 2026-02-28 -- Completed 04-05-PLAN.md (User Profile & Session Management)
 
-Progress: [##################--] 78%
+Progress: [###################-] 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
-- Average duration: 10 min
-- Total execution time: 3.4 hours
+- Total plans completed: 25
+- Average duration: 9 min
+- Total execution time: 3.6 hours
 
 **By Phase:**
 
@@ -43,11 +43,11 @@ Progress: [##################--] 78%
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
 | 03 | 7+7 | 65 min | 5 min |
-| 04 | 1 | 7 min | 7 min |
+| 04 | 4 | 28 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-06 (7 min), 03-07 (4 min), 03-08 (6 min), 03-15 (5 min), 04-01 (7 min)
-- Trend: Accelerating
+- Last 5 plans: 03-15 (5 min), 04-01 (7 min), 04-03 (7 min), 04-04 (7 min), 04-05 (7 min)
+- Trend: Consistent
 
 *Updated after each plan completion*
 
@@ -138,6 +138,15 @@ Recent decisions affecting current work:
 - [04-01]: Role service catches Prisma P2002 unique constraint error and maps to user-friendly message
 - [04-01]: Session service uses raw prisma (not tenantDb) since Session is not org-scoped
 - [04-01]: Password expiry check falls back to user.createdAt when passwordChangedAt is null
+- [04-05]: OrgMember uses joinedAt field (not createdAt) for profile join date display
+- [04-05]: Avatar processing done client-side with canvas (auto-crop, resize 200x200, JPEG 80%)
+- [04-05]: Session revoke uses inline Confirm/Cancel buttons (not a dialog modal)
+- [04-05]: Profile tab syncs name to General tab state when saved
+- [04-03]: UsageBanner polls every 60 seconds with setInterval (lightweight single-aggregate endpoint)
+- [04-03]: Warning dismissal tracks percentage at dismissal, re-shows if usage jumps 10%+ since dismissed
+- [04-03]: Daily trend uses raw SQL DATE() grouping since Prisma groupBy lacks date truncation
+- [04-03]: Per-user table sorts blocked > warning > normal > inactive for admin attention priority
+- [04-03]: Force-logout button wired to 04-05 endpoint path (works once that plan completes)
 
 ### Pending Todos
 
@@ -152,5 +161,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 04-01-PLAN.md (Schema, Services, UI Foundation) -- Phase 4 plan 01 done
-Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-01-SUMMARY.md
+Stopped at: Completed 04-05-PLAN.md (User Profile & Session Management) -- Phase 4 plan 05 done
+Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-05-SUMMARY.md
