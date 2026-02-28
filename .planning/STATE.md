@@ -147,6 +147,10 @@ Recent decisions affecting current work:
 - [04-03]: Daily trend uses raw SQL DATE() grouping since Prisma groupBy lacks date truncation
 - [04-03]: Per-user table sorts blocked > warning > normal > inactive for admin attention priority
 - [04-03]: Force-logout button wired to 04-05 endpoint path (works once that plan completes)
+- [04-04]: Auth middleware guard exempts /change-password, /logout, and /force-password-change paths
+- [04-04]: Force password change page fetches policy from admin API with graceful 403 fallback to defaults
+- [04-04]: Login route re-queries orgMember for forcePasswordChange after session creation (lightweight single-field select)
+- [04-04]: Change-password endpoint validates against org policy before accepting new password
 
 ### Pending Todos
 
@@ -161,5 +165,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 04-05-PLAN.md (User Profile & Session Management) -- Phase 4 plan 05 done
-Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-05-SUMMARY.md
+Stopped at: Completed 04-04-PLAN.md (Password Policy & Force Reset) -- Phase 4 plan 04 done
+Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-04-SUMMARY.md

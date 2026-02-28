@@ -136,12 +136,12 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Password Policy (OPWD)
 
-- [ ] **OPWD-01**: Org Admin can set minimum password length for the org
-- [ ] **OPWD-02**: Org Admin can set complexity requirements (uppercase, lowercase, numbers, special characters)
-- [ ] **OPWD-03**: Org Admin can force password reset for a specific user or all users in the org at once
+- [x] **OPWD-01**: Org Admin can set minimum password length for the org
+- [x] **OPWD-02**: Org Admin can set complexity requirements (uppercase, lowercase, numbers, special characters)
+- [x] **OPWD-03**: Org Admin can force password reset for a specific user or all users in the org at once
 - [x] **OPWD-04**: Org Admin can set password expiry period (e.g. every 90 days)
-- [ ] **OPWD-05**: Existing passwords that do not meet a newly tightened policy are only enforced on next login — no immediate lockout
-- [ ] **OPWD-06**: Org Admin cannot lock themselves out via password policy changes
+- [x] **OPWD-05**: Existing passwords that do not meet a newly tightened policy are only enforced on next login — no immediate lockout
+- [x] **OPWD-06**: Org Admin cannot lock themselves out via password policy changes
 
 ### Org Admin — Default Role (ODEF)
 
@@ -474,12 +474,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UCHAT-04 | Phase 4 | Complete |
 | SAFE-10 | Phase 4 | Complete |
 | SAFE-11 | Phase 4 | Pending |
-| OPWD-01 | Phase 4 | Pending |
-| OPWD-02 | Phase 4 | Pending |
-| OPWD-03 | Phase 4 | Pending |
+| OPWD-01 | Phase 4 | Complete |
+| OPWD-02 | Phase 4 | Complete |
+| OPWD-03 | Phase 4 | Complete |
 | OPWD-04 | Phase 4 | Complete |
-| OPWD-05 | Phase 4 | Pending |
-| OPWD-06 | Phase 4 | Pending |
+| OPWD-05 | Phase 4 | Complete |
+| OPWD-06 | Phase 4 | Complete |
 | USES-01 | Phase 4 | Complete |
 | USES-02 | Phase 4 | Complete |
 | UPRF-01 | Phase 4 | Complete |
