@@ -2,26 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-27T13:20:26.256Z"
-progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in-progress
-last_updated: "2026-02-28T00:29:25Z"
+last_updated: "2026-02-28T00:41:01Z"
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 21
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -36,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 3 of 7 (gap closure)
-Plan: 9 of 14 in current phase (next plan)
-Status: Executing Phase 3 gap closure plans (03-08 complete, 03-09 next)
-Last activity: 2026-02-28 -- Completed 03-08-PLAN.md (UI Infrastructure and Model Endpoint Fix)
+Plan: 14 of 14 in current phase (next plan)
+Status: Executing Phase 3 gap closure plans (03-13 complete, 03-14 next)
+Last activity: 2026-02-28 -- Completed 03-13-PLAN.md (Visual Polish - Gear Icon and MCP Empty States)
 
-Progress: [################----] 76%
+Progress: [##################--] 90%
 
 ## Performance Metrics
 
@@ -123,6 +110,9 @@ Recent decisions affecting current work:
 - [03-08]: Org admin models endpoint returns raw Model objects (same shape as super-admin endpoint) for component compatibility
 - [03-08]: RoleModelAssignment now fetches from /api/org/${slug}/admin/models instead of /api/admin/models (fixes 403 blocker)
 - [03-08]: Toast and AlertDialog components follow existing Radix UI wrapper patterns (dialog.tsx, tooltip.tsx)
+- [03-13]: Top-level MCP empty state handled inside McpAssignmentPanel (owns connection data, avoids lifting state to page)
+- [03-13]: AddOrgMcpDialog accepts defaultAssignmentType prop with useEffect sync on dialog open for CTA pre-selection
+- [03-13]: Gear icon fix uses minimal pl-0.5 (2px) on SidebarMenuItem -- single class on 86KB file
 
 ### Pending Todos
 
@@ -137,5 +127,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-08-PLAN.md (UI Infrastructure and Model Endpoint Fix)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-08-SUMMARY.md
+Stopped at: Completed 03-13-PLAN.md (Visual Polish - Gear Icon and MCP Empty States)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-13-SUMMARY.md
