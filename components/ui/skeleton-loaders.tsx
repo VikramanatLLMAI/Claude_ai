@@ -361,4 +361,158 @@ export function CardLoadingSkeleton({ className }: { className?: string }) {
   )
 }
 
+/**
+ * Skeleton loader for admin instructions page.
+ * Mimics the instruction editors layout with title, textarea, token counter,
+ * progress bar, and save button -- repeated for role sections.
+ */
+export function AdminInstructionsSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-3xl space-y-8 p-6">
+      {/* Org instructions section */}
+      <div className="space-y-4">
+        <ShimmerSkeleton className="h-5 w-[200px]" />
+        <ShimmerSkeleton className="h-4 w-[320px]" />
+        <ShimmerSkeleton className="h-[120px] w-full rounded-lg" />
+        <div className="flex items-center gap-3">
+          <ShimmerSkeleton className="h-1 w-full rounded-full" />
+          <ShimmerSkeleton className="h-4 w-[100px]" />
+        </div>
+        <ShimmerSkeleton className="h-9 w-[80px] rounded-md" />
+      </div>
+
+      {/* Separator */}
+      <div className="border-t border-border" />
+
+      {/* Role sections */}
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="space-y-4 rounded-lg border border-border p-4">
+          <ShimmerSkeleton className="h-5 w-[160px]" />
+          <ShimmerSkeleton className="h-4 w-[280px]" />
+          <ShimmerSkeleton className="h-[100px] w-full rounded-lg" />
+          <div className="flex items-center gap-3">
+            <ShimmerSkeleton className="h-1 w-full rounded-full" />
+            <ShimmerSkeleton className="h-4 w-[100px]" />
+          </div>
+          <ShimmerSkeleton className="h-9 w-[80px] rounded-md" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Skeleton loader for admin role cards page.
+ * Mimics role cards with header bar, checkbox rows, and toggle rows.
+ */
+export function AdminRoleCardsSkeleton() {
+  return (
+    <div className="mx-auto max-w-4xl px-6 py-8">
+      {/* Page header */}
+      <div className="mb-8 flex items-center gap-3">
+        <ShimmerSkeleton className="h-10 w-10 rounded-lg" />
+        <div className="space-y-1">
+          <ShimmerSkeleton className="h-6 w-48" />
+          <ShimmerSkeleton className="h-4 w-64" />
+        </div>
+      </div>
+
+      {/* Role cards */}
+      <div className="space-y-6">
+        {[1, 2, 3].map((i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1, duration: 0.3 }}
+            className="rounded-2xl border p-6 space-y-5"
+          >
+            {/* Card header */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <ShimmerSkeleton className="h-5 w-32" />
+                <ShimmerSkeleton className="h-4 w-48" />
+              </div>
+              <ShimmerSkeleton className="h-4 w-20" />
+            </div>
+
+            {/* Model access checkboxes */}
+            <div className="space-y-2">
+              <ShimmerSkeleton className="h-4 w-24" />
+              {[1, 2, 3, 4].map((j) => (
+                <div key={j} className="flex items-center gap-2">
+                  <ShimmerSkeleton className="h-4 w-4 rounded" />
+                  <ShimmerSkeleton className="h-4 w-40" />
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-border" />
+
+            {/* Toggle rows */}
+            {[1, 2].map((j) => (
+              <div key={j} className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <ShimmerSkeleton className="h-4 w-36" />
+                  <ShimmerSkeleton className="h-3 w-56" />
+                </div>
+                <ShimmerSkeleton className="h-5 w-9 rounded-full" />
+              </div>
+            ))}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Skeleton loader for admin MCP page.
+ * Mimics MCP panel layout with section header and connection cards.
+ */
+export function AdminMcpSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ShimmerSkeleton className="h-5 w-5 rounded" />
+          <div className="space-y-1">
+            <ShimmerSkeleton className="h-5 w-48" />
+            <ShimmerSkeleton className="h-4 w-72" />
+          </div>
+        </div>
+        <ShimmerSkeleton className="h-9 w-32 rounded-md" />
+      </div>
+
+      {/* Connection cards */}
+      {[1, 2].map((i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.1, duration: 0.3 }}
+          className="rounded-lg border p-4 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShimmerSkeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-1">
+                <ShimmerSkeleton className="h-4 w-36" />
+                <ShimmerSkeleton className="h-3 w-52" />
+              </div>
+            </div>
+            <ShimmerSkeleton className="h-6 w-16 rounded-full" />
+          </div>
+          <div className="flex gap-2">
+            <ShimmerSkeleton className="h-8 w-20 rounded" />
+            <ShimmerSkeleton className="h-8 w-20 rounded" />
+            <ShimmerSkeleton className="h-8 w-20 rounded" />
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
 export { ShimmerSkeleton }

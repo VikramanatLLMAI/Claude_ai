@@ -45,15 +45,17 @@ export function AdminBreadcrumb({ orgSlug }: AdminBreadcrumbProps) {
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
-      <Link
-        href={adminBase}
-        className="text-muted-foreground hover:text-foreground transition-colors"
-      >
-        Admin Console
-      </Link>
-      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
-      <span className="text-foreground font-medium">{label}</span>
-    </nav>
+    <div className="border-b px-6 py-3">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
+        <Link
+          href={adminBase}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Admin Console
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
+        <span className="text-foreground font-medium">{label}</span>
+      </nav>
+    </div>
   )
 }

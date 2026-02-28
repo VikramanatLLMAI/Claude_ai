@@ -4,8 +4,10 @@ import * as React from "react"
 import { useEffect, useState, useMemo } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { PageLoadingSkeleton } from "@/components/ui/skeleton-loaders"
+import { toast } from "@/components/ui/toast"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -79,8 +81,11 @@ export default function OrgAdminLayout({ children }: { children: React.ReactNode
           return
         }
         if (res.status === 403) {
-          // Not an admin, redirect to chat
-          if (!cancelled) router.replace(`/org/${slug}/chat`)
+          // Not an admin, show toast and redirect to chat
+          if (!cancelled) {
+            toast.error("Access denied. You don't have admin privileges for this organization.")
+            router.replace(`/org/${slug}/chat`)
+          }
           return
         }
         if (!res.ok) {
@@ -125,7 +130,10 @@ export default function OrgAdminLayout({ children }: { children: React.ReactNode
   return (
     <SidebarProvider>
       <AdminSidebar variant="org-admin" orgSlug={slug} orgName={orgName} />
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset>
+        <AdminBreadcrumb orgSlug={slug} />
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   )
 }

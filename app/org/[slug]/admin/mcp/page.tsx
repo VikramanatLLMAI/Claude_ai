@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Plus, Loader2, Plug } from "lucide-react"
+import { Plus, Plug } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { McpAssignmentPanel, AddOrgMcpDialog } from "@/components/admin/mcp-assignment-panel"
 import type { RoleInfo } from "@/components/admin/mcp-assignment-panel"
+import { AdminMcpSkeleton } from "@/components/ui/skeleton-loaders"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
@@ -78,11 +79,7 @@ export default function OrgAdminMcpPage() {
   }
 
   if (rolesLoading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <AdminMcpSkeleton />
   }
 
   return (

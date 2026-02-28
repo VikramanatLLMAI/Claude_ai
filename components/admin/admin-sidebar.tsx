@@ -158,8 +158,8 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
                     >
                       <Icon className="h-4 w-4" />
                       <span className="flex-1">{item.label}</span>
-                      <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
-                        Coming Soon
+                      <Badge variant="outline" className="ml-auto text-[10px] px-1.5 py-0 text-muted-foreground/60 border-muted-foreground/20 bg-transparent font-normal">
+                        Soon
                       </Badge>
                     </SidebarMenuButton>
                   )}
@@ -195,7 +195,7 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
           onClick={handleSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
