@@ -581,7 +581,7 @@ function ChatSidebar({
       <SidebarFooter>
         <SidebarMenu>
           {isOrgAdmin && orgSlug && (
-            <SidebarMenuItem>
+            <SidebarMenuItem className="pl-0.5">
               <SidebarMenuButton
                 tooltip="Admin Console"
                 onClick={() => router.push(`/org/${orgSlug}/admin`)}

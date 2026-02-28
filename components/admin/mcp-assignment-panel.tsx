@@ -60,6 +60,7 @@ export function McpAssignmentPanel({ orgSlug, roles }: McpAssignmentPanelProps) 
   const [connections, setConnections] = React.useState<OrgMcpConnection[]>([])
   const [loading, setLoading] = React.useState(true)
   const [showAddDialog, setShowAddDialog] = React.useState(false)
+  const [defaultAssignmentType, setDefaultAssignmentType] = React.useState<"org-wide" | "role-specific">("org-wide")
 
   const getAuthHeaders = React.useCallback(() => {
     const token = localStorage.getItem(AUTH_TOKEN_KEY) || ""
@@ -139,6 +140,11 @@ export function McpAssignmentPanel({ orgSlug, roles }: McpAssignmentPanelProps) 
     }
   }
 
+  const openAddDialog = (type: "org-wide" | "role-specific") => {
+    setDefaultAssignmentType(type)
+    setShowAddDialog(true)
+  }
+
   const orgWideConnections = connections.filter((c) => c.assignmentType === "org-wide")
   const roleSpecificConnections = connections.filter((c) => c.assignmentType === "role-specific")
 
@@ -158,6 +164,43 @@ export function McpAssignmentPanel({ orgSlug, roles }: McpAssignmentPanelProps) 
     )
   }
 
+  // Top-level empty state when no connections exist at all
+  if (connections.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col items-center text-center py-12 space-y-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+            <Plug className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-base font-medium text-foreground">Connect your first MCP server</p>
+            <p className="text-sm text-muted-foreground max-w-md">
+              MCP (Model Context Protocol) servers extend your AI assistant&apos;s capabilities with external tools. Connect servers to give your team access to databases, APIs, and custom tooling.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button size="sm" onClick={() => openAddDialog("org-wide")}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Org-Wide Server
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => openAddDialog("role-specific")}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Role-Specific Server
+            </Button>
+          </div>
+        </div>
+
+        <AddOrgMcpDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          onAdd={handleAddConnection}
+          roles={roles}
+          defaultAssignmentType={defaultAssignmentType}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Org-wide Servers */}
@@ -170,9 +213,21 @@ export function McpAssignmentPanel({ orgSlug, roles }: McpAssignmentPanelProps) 
           </Badge>
         </div>
         {orgWideConnections.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            No org-wide MCP servers configured.
-          </p>
+          <div className="flex flex-col items-center text-center py-8 space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Globe className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">No org-wide MCP servers</p>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                MCP servers connected here are available to all users in your organization. Connect a server to give your team access to external tools.
+              </p>
+            </div>
+            <Button size="sm" onClick={() => openAddDialog("org-wide")}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Org-Wide Server
+            </Button>
+          </div>
         ) : (
           <div className="grid gap-3">
             {orgWideConnections.map((conn) => (
@@ -198,9 +253,21 @@ export function McpAssignmentPanel({ orgSlug, roles }: McpAssignmentPanelProps) 
           </Badge>
         </div>
         {Object.keys(connectionsByRole).length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
-            No role-specific MCP servers configured.
-          </p>
+          <div className="flex flex-col items-center text-center py-8 space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Shield className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">No role-specific MCP servers</p>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                MCP servers connected here are only available to users with specific roles. Assign servers to control which roles can access which tools.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => openAddDialog("role-specific")}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Role-Specific Server
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
             {Object.entries(connectionsByRole).map(([roleName, conns]) => (
@@ -232,6 +299,7 @@ export function McpAssignmentPanel({ orgSlug, roles }: McpAssignmentPanelProps) 
         onOpenChange={setShowAddDialog}
         onAdd={handleAddConnection}
         roles={roles}
+        defaultAssignmentType={defaultAssignmentType}
       />
     </div>
   )
@@ -397,6 +465,7 @@ function AddOrgMcpDialog({
   onOpenChange,
   onAdd,
   roles,
+  defaultAssignmentType = "org-wide",
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -409,6 +478,7 @@ function AddOrgMcpDialog({
     roleId?: string
   }) => Promise<void>
   roles: RoleInfo[]
+  defaultAssignmentType?: "org-wide" | "role-specific"
 }) {
   const [name, setName] = React.useState("")
   const [serverUrl, setServerUrl] = React.useState("")
@@ -416,10 +486,17 @@ function AddOrgMcpDialog({
   const [apiKey, setApiKey] = React.useState("")
   const [oauthClientId, setOauthClientId] = React.useState("")
   const [oauthClientSecret, setOauthClientSecret] = React.useState("")
-  const [assignmentType, setAssignmentType] = React.useState<"org-wide" | "role-specific">("org-wide")
+  const [assignmentType, setAssignmentType] = React.useState<"org-wide" | "role-specific">(defaultAssignmentType)
   const [selectedRoleId, setSelectedRoleId] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
+
+  // Sync assignment type when dialog opens with a specific default
+  React.useEffect(() => {
+    if (open) {
+      setAssignmentType(defaultAssignmentType)
+    }
+  }, [open, defaultAssignmentType])
 
   const resetForm = () => {
     setName("")
