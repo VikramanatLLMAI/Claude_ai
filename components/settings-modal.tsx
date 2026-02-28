@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import {
   Settings,
   Palette,
@@ -18,7 +18,15 @@ import {
   Sun,
   Monitor,
   Loader2,
+  User as UserIcon,
+  Smartphone,
+  Tablet,
+  Lock,
+  Trash2,
+  Upload,
+  Shield,
 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -46,14 +54,16 @@ const COLOR_THEMES: { id: ColorTheme; label: string; description: string; accent
   { id: "violet-bloom", label: "Violet Bloom", description: "Rich violet", accent: "#7C3AED" },
 ]
 
-type SettingsTab = "general" | "appearance" | "api-keys" | "mcp" | "instructions" | "advanced"
+type SettingsTab = "profile" | "general" | "appearance" | "api-keys" | "mcp" | "instructions" | "sessions" | "advanced"
 
 const SETTINGS_TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
+  { id: "profile", label: "Profile", icon: UserIcon },
   { id: "general", label: "General", icon: Settings },
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "api-keys", label: "API Keys", icon: Key },
   { id: "mcp", label: "MCP", icon: Plug },
   { id: "instructions", label: "Instructions Tuning", icon: SlidersHorizontal },
+  { id: "sessions", label: "Sessions", icon: Monitor },
   { id: "advanced", label: "Advanced", icon: Sliders },
 ]
 
@@ -134,6 +144,40 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingConnection, setEditingConnection] = useState<McpConnectionData | null>(null)
 
+  // Org Profile state (Profile tab with org context)
+  interface OrgProfileData {
+    name: string
+    email: string
+    avatarBase64: string | null
+    roleName: string
+    roleId: string
+    joinedAt: string
+  }
+  const [orgProfile, setOrgProfile] = useState<OrgProfileData | null>(null)
+  const [orgProfileLoading, setOrgProfileLoading] = useState(false)
+  const [orgProfileName, setOrgProfileName] = useState("")
+  const [orgProfileAvatarPreview, setOrgProfileAvatarPreview] = useState<string | null>(null)
+  const [orgProfileAvatarChanged, setOrgProfileAvatarChanged] = useState(false)
+  const [orgProfileSaving, setOrgProfileSaving] = useState(false)
+  const [orgProfileMessage, setOrgProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  // Sessions state
+  interface SessionData {
+    id: string
+    browser: string
+    os: string
+    device: string
+    ipAddress: string | null
+    lastUsedAt: string | null
+    createdAt: string
+    isCurrent: boolean
+  }
+  const [sessions, setSessions] = useState<SessionData[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null)
+  const [sessionConfirmId, setSessionConfirmId] = useState<string | null>(null)
+
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem(AUTH_TOKEN_KEY) || ""
     return {
@@ -168,6 +212,8 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
     loadAnthropicConfig()
     fetchConnections()
     loadCustomInstructions()
+    loadOrgProfile()
+    loadSessions()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -234,6 +280,195 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
       // Fallback: localStorage-based instructions (non-org context)
       const saved = localStorage.getItem(INSTRUCTIONS_KEY)
       if (saved) setCustomInstructions(saved)
+    }
+  }
+
+  // Org Profile loading (Profile tab)
+  const loadOrgProfile = async () => {
+    if (!orgSlug) return
+    setOrgProfileLoading(true)
+    try {
+      const res = await fetch(`/api/org/${orgSlug}/profile`, { headers: getAuthHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setOrgProfile(data)
+        setOrgProfileName(data.name || "")
+        setOrgProfileAvatarPreview(data.avatarBase64 || null)
+        setOrgProfileAvatarChanged(false)
+      }
+    } catch (error) {
+      console.error("Error loading org profile:", error)
+    } finally {
+      setOrgProfileLoading(false)
+    }
+  }
+
+  // Avatar processing: auto-crop to centered square, resize to 200x200, JPEG 80%
+  const processAvatarFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith("image/")) {
+        reject(new Error("File must be an image (PNG or JPEG)"))
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = () => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          canvas.width = 200
+          canvas.height = 200
+          const ctx = canvas.getContext("2d")
+          if (!ctx) {
+            reject(new Error("Canvas not supported"))
+            return
+          }
+          // Auto-crop to centered square
+          const size = Math.min(img.width, img.height)
+          const sx = (img.width - size) / 2
+          const sy = (img.height - size) / 2
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200)
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.8)
+          // Check size (Base64 payload after comma)
+          const base64Part = dataUrl.split(",")[1] || ""
+          const estimatedBytes = Math.ceil(base64Part.length * 3 / 4)
+          if (estimatedBytes > 200 * 1024) {
+            reject(new Error("Processed image exceeds 200KB. Try a smaller image."))
+            return
+          }
+          resolve(dataUrl)
+        }
+        img.onerror = () => reject(new Error("Failed to load image"))
+        img.src = reader.result as string
+      }
+      reader.onerror = () => reject(new Error("Failed to read file"))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const processed = await processAvatarFile(file)
+      setOrgProfileAvatarPreview(processed)
+      setOrgProfileAvatarChanged(true)
+      setOrgProfileMessage(null)
+    } catch (err) {
+      setOrgProfileMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to process image" })
+    }
+    // Reset input so same file can be re-selected
+    if (avatarInputRef.current) avatarInputRef.current.value = ""
+  }
+
+  const handleRemoveAvatar = () => {
+    setOrgProfileAvatarPreview(null)
+    setOrgProfileAvatarChanged(true)
+    setOrgProfileMessage(null)
+  }
+
+  const handleSaveOrgProfile = async () => {
+    if (!orgSlug) return
+    setOrgProfileSaving(true)
+    setOrgProfileMessage(null)
+    try {
+      const body: Record<string, unknown> = {}
+      if (orgProfileName !== orgProfile?.name) {
+        body.name = orgProfileName
+      }
+      if (orgProfileAvatarChanged) {
+        body.avatarBase64 = orgProfileAvatarPreview // null clears it
+      }
+      if (Object.keys(body).length === 0) {
+        setOrgProfileMessage({ type: "success", text: "No changes to save" })
+        setOrgProfileSaving(false)
+        return
+      }
+      const res = await fetch(`/api/org/${orgSlug}/profile`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setOrgProfile(data)
+        setOrgProfileName(data.name || "")
+        setOrgProfileAvatarPreview(data.avatarBase64 || null)
+        setOrgProfileAvatarChanged(false)
+        // Also update the basic profile state so General tab stays in sync
+        setName(data.name || "")
+        setOrgProfileMessage({ type: "success", text: "Profile updated successfully" })
+      } else {
+        const data = await res.json()
+        setOrgProfileMessage({ type: "error", text: data.error || "Failed to update profile" })
+      }
+    } catch {
+      setOrgProfileMessage({ type: "error", text: "Network error. Please try again." })
+    } finally {
+      setOrgProfileSaving(false)
+    }
+  }
+
+  // Sessions loading
+  const loadSessions = async () => {
+    if (!orgSlug) return
+    setSessionsLoading(true)
+    try {
+      const res = await fetch(`/api/org/${orgSlug}/sessions`, { headers: getAuthHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setSessions(data.sessions || [])
+      }
+    } catch (error) {
+      console.error("Error loading sessions:", error)
+    } finally {
+      setSessionsLoading(false)
+    }
+  }
+
+  const handleRevokeSession = async (sessionId: string) => {
+    if (!orgSlug) return
+    setRevokingSessionId(sessionId)
+    try {
+      const res = await fetch(`/api/org/${orgSlug}/sessions/${sessionId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      })
+      if (res.ok) {
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+      } else {
+        const data = await res.json()
+        console.error("Failed to revoke session:", data.error)
+      }
+    } catch (error) {
+      console.error("Error revoking session:", error)
+    } finally {
+      setRevokingSessionId(null)
+      setSessionConfirmId(null)
+    }
+  }
+
+  // Helper: relative time (e.g., "5 minutes ago")
+  const getRelativeTime = (dateStr: string | null): string => {
+    if (!dateStr) return "Never"
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    if (diffMins < 1) return "Just now"
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`
+    return date.toLocaleDateString()
+  }
+
+  // Device icon helper
+  const getDeviceIcon = (device: string) => {
+    switch (device) {
+      case "Mobile": return Smartphone
+      case "Tablet": return Tablet
+      default: return Monitor
     }
   }
 
@@ -528,6 +763,149 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto px-6 pb-6">
+              {/* PROFILE TAB */}
+              {activeTab === "profile" && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+                      Profile
+                    </h3>
+
+                    {!orgSlug ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <UserIcon className="mb-3 size-10 text-muted-foreground/50" />
+                        <p className="text-sm font-medium text-foreground mb-1">Profile management</p>
+                        <p className="text-xs text-muted-foreground">
+                          Profile management is available in the organization context.
+                        </p>
+                      </div>
+                    ) : orgProfileLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Avatar section */}
+                        <div className="flex items-start gap-5">
+                          <div className="relative shrink-0">
+                            <div className="size-[100px] rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+                              {orgProfileAvatarPreview ? (
+                                <img
+                                  src={orgProfileAvatarPreview}
+                                  alt="Avatar"
+                                  className="size-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-2xl font-semibold text-muted-foreground">
+                                  {(orgProfileName || orgProfile?.name || "U").slice(0, 2).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 pt-2">
+                            <input
+                              ref={avatarInputRef}
+                              type="file"
+                              accept="image/png,image/jpeg"
+                              className="hidden"
+                              onChange={handleAvatarFileChange}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => avatarInputRef.current?.click()}
+                            >
+                              <Upload className="mr-1.5 size-3.5" />
+                              Upload Avatar
+                            </Button>
+                            {orgProfileAvatarPreview && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                onClick={handleRemoveAvatar}
+                              >
+                                <Trash2 className="mr-1.5 size-3.5" />
+                                Remove Avatar
+                              </Button>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              PNG or JPEG, auto-cropped to square, max 200KB
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Name field */}
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1.5 block">Display Name</label>
+                          <Input
+                            value={orgProfileName}
+                            onChange={(e) => setOrgProfileName(e.target.value)}
+                            placeholder="Your name"
+                          />
+                        </div>
+
+                        {/* Email field (read-only) */}
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+                          <div className="relative">
+                            <Input
+                              value={orgProfile?.email || ""}
+                              disabled
+                              className="opacity-60 pr-9"
+                            />
+                            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                        </div>
+
+                        {/* Role field (read-only) */}
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1.5 block">Role</label>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              <Shield className="mr-1 size-3" />
+                              {orgProfile?.roleName || "Member"}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">Role is managed by your administrator</p>
+                        </div>
+
+                        {/* Joined date */}
+                        {orgProfile?.joinedAt && (
+                          <div>
+                            <label className="text-sm font-medium text-foreground mb-1.5 block">Joined</label>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(orgProfile.joinedAt).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Save messages and button */}
+                        {orgProfileMessage && (
+                          <div className={cn(
+                            "flex items-center gap-2 rounded-md p-3 text-sm",
+                            orgProfileMessage.type === "success"
+                              ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                              : "bg-destructive/10 text-destructive"
+                          )}>
+                            {orgProfileMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
+                            {orgProfileMessage.text}
+                          </div>
+                        )}
+                        <Button size="sm" onClick={handleSaveOrgProfile} disabled={orgProfileSaving}>
+                          {orgProfileSaving ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* GENERAL TAB */}
               {activeTab === "general" && (
                 <div className="space-y-8">
@@ -1036,6 +1414,108 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                             {instructionsSaving ? "Saving..." : "Save Instructions"}
                           </Button>
                         )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* SESSIONS TAB */}
+              {activeTab === "sessions" && (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Active Sessions
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-5">
+                      Manage your active sessions across devices.
+                    </p>
+
+                    {!orgSlug ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Monitor className="mb-3 size-10 text-muted-foreground/50" />
+                        <p className="text-sm font-medium text-foreground mb-1">Session management</p>
+                        <p className="text-xs text-muted-foreground">
+                          Session management is available in the organization context.
+                        </p>
+                      </div>
+                    ) : sessionsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : sessions.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Monitor className="mb-3 size-10 text-muted-foreground/50" />
+                        <p className="text-sm font-medium text-foreground">No active sessions</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {sessions.length === 1 && sessions[0].isCurrent && (
+                          <p className="text-sm text-muted-foreground mb-3">This is your only active session.</p>
+                        )}
+                        {sessions.map((session) => {
+                          const DeviceIcon = getDeviceIcon(session.device)
+                          return (
+                            <div
+                              key={session.id}
+                              className="rounded-lg border border-border p-4"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex size-9 items-center justify-center rounded-full bg-muted">
+                                    <DeviceIcon className="size-4 text-muted-foreground" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">
+                                      {session.browser} on {session.os}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {session.ipAddress || "Unknown IP"} &middot; Active {getRelativeTime(session.lastUsedAt)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div>
+                                  {session.isCurrent ? (
+                                    <Badge variant="outline" className="border-green-500/50 text-green-700 dark:text-green-400">
+                                      Current Session
+                                    </Badge>
+                                  ) : sessionConfirmId === session.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => handleRevokeSession(session.id)}
+                                        disabled={revokingSessionId === session.id}
+                                      >
+                                        {revokingSessionId === session.id ? (
+                                          <Loader2 className="size-3.5 animate-spin" />
+                                        ) : (
+                                          "Confirm"
+                                        )}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setSessionConfirmId(null)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() => setSessionConfirmId(session.id)}
+                                    >
+                                      Revoke
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
