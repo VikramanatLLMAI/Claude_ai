@@ -117,6 +117,16 @@ None - no external service configuration required.
 - Toast, dirty state, and confirmation dialog patterns are established for reuse in future admin pages
 - InstructionEditor Ctrl+S shortcut available for any page that passes onSave prop
 
+## Self-Check: PASSED
+
+- FOUND: components/admin/instruction-editor.tsx
+- FOUND: app/org/[slug]/admin/instructions/page.tsx
+- FOUND: app/org/[slug]/admin/roles/page.tsx
+- FOUND: components/ui/switch.tsx
+- FOUND: commit a330133 (Task 1)
+- FOUND: commit 1a929ce (Task 2)
+- FOUND: commit e208a65 (docs)
+
 ---
 *Phase: 03-chat-integration-and-core-rbac*
 *Completed: 2026-02-28*

@@ -138,5 +138,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-10-PLAN.md (Instructions & Role Settings UX Polish)
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-10-SUMMARY.md
+Stopped at: Completed 03-09-PLAN.md (MCP Panel UX Polish)
+Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-09-SUMMARY.md
