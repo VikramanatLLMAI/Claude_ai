@@ -139,14 +139,14 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **OPWD-01**: Org Admin can set minimum password length for the org
 - [ ] **OPWD-02**: Org Admin can set complexity requirements (uppercase, lowercase, numbers, special characters)
 - [ ] **OPWD-03**: Org Admin can force password reset for a specific user or all users in the org at once
-- [ ] **OPWD-04**: Org Admin can set password expiry period (e.g. every 90 days)
+- [x] **OPWD-04**: Org Admin can set password expiry period (e.g. every 90 days)
 - [ ] **OPWD-05**: Existing passwords that do not meet a newly tightened policy are only enforced on next login — no immediate lockout
 - [ ] **OPWD-06**: Org Admin cannot lock themselves out via password policy changes
 
 ### Org Admin — Default Role (ODEF)
 
 - [x] **ODEF-01**: Org Admin can set a default role automatically assigned when a new user accepts an invitation without a specified role
-- [ ] **ODEF-02**: If the default role is deleted, the field clears automatically and next invitation requires explicit role selection
+- [x] **ODEF-02**: If the default role is deleted, the field clears automatically and next invitation requires explicit role selection
 
 ### Org Admin — Conversation Visibility (OVIS)
 
@@ -269,7 +269,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Regular User — Session Management (USES)
 
-- [ ] **USES-01**: User can view all active sessions (device, last active)
+- [x] **USES-01**: User can view all active sessions (device, last active)
 - [ ] **USES-02**: User can manually revoke any specific session (logout from a specific device)
 
 ### Regular User — Theme Preference (UTHEM)
@@ -314,7 +314,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [x] **SAFE-07**: Audit logs are immutable — cannot be edited or deleted by anyone
 - [x] **SAFE-08**: Custom instructions preserved but not injected when Org Admin disables them for a role — re-enabled without data loss
 - [x] **SAFE-09**: Character limits enforced server-side, not just client-side
-- [ ] **SAFE-10**: Role-level daily limits and org-level monthly limits enforced — requests hard rejected when exceeded
+- [x] **SAFE-10**: Role-level daily limits and org-level monthly limits enforced — requests hard rejected when exceeded
 - [ ] **SAFE-11**: Org Admin conversation access is read-only — no edit or delete
 
 ### Scheduled Tasks (CRON)
@@ -407,7 +407,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUSR-01 | Phase 2 | Complete |
 | OUSR-09 | Phase 2 | Complete |
 | ODEF-01 | Phase 2 | Complete |
-| ODEF-02 | Phase 4 | Pending |
+| ODEF-02 | Phase 4 | Complete |
 | UATH-01 | Phase 2 | Complete |
 | UATH-02 | Phase 2 | Complete |
 | UATH-03 | Phase 2 | Complete |
@@ -472,15 +472,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OALT-03 | Phase 4 | Pending |
 | UCHAT-03 | Phase 4 | Pending |
 | UCHAT-04 | Phase 4 | Pending |
-| SAFE-10 | Phase 4 | Pending |
+| SAFE-10 | Phase 4 | Complete |
 | SAFE-11 | Phase 4 | Pending |
 | OPWD-01 | Phase 4 | Pending |
 | OPWD-02 | Phase 4 | Pending |
 | OPWD-03 | Phase 4 | Pending |
-| OPWD-04 | Phase 4 | Pending |
+| OPWD-04 | Phase 4 | Complete |
 | OPWD-05 | Phase 4 | Pending |
 | OPWD-06 | Phase 4 | Pending |
-| USES-01 | Phase 4 | Pending |
+| USES-01 | Phase 4 | Complete |
 | USES-02 | Phase 4 | Pending |
 | UPRF-01 | Phase 4 | Pending |
 | UPRF-02 | Phase 4 | Pending |

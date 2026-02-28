@@ -2,39 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T12:10:51.447Z"
-progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 22
-  completed_plans: 22
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T01:08:54.546Z"
-progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 21
-  completed_plans: 21
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in-progress
-last_updated: "2026-02-28T01:04:06Z"
+last_updated: "2026-02-28T17:02:20Z"
 progress:
   total_phases: 7
   completed_phases: 3
-  total_plans: 21
-  completed_plans: 18
+  total_plans: 27
+  completed_plans: 21
 ---
 
 # Project State
@@ -44,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 3 complete. Ready for Phase 4: Role Configuration and Usage Limits
+**Current focus:** Phase 4 in progress: Role Configuration and Usage Limits
 
 ## Current Position
 
-Phase: 3 of 7 (complete)
-Plan: 15 of 15 in current phase (all complete)
-Status: Phase 3 fully complete -- all 15 plans executed, all UAT gaps closed
-Last activity: 2026-02-28 -- Completed 03-15-PLAN.md (Gap Closure for Final 3 UAT Items)
+Phase: 4 of 7 (in progress)
+Plan: 1 of 6 in current phase (1 complete)
+Status: Phase 4 plan 01 complete -- schema, services, and UI components foundation
+Last activity: 2026-02-28 -- Completed 04-01-PLAN.md (Schema, Services, UI Foundation)
 
-Progress: [##################--] 90%
+Progress: [##################--] 78%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
-- Average duration: 11 min
-- Total execution time: 3.3 hours
+- Total plans completed: 21
+- Average duration: 10 min
+- Total execution time: 3.4 hours
 
 **By Phase:**
 
@@ -69,9 +43,10 @@ Progress: [##################--] 90%
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
 | 03 | 7+7 | 65 min | 5 min |
+| 04 | 1 | 7 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (6 min), 03-03 (5 min), 03-06 (7 min), 03-07 (4 min), 03-08 (6 min)
+- Last 5 plans: 03-06 (7 min), 03-07 (4 min), 03-08 (6 min), 03-15 (5 min), 04-01 (7 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -158,6 +133,11 @@ Recent decisions affecting current work:
 - [03-15]: aria-labels added to MCP action buttons only, no Tooltip structure changes
 - [03-15]: Navigation guard uses capture-phase click handler + popstate for comprehensive coverage
 - [03-15]: SYSTEM_ROLE_DESCRIPTIONS is a display-only fallback, not a database change
+- [04-01]: Usage service uses single aggregate query for both request count and token sum (performance optimization)
+- [04-01]: checkOrgMonthlyCeiling uses the lower of org ceiling (Super Admin) and orgSettings limit (Org Admin) for enforcement
+- [04-01]: Role service catches Prisma P2002 unique constraint error and maps to user-friendly message
+- [04-01]: Session service uses raw prisma (not tenantDb) since Session is not org-scoped
+- [04-01]: Password expiry check falls back to user.createdAt when passwordChangedAt is null
 
 ### Pending Todos
 
@@ -167,10 +147,10 @@ None yet.
 
 - [Phase 1]: RESOLVED -- storage.ts functions deprecated; all API routes now use tenantDb from requireOrgAuth() for data isolation
 - [Phase 3]: 4-layer prompt stack is a novel pattern -- token budget enforcement needs experimentation
-- [Phase 5]: Recharts 3.x may need --legacy-peer-deps for React 19 compatibility
+- [Phase 4]: RESOLVED -- Recharts 3.x installed with --legacy-peer-deps for React 19 compatibility
 
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-15-PLAN.md (Gap Closure for Final 3 UAT Items) -- Phase 3 fully complete
-Resume file: .planning/phases/03-chat-integration-and-core-rbac/03-15-SUMMARY.md
+Stopped at: Completed 04-01-PLAN.md (Schema, Services, UI Foundation) -- Phase 4 plan 01 done
+Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-01-SUMMARY.md
