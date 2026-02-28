@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Save, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react"
+import { Save, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { InstructionEditor } from "@/components/admin/instruction-editor"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { TOKEN_LIMITS } from "@/lib/token-counter"
+import { toast } from "@/components/ui/toast"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
@@ -29,16 +30,19 @@ interface RoleData {
   systemInstructions: string | null
 }
 
-type SaveStatus = "idle" | "saving" | "saved" | "error"
+type SaveStatus = "idle" | "saving"
 
 /**
  * System Instructions management page for Org Admin.
  *
  * Route: /org/[slug]/admin/instructions
  *
- * Allows Org Admin to set:
- * - Organization-wide system instructions (max 700 tokens)
- * - Role-specific system instructions (max 500 tokens per role)
+ * Features:
+ * - Toast notifications on save success/error
+ * - Unsaved changes tracking with dirty dot indicator
+ * - beforeunload warning when leaving with unsaved changes
+ * - Ctrl+S keyboard shortcut (via InstructionEditor)
+ * - Consistent filled primary save button styling
  */
 export default function InstructionsPage() {
   const params = useParams<{ slug: string }>()
@@ -46,17 +50,40 @@ export default function InstructionsPage() {
 
   // Organization instructions state
   const [orgInstructions, setOrgInstructions] = React.useState("")
+  const [orgSavedValue, setOrgSavedValue] = React.useState("")
   const [orgSaveStatus, setOrgSaveStatus] = React.useState<SaveStatus>("idle")
-  const [orgError, setOrgError] = React.useState<string | null>(null)
 
   // Roles state
   const [roles, setRoles] = React.useState<RoleData[]>([])
   const [roleInstructions, setRoleInstructions] = React.useState<Record<string, string>>({})
+  const [roleSavedValues, setRoleSavedValues] = React.useState<Record<string, string>>({})
   const [roleSaveStatuses, setRoleSaveStatuses] = React.useState<Record<string, SaveStatus>>({})
-  const [roleErrors, setRoleErrors] = React.useState<Record<string, string | null>>({})
 
   // Loading state
   const [loading, setLoading] = React.useState(true)
+
+  // Dirty state tracking
+  const orgDirty = orgInstructions !== orgSavedValue
+  const roleDirtyMap = React.useMemo(() => {
+    const map: Record<string, boolean> = {}
+    for (const role of roles) {
+      map[role.id] = (roleInstructions[role.id] || "") !== (roleSavedValues[role.id] || "")
+    }
+    return map
+  }, [roles, roleInstructions, roleSavedValues])
+
+  const anyDirty = orgDirty || Object.values(roleDirtyMap).some(Boolean)
+
+  // beforeunload warning when any section is dirty
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (anyDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [anyDirty])
 
   // Fetch org instructions and roles on mount
   React.useEffect(() => {
@@ -76,20 +103,24 @@ export default function InstructionsPage() {
         if (!cancelled) {
           if (instrRes.ok) {
             const instrData = await instrRes.json()
-            setOrgInstructions(instrData.systemInstructions || "")
+            const val = instrData.systemInstructions || ""
+            setOrgInstructions(val)
+            setOrgSavedValue(val)
           }
 
           if (rolesRes.ok) {
-            // Roles endpoint returns array directly
             const rolesData: RoleData[] = await rolesRes.json()
             setRoles(rolesData)
 
-            // Initialize role instructions from fetched data
             const initialRoleInstructions: Record<string, string> = {}
+            const initialSavedValues: Record<string, string> = {}
             for (const role of rolesData) {
-              initialRoleInstructions[role.id] = role.systemInstructions || ""
+              const val = role.systemInstructions || ""
+              initialRoleInstructions[role.id] = val
+              initialSavedValues[role.id] = val
             }
             setRoleInstructions(initialRoleInstructions)
+            setRoleSavedValues(initialSavedValues)
           }
 
           setLoading(false)
@@ -110,7 +141,6 @@ export default function InstructionsPage() {
   // Save org instructions
   const handleSaveOrgInstructions = React.useCallback(async () => {
     setOrgSaveStatus("saving")
-    setOrgError(null)
 
     try {
       const res = await fetch(`/api/org/${slug}/admin/instructions`, {
@@ -120,24 +150,25 @@ export default function InstructionsPage() {
       })
 
       if (res.ok) {
-        setOrgSaveStatus("saved")
-        setTimeout(() => setOrgSaveStatus("idle"), 3000)
+        setOrgSavedValue(orgInstructions)
+        setOrgSaveStatus("idle")
+        toast.success("Organization instructions saved")
       } else {
         const data = await res.json()
-        setOrgError(data.error || "Failed to save instructions")
-        setOrgSaveStatus("error")
+        setOrgSaveStatus("idle")
+        toast.error(data.error || "Failed to save organization instructions")
       }
     } catch {
-      setOrgError("Network error. Please try again.")
-      setOrgSaveStatus("error")
+      setOrgSaveStatus("idle")
+      toast.error("Network error. Please try again.")
     }
   }, [slug, orgInstructions])
 
   // Save role instructions
   const handleSaveRoleInstructions = React.useCallback(
     async (roleId: string) => {
+      const roleName = roles.find((r) => r.id === roleId)?.name || "role"
       setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "saving" }))
-      setRoleErrors((prev) => ({ ...prev, [roleId]: null }))
 
       try {
         const res = await fetch(
@@ -152,29 +183,23 @@ export default function InstructionsPage() {
         )
 
         if (res.ok) {
-          setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "saved" }))
-          setTimeout(
-            () =>
-              setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "idle" })),
-            3000
-          )
+          setRoleSavedValues((prev) => ({
+            ...prev,
+            [roleId]: roleInstructions[roleId] || "",
+          }))
+          setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "idle" }))
+          toast.success(`Instructions saved for ${roleName} role`)
         } else {
           const data = await res.json()
-          setRoleErrors((prev) => ({
-            ...prev,
-            [roleId]: data.error || "Failed to save instructions",
-          }))
-          setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "error" }))
+          setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "idle" }))
+          toast.error(data.error || `Failed to save instructions for ${roleName} role`)
         }
       } catch {
-        setRoleErrors((prev) => ({
-          ...prev,
-          [roleId]: "Network error. Please try again.",
-        }))
-        setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "error" }))
+        setRoleSaveStatuses((prev) => ({ ...prev, [roleId]: "idle" }))
+        toast.error(`Network error saving ${roleName} instructions. Please try again.`)
       }
     },
-    [slug, roleInstructions]
+    [slug, roleInstructions, roles]
   )
 
   if (loading) {
@@ -229,6 +254,8 @@ export default function InstructionsPage() {
           <InstructionEditor
             value={orgInstructions}
             onChange={setOrgInstructions}
+            onSave={handleSaveOrgInstructions}
+            saving={orgSaveStatus === "saving"}
             maxTokens={TOKEN_LIMITS.org}
             label="Organization Instructions"
             description="Set guidelines, rules, or context that applies to all users."
@@ -237,24 +264,15 @@ export default function InstructionsPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={handleSaveOrgInstructions}
-              disabled={orgSaveStatus === "saving"}
+              disabled={orgSaveStatus === "saving" || !orgDirty}
               size="sm"
             >
               <Save className="mr-2 h-4 w-4" />
               {orgSaveStatus === "saving" ? "Saving..." : "Save"}
+              {orgDirty && (
+                <span className="ml-2 h-2 w-2 rounded-full bg-amber-500" />
+              )}
             </Button>
-            {orgSaveStatus === "saved" && (
-              <span className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4" />
-                Saved
-              </span>
-            )}
-            {orgSaveStatus === "error" && orgError && (
-              <span className="flex items-center gap-1 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4" />
-                {orgError}
-              </span>
-            )}
           </div>
         </section>
 
@@ -280,7 +298,7 @@ export default function InstructionsPage() {
           ) : (
             roles.map((role) => {
               const saveStatus = roleSaveStatuses[role.id] || "idle"
-              const error = roleErrors[role.id] || null
+              const isDirty = roleDirtyMap[role.id] || false
 
               return (
                 <div key={role.id} className="space-y-3 rounded-lg border border-border p-4">
@@ -292,6 +310,8 @@ export default function InstructionsPage() {
                         [role.id]: val,
                       }))
                     }
+                    onSave={() => handleSaveRoleInstructions(role.id)}
+                    saving={saveStatus === "saving"}
                     maxTokens={TOKEN_LIMITS.role}
                     label={role.name}
                     description={
@@ -302,25 +322,15 @@ export default function InstructionsPage() {
                   <div className="flex items-center gap-3">
                     <Button
                       onClick={() => handleSaveRoleInstructions(role.id)}
-                      disabled={saveStatus === "saving"}
+                      disabled={saveStatus === "saving" || !isDirty}
                       size="sm"
-                      variant="outline"
                     >
                       <Save className="mr-2 h-4 w-4" />
                       {saveStatus === "saving" ? "Saving..." : "Save"}
+                      {isDirty && (
+                        <span className="ml-2 h-2 w-2 rounded-full bg-amber-500" />
+                      )}
                     </Button>
-                    {saveStatus === "saved" && (
-                      <span className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Saved
-                      </span>
-                    )}
-                    {saveStatus === "error" && error && (
-                      <span className="flex items-center gap-1 text-sm text-destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        {error}
-                      </span>
-                    )}
                   </div>
                 </div>
               )

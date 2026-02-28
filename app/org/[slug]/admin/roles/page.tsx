@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RoleModelAssignment } from "@/components/admin/role-model-assignment"
+import { AdminRoleCardsSkeleton } from "@/components/ui/skeleton-loaders"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -44,12 +45,33 @@ interface RoleData {
 }
 
 /**
+ * Default descriptions for system roles when no description is set.
+ */
+const SYSTEM_ROLE_DESCRIPTIONS: Record<string, string> = {
+  Technical: "Full access to all AI capabilities and development tools",
+  Business: "Standard access to AI models for business workflows",
+  Basic: "Essential AI access with limited model selection",
+}
+
+/**
+ * Get role description, falling back to system defaults or generic text.
+ */
+function getRoleDescription(role: RoleData): string {
+  if (role.description) return role.description
+  if (role.isSystemRole && SYSTEM_ROLE_DESCRIPTIONS[role.name]) {
+    return SYSTEM_ROLE_DESCRIPTIONS[role.name]
+  }
+  return "Custom role"
+}
+
+/**
  * Org Admin Role Settings Page
  *
  * Displays all roles for the organization with:
  * - Model assignment section (RoleModelAssignment component)
  * - Custom instructions toggle
  * - Personal MCP servers toggle with max count setting
+ * - Role descriptions and member counts
  *
  * Route: /org/[slug]/admin/roles
  */
@@ -238,18 +260,7 @@ export default function OrgAdminRolesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-4xl px-6 py-8">
-          <div className="mb-8 flex items-center gap-3">
-            <div className="h-10 w-10 animate-pulse rounded-lg bg-muted" />
-            <div className="space-y-1">
-              <div className="h-6 w-48 animate-pulse rounded bg-muted" />
-              <div className="h-4 w-64 animate-pulse rounded bg-muted" />
-            </div>
-          </div>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="mb-6 h-64 animate-pulse rounded-2xl border bg-muted/30" />
-          ))}
-        </div>
+        <AdminRoleCardsSkeleton />
       </div>
     )
   }
@@ -314,14 +325,14 @@ export default function OrgAdminRolesPage() {
                           </Badge>
                         )}
                       </CardTitle>
-                      {role.description && (
-                        <CardDescription>{role.description}</CardDescription>
-                      )}
+                      <CardDescription>{getRoleDescription(role)}</CardDescription>
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Users className="h-4 w-4" />
-                      <span>
-                        {role._count.members} member{role._count.members !== 1 ? "s" : ""}
+                      <span className={role._count.members === 0 ? "italic text-muted-foreground/60" : ""}>
+                        {role._count.members === 0
+                          ? "No members"
+                          : `${role._count.members} member${role._count.members !== 1 ? "s" : ""}`}
                       </span>
                     </div>
                   </div>
