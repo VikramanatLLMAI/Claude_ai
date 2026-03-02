@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve org context from URL (if present)
-    const slug = resolveOrgSlug(req);
+    // Resolve org context from URL (if present) with body.slug fallback for org login page
+    const slug = resolveOrgSlug(req) || body.slug || null;
     let organizationId: string | null = null;
     let orgInfo: { id: string; name: string; slug: string } | null = null;
 
