@@ -183,6 +183,25 @@ function getOrgSlugFromUrl(): string | null {
   return match ? match[1] : null
 }
 
+/**
+ * Check if a fetch response is a 403 FORCE_PASSWORD_CHANGE and redirect if so.
+ * Returns true if redirect was triggered, false otherwise.
+ */
+async function checkForcePasswordChange(response: Response): Promise<boolean> {
+  if (response.status === 403) {
+    try {
+      const data = await response.clone().json()
+      if (data.code === 'FORCE_PASSWORD_CHANGE' && data.redirectTo) {
+        window.location.href = data.redirectTo
+        return true
+      }
+    } catch {
+      // Not a JSON response or parse error — ignore
+    }
+  }
+  return false
+}
+
 // Admin role info is fetched from /api/org/[slug]/models endpoint (isOrgAdmin field)
 
 
@@ -1051,6 +1070,7 @@ function ChatContent({
             headers: getAuthHeaders(),
           })
           if (!res.ok) {
+            if (await checkForcePasswordChange(res)) return
             throw new Error(`HTTP ${res.status}`)
           }
           const data = await res.json()
@@ -1598,6 +1618,8 @@ function ChatContent({
                             }}
                             McpConnectionsSubmenu={McpConnectionsSubmenu}
                             onManageConnectors={onOpenMcpSettings}
+                            disabled={usageBlocked}
+                            disabledPlaceholder="Daily usage limit reached. Please wait for the limit to reset."
                           />
                         </motion.div>
 
@@ -1998,6 +2020,8 @@ function ChatContent({
                       }}
                       McpConnectionsSubmenu={McpConnectionsSubmenu}
                       onManageConnectors={onOpenMcpSettings}
+                      disabled={usageBlocked}
+                      disabledPlaceholder="Daily usage limit reached. Please wait for the limit to reset."
                     />
                     <p className="mt-2 text-center text-[10px] text-muted-foreground/50">
                       LLM at Scale.AI. All Rights Reserved. Confidential and Proprietary Information. Version 1.0
@@ -2072,6 +2096,7 @@ function FullChatApp() {
           headers: getAuthHeaders(),
         })
         if (!response.ok) {
+          if (await checkForcePasswordChange(response)) return
           console.error("[Chat] Failed to fetch permitted models:", response.status)
           return
         }
@@ -2103,6 +2128,7 @@ function FullChatApp() {
       })
 
       if (!response.ok) {
+        if (await checkForcePasswordChange(response)) return
         if (response.status === 401) {
           window.location.href = '/'
           return
