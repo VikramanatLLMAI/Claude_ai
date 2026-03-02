@@ -100,7 +100,7 @@ Plans:
   3. Org Admin can set password policy (length, complexity, expiry) and users are required to comply on their next login or password change without immediate lockout
   4. Users can view all their active sessions and revoke any specific session, and Org Admin can force-logout a user from all sessions
   5. Users can update their display name and avatar, and cannot change their own email or role
-**Plans**: 6 plans in 3 waves
+**Plans**: 9 plans in 4 waves
 
 Plans:
 - [ ] 04-01-PLAN.md -- Schema changes + service layer foundation + Tabs UI + dependency installation (Wave 1)
@@ -109,6 +109,9 @@ Plans:
 - [x] 04-04-PLAN.md -- Password policy management + force password reset + forced password change page + login integration (Wave 2, depends on 04-01)
 - [ ] 04-05-PLAN.md -- User profile management + session management in settings modal + force-logout API (Wave 2, depends on 04-01)
 - [ ] 04-06-PLAN.md -- Human verification checkpoint for all 30 Phase 4 requirements (Wave 3, depends on 04-02 through 04-05)
+- [x] 04-07-PLAN.md -- Gap closure: Zod validation fix (personalMcpMaxCount nonnegative) + role description pre-fill + chat textarea disabled state (Wave 1, standalone)
+- [ ] 04-08-PLAN.md -- Gap closure: Org login slug fix + 403 FORCE_PASSWORD_CHANGE interceptor in chat (Wave 1, standalone)
+- [ ] 04-09-PLAN.md -- Gap closure: Non-admin password policy endpoint for force-password-change + session lastUsedAt tracking + sessions tab current highlighting (Wave 1, standalone)
 
 ### Phase 5: Super Admin Dashboard
 **Goal**: Super Admin has a complete management panel at admin.llmatscale.ai with org management, API key management, platform analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts
@@ -190,7 +193,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Schema and Auth Foundation | 3/3 | Complete | 2026-02-26 |
 | 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
 | 3. Chat Integration and Core RBAC | 14/14 | Complete | 2026-02-28 |
-| 4. Role Configuration and Usage Limits | 4/6 | In Progress|  |
+| 4. Role Configuration and Usage Limits | 7/9 | In Progress|  |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |
 | 7. Theming, Branding, and Compliance | 0/3 | Not started | - |
