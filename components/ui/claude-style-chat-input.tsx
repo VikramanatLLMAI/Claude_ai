@@ -166,10 +166,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models, selectedModel, on
     const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const currentModel = models.find(m => m.id === selectedModel) || models[0];
-    const latestModels = models.filter(m => LATEST_MODEL_IDS.has(m.id));
-    const olderModels = models.filter(m => !LATEST_MODEL_IDS.has(m.id));
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -180,6 +176,30 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ models, selectedModel, on
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Guard against empty models array (e.g. before API fetch completes)
+    // Placed after all hooks to avoid React "rendered more hooks" error
+    if (!models || models.length === 0) {
+        return (
+            <div className="relative">
+                <button
+                    className="inline-flex items-center justify-center relative shrink-0 transition font-base duration-300 ease-[cubic-bezier(0.165,0.85,0.45,1)] h-8 rounded-xl px-3 min-w-[4rem] whitespace-nowrap !text-xs pl-2.5 pr-2 gap-1 text-text-300 dark:text-text-300"
+                    type="button"
+                    disabled
+                >
+                    <div className="font-ui inline-flex gap-[3px] text-[14px] h-[14px] leading-none items-baseline">
+                        <div className="flex items-center gap-[4px]">
+                            <div className="whitespace-nowrap select-none font-medium">Loading models...</div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        );
+    }
+
+    const currentModel = models.find(m => m.id === selectedModel) || models[0];
+    const latestModels = models.filter(m => LATEST_MODEL_IDS.has(m.id));
+    const olderModels = models.filter(m => !LATEST_MODEL_IDS.has(m.id));
 
     const renderModelItem = (model: Model) => (
         <button
@@ -307,10 +327,12 @@ interface ClaudeChatInputProps {
     onStop?: () => void;
     isThinkingEnabled?: boolean;
     onThinkingChange?: (enabled: boolean) => void;
+    disabled?: boolean;
+    disabledPlaceholder?: string;
 }
 
 export const ClaudeChatInput = forwardRef<ClaudeChatInputHandle, ClaudeChatInputProps>(
-    ({ onSendMessage, models: modelsProp, defaultModel, placeholder = "How can I help you today?", webSearchEnabled, onWebSearchChange, activeMcpIds, onMcpToggle, McpConnectionsSubmenu, onManageConnectors, isLoading, onStop, isThinkingEnabled: isThinkingEnabledProp, onThinkingChange }, ref) => {
+    ({ onSendMessage, models: modelsProp, defaultModel, placeholder = "How can I help you today?", webSearchEnabled, onWebSearchChange, activeMcpIds, onMcpToggle, McpConnectionsSubmenu, onManageConnectors, isLoading, onStop, isThinkingEnabled: isThinkingEnabledProp, onThinkingChange, disabled, disabledPlaceholder }, ref) => {
     const [message, setMessage] = useState("");
     const [files, setFiles] = useState<AttachedFile[]>([]);
     const [pastedContent, setPastedContent] = useState<{ id: string; content: string; timestamp: Date }[]>([]);
@@ -413,11 +435,12 @@ export const ClaudeChatInput = forwardRef<ClaudeChatInputHandle, ClaudeChatInput
     }, []);
 
     // Drag & Drop
-    const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+    const onDragOver = (e: React.DragEvent) => { e.preventDefault(); if (!disabled) setIsDragging(true); };
     const onDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); };
     const onDrop = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
+        if (disabled) return;
         if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
     };
 
@@ -454,6 +477,7 @@ export const ClaudeChatInput = forwardRef<ClaudeChatInputHandle, ClaudeChatInput
     };
 
     const handleSend = () => {
+        if (disabled) return;
         if (isLoading) return;
         if (!message.trim() && files.length === 0 && pastedContent.length === 0) return;
         const pastedAsFiles: AttachedFile[] = pastedContent.map(p => ({
@@ -499,6 +523,7 @@ export const ClaudeChatInput = forwardRef<ClaudeChatInputHandle, ClaudeChatInput
                 shadow-lg hover:shadow-xl
                 focus-within:shadow-xl
                 bg-white dark:bg-bg-200 font-sans antialiased
+                ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}>
 
                 <div className="flex flex-col px-3 pt-3 pb-2 gap-2">
@@ -532,10 +557,11 @@ export const ClaudeChatInput = forwardRef<ClaudeChatInputHandle, ClaudeChatInput
                                 onChange={(e) => setMessage(e.target.value)}
                                 onPaste={handlePaste}
                                 onKeyDown={handleKeyDown}
-                                placeholder={placeholder}
-                                className="w-full bg-transparent border-0 outline-none text-text-100 text-[16px] placeholder:text-text-400 resize-none overflow-hidden py-0 leading-relaxed block font-normal antialiased"
+                                placeholder={disabled && disabledPlaceholder ? disabledPlaceholder : placeholder}
+                                className={`w-full bg-transparent border-0 outline-none text-text-100 text-[16px] placeholder:text-text-400 resize-none overflow-hidden py-0 leading-relaxed block font-normal antialiased ${disabled ? 'cursor-not-allowed' : ''}`}
                                 rows={1}
-                                autoFocus
+                                autoFocus={!disabled}
+                                disabled={disabled}
                                 style={{ minHeight: '1.5em' }}
                             />
                         </div>
