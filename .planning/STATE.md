@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-02T10:46:41Z"
+last_updated: "2026-03-02T10:48:33Z"
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 31
-  completed_plans: 30
+  completed_plans: 31
 ---
 
 # Project State
@@ -18,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 4 in progress: Role Configuration and Usage Limits
+**Current focus:** Phase 4 complete: Role Configuration and Usage Limits
 
 ## Current Position
 
-Phase: 4 of 7 (in progress)
-Plan: 9 of 9 in current phase (8 complete, 1 pending)
-Status: Phase 4 plan 09 complete -- force-password-change policy fix and session tracking
-Last activity: 2026-03-02 -- Completed 04-09-PLAN.md (Force-Password-Change Policy Fix & Session Tracking)
+Phase: 4 of 7 (complete)
+Plan: 9 of 9 in current phase (9 complete, 0 pending)
+Status: Phase 4 complete -- all role configuration and usage limits plans done
+Last activity: 2026-03-02 -- Completed 04-08-PLAN.md (Org Login Slug Fix & Force-Password-Change Redirect)
 
-Progress: [####################] 97%
+Progress: [####################] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 30
 - Average duration: 8 min
-- Total execution time: 3.7 hours
+- Total execution time: 3.8 hours
 
 **By Phase:**
 
@@ -43,7 +43,7 @@ Progress: [####################] 97%
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
 | 03 | 7+7 | 65 min | 5 min |
-| 04 | 7 | 30 min | 4 min |
+| 04 | 8 | 37 min | 5 min |
 
 **Recent Trend:**
 - Last 5 plans: 04-03 (7 min), 04-04 (7 min), 04-05 (7 min), 04-07 (2 min), 04-09 (2 min)
@@ -157,6 +157,9 @@ Recent decisions affecting current work:
 - [04-02]: Modal CRUD pattern: read-only card grid + Dialog modal replaces inline editing
 - [04-07]: Description pre-fill already working in role-form-modal.tsx -- no changes needed
 - [04-07]: disabledPlaceholder as separate prop rather than overriding placeholder default
+- [04-08]: Used body.slug fallback (not new route) to minimize code changes and match existing login route structure
+- [04-08]: Module-level checkForcePasswordChange helper (not component callback) for reuse across FullChatApp and ChatContent
+- [04-08]: FORCE_PASSWORD_CHANGE intercepted on fetchModels, fetchConversations, and conversation loading
 - [04-09]: Created separate non-admin /password-policy endpoint (admin endpoint uses requireOrgAdmin, would fail for non-admin users)
 - [04-09]: Added /password-policy to forcePasswordChange exempt paths for force-change users
 - [04-09]: Session lastUsedAt tracked in both requireOrgAuth and requireAuth for comprehensive coverage
