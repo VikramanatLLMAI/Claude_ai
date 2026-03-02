@@ -68,7 +68,7 @@ export default function ForcePasswordChangePage() {
     // unauthenticated-style fetch or handle the 403 gracefully.
     async function fetchPolicy() {
       try {
-        const res = await fetch(`/api/org/${slug}/admin/security/password-policy`, {
+        const res = await fetch(`/api/org/${slug}/password-policy`, {
           headers: { Authorization: `Bearer ${token}` },
         })
 

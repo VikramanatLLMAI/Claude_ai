@@ -35,6 +35,7 @@ export interface AuthenticatedRequest extends NextRequest {
 export interface AuthResult {
   authenticated: boolean;
   user?: User;
+  sessionId?: string;
   error?: string;
   status?: number;
 }
@@ -120,6 +121,7 @@ export async function validateSession(req: NextRequest): Promise<AuthResult> {
     return {
       authenticated: true,
       user: session.user,
+      sessionId: session.id,
     };
   } catch (error) {
     console.error('Session validation error:', error);
@@ -180,6 +182,14 @@ export async function requireAuth(
       { error: auth.error || 'Unauthorized' },
       { status: auth.status || 401 }
     );
+  }
+
+  // Fire-and-forget: update session lastUsedAt
+  if (auth.sessionId) {
+    prisma.session.update({
+      where: { id: auth.sessionId },
+      data: { lastUsedAt: new Date() },
+    }).catch(() => {});
   }
 
   return { user: auth.user };
@@ -274,7 +284,8 @@ export async function requireOrgAuth(
     const isExemptPath =
       pathname.endsWith('/change-password') ||
       pathname.endsWith('/logout') ||
-      pathname.includes('/force-password-change');
+      pathname.includes('/force-password-change') ||
+      pathname.endsWith('/password-policy');
 
     if (!isExemptPath) {
       return NextResponse.json(
@@ -302,13 +313,23 @@ export async function requireOrgAuth(
     tenantDb: tenantPrisma(orgMember.organization.id),
   };
 
-  // 7. Fire-and-forget: update lastActiveAt
+  // 7. Fire-and-forget: update lastActiveAt and session lastUsedAt
   prisma.orgMember.update({
     where: { id: orgMember.id },
     data: { lastActiveAt: new Date() },
   }).catch(() => {
     // Silently ignore errors — this is non-critical
   });
+
+  // Fire-and-forget: update session lastUsedAt for accurate session timestamps
+  if (auth.sessionId) {
+    prisma.session.update({
+      where: { id: auth.sessionId },
+      data: { lastUsedAt: new Date() },
+    }).catch(() => {
+      // Silently ignore errors — this is best-effort
+    });
+  }
 
   return context;
 }
