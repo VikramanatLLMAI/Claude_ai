@@ -416,7 +416,13 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
       const res = await fetch(`/api/org/${orgSlug}/sessions`, { headers: getAuthHeaders() })
       if (res.ok) {
         const data = await res.json()
-        setSessions(data.sessions || [])
+        // Sort: current session first, then by lastUsedAt descending
+        const sorted = (data.sessions || []).sort((a: SessionData, b: SessionData) => {
+          if (a.isCurrent && !b.isCurrent) return -1
+          if (!a.isCurrent && b.isCurrent) return 1
+          return 0
+        })
+        setSessions(sorted)
       }
     } catch (error) {
       console.error("Error loading sessions:", error)
@@ -1458,19 +1464,27 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                           return (
                             <div
                               key={session.id}
-                              className="rounded-lg border border-border p-4"
+                              className={`rounded-lg border p-4 ${
+                                session.isCurrent
+                                  ? "border-green-500/30 bg-green-500/5 dark:border-green-500/20 dark:bg-green-500/5"
+                                  : "border-border"
+                              }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="flex size-9 items-center justify-center rounded-full bg-muted">
-                                    <DeviceIcon className="size-4 text-muted-foreground" />
+                                  <div className={`flex size-9 items-center justify-center rounded-full ${
+                                    session.isCurrent ? "bg-green-500/10" : "bg-muted"
+                                  }`}>
+                                    <DeviceIcon className={`size-4 ${
+                                      session.isCurrent ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
+                                    }`} />
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium text-foreground">
                                       {session.browser} on {session.os}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                      {session.ipAddress || "Unknown IP"} &middot; Active {getRelativeTime(session.lastUsedAt)}
+                                      {session.ipAddress || "Unknown IP"} &middot; {session.isCurrent ? "Active now" : `Active ${getRelativeTime(session.lastUsedAt)}`}
                                     </p>
                                   </div>
                                 </div>
