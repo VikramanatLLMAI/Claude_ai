@@ -16,7 +16,8 @@ import { z } from 'zod';
 /**
  * Zod schema for role creation payload.
  * name: required (3-50 chars), description: optional (max 200 chars),
- * allowedModels: string array, limits: positive integers or null.
+ * allowedModels: string array, limits: positive integers or null,
+ * personalMcpMaxCount: nonnegative integer (0 means MCP disabled).
  */
 const CreateRoleSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters').max(50, 'Name must be at most 50 characters'),
@@ -25,7 +26,7 @@ const CreateRoleSchema = z.object({
   systemInstructions: z.string().optional(),
   customInstructionsEnabled: z.boolean().optional(),
   personalMcpEnabled: z.boolean().optional(),
-  personalMcpMaxCount: z.number().int().positive().optional(),
+  personalMcpMaxCount: z.number().int().nonnegative().optional(),
   dailyRequestLimit: z.number().int().positive().nullable().optional(),
   dailyTokenLimit: z.number().int().positive().nullable().optional(),
 });

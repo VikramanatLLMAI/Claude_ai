@@ -29,7 +29,7 @@ const UpdateRoleSchema = z.object({
   systemInstructions: z.string().optional().nullable(),
   customInstructionsEnabled: z.boolean().optional(),
   personalMcpEnabled: z.boolean().optional(),
-  personalMcpMaxCount: z.number().int().positive().optional(),
+  personalMcpMaxCount: z.number().int().nonnegative().optional(),
   dailyRequestLimit: z.number().int().positive().nullable().optional(),
   dailyTokenLimit: z.number().int().positive().nullable().optional(),
 });
