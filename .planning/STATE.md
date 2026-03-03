@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 4 of 7 (complete)
-Plan: 9 of 9 in current phase (9 complete, 0 pending)
-Status: Phase 4 complete -- all role configuration and usage limits plans done
-Last activity: 2026-03-02 -- Completed 04-08-PLAN.md (Org Login Slug Fix & Force-Password-Change Redirect)
+Plan: 10 of 10 in current phase (10 complete, 0 pending)
+Status: Phase 4 complete -- all role configuration and usage limits plans done (including gap closure 04-10)
+Last activity: 2026-03-03 -- Completed 04-10-PLAN.md (Org Auth Session Fallback and UsageBanner Mount Fix)
 
 Progress: [####################] 100%
 
@@ -177,6 +177,9 @@ Recent decisions affecting current work:
 - [04-09]: Added /password-policy to forcePasswordChange exempt paths for force-change users
 - [04-09]: Session lastUsedAt tracked in both requireOrgAuth and requireAuth for comprehensive coverage
 - [04-09]: validateSession now returns sessionId for downstream session tracking
+- [04-10]: Session-based org fallback in requireOrgAuth uses prisma.session.findUnique(id) to get organizationId when resolveOrgSlug returns null -- fixes flat /api/* path 400 errors for org users
+- [04-10]: UsageBanner always mounted when orgSlug set; CSS hidden class on wrapper suppresses visual output on welcome screen -- ensures onBlockedChange fires on first poll
+- [04-10]: resolvedSlug = slug ?? orgMember.organization.slug for forcePasswordChange redirect handles both URL-slug and session-based resolution paths
 
 ### Pending Todos
 
@@ -190,6 +193,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-02
-Stopped at: Completed 04-08-PLAN.md (Org Login Slug Fix & Force-Password-Change Redirect) -- Phase 4 complete
-Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-08-SUMMARY.md
+Last session: 2026-03-03
+Stopped at: Completed 04-10-PLAN.md (Org Auth Session Fallback and UsageBanner Mount Fix) -- Phase 4 gap closure complete
+Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-10-SUMMARY.md
