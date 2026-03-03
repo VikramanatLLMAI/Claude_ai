@@ -53,6 +53,7 @@ export function FindMyOrg() {
         const session = JSON.parse(sessionData)
         if (session.expiresAt && new Date(session.expiresAt) > new Date()) {
           // Valid session exists - verify token with server and redirect
+          const localOrgSlug = session.organization?.slug ?? null
           fetch("/api/auth/me", {
             headers: { Authorization: `Bearer ${token}` },
           })
@@ -64,9 +65,15 @@ export function FindMyOrg() {
               if (data.user?.isSuperAdmin) {
                 router.replace("/admin")
               } else {
-                // For now, redirect to /chat (existing route)
-                // In later phases, this will redirect to /org/{slug}/chat
-                router.replace("/chat")
+                // Use org slug from localStorage session (stored by org-login-page on login)
+                if (localOrgSlug) {
+                  router.replace(`/org/${localOrgSlug}/chat`)
+                } else {
+                  // No org context in session — clear stale session and show the form
+                  window.localStorage.removeItem(AUTH_SESSION_KEY)
+                  window.localStorage.removeItem(AUTH_TOKEN_KEY)
+                  setIsCheckingSession(false)
+                }
               }
             })
             .catch(() => {
