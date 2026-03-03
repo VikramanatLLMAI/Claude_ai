@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 4 of 7 (complete)
-Plan: 11 of 11 in current phase (11 complete, 0 pending)
-Status: Phase 4 complete -- all role configuration and usage limits plans done (including gap closures 04-10 and 04-11)
-Last activity: 2026-03-03 -- Completed 04-11-PLAN.md (UsageBanner welcome-screen visibility and metric selection fixes)
+Plan: 12 of 13 in current phase (12 complete, 1 pending)
+Status: Phase 4 gap closure in progress -- 04-12 session isolation fixes complete, 04-13 pending
+Last activity: 2026-03-03 -- Completed 04-12-PLAN.md (Session isolation fixes: isSuperAdmin guard on admin layout, org login SA bypass, root redirect to /org/slug/chat)
 
 Progress: [####################] 100%
 
@@ -56,10 +56,10 @@ Progress: [####################] 100%
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
 | 03 | 7+7 | 65 min | 5 min |
-| 04 | 10 | 52 min | 5 min |
+| 04 | 12 | 54 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-05 (7 min), 04-07 (2 min), 04-09 (2 min), 04-08 (5 min), 04-11 (10 min)
+- Last 5 plans: 04-07 (2 min), 04-09 (2 min), 04-08 (5 min), 04-11 (10 min), 04-12 (2 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -183,6 +183,10 @@ Recent decisions affecting current work:
 - [04-11]: isWelcomeVisible && !usageBlocked as hidden gate -- blocked users see banner on welcome screen; unblocked users do not (no visual regression)
 - [04-11]: reqPct >= tokPct tie-break for primaryStatus selection -- requests win when equal, maintaining prior behaviour; null metrics use -1 so any active metric wins
 - [04-11]: isRequestBased uses identity comparison (primaryStatus === status.requestStatus) after percentage-based selection for consistency
+- [04-12]: isSuperAdmin flag persisted in admin login localStorage session so admin layout guard works after page reload
+- [04-12]: Admin layout useEffect redirects org users to /org/{slug}/chat (not /admin/login) for better UX
+- [04-12]: Org login useEffect returns early for SA sessions without touching localStorage
+- [04-12]: find-my-org reads org slug from localStorage before fetch to avoid extra API call
 
 ### Pending Todos
 
@@ -197,5 +201,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 04-11-PLAN.md (UsageBanner welcome-screen visibility and metric selection fixes) -- Phase 4 fully signed off
-Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-11-SUMMARY.md
+Stopped at: Completed 04-12-PLAN.md (session isolation fixes). 04-13 gap closure plan pending.
+Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-13-PLAN.md
