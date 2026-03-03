@@ -102,6 +102,7 @@ export function ModelRegistryTable({
     new Set()
   )
   const [deleteTarget, setDeleteTarget] = React.useState<ModelData | null>(null)
+  const [deprecateTarget, setDeprecateTarget] = React.useState<ModelData | null>(null)
   const grouped = groupModelsByGeneration(models)
 
   // Expand all groups by default
@@ -126,6 +127,13 @@ export function ModelRegistryTable({
     if (deleteTarget) {
       onDelete(deleteTarget)
       setDeleteTarget(null)
+    }
+  }
+
+  const handleDeprecateConfirm = () => {
+    if (deprecateTarget) {
+      onDeprecate(deprecateTarget)
+      setDeprecateTarget(null)
     }
   }
 
@@ -288,7 +296,7 @@ export function ModelRegistryTable({
                                   <Button
                                     variant="ghost"
                                     size="icon-sm"
-                                    onClick={() => onDeprecate(model)}
+                                    onClick={() => setDeprecateTarget(model)}
                                     title="Deprecate model"
                                   >
                                     <Ban className="h-3.5 w-3.5 text-amber-600" />
@@ -337,6 +345,36 @@ export function ModelRegistryTable({
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deprecate confirmation dialog */}
+      <Dialog
+        open={!!deprecateTarget}
+        onOpenChange={(open) => !open && setDeprecateTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deprecate Model</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to deprecate{" "}
+              <strong>{deprecateTarget?.displayName}</strong>? The model will
+              be marked as deprecated and hidden from new role assignments.
+              Existing roles that reference this model will continue to work.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeprecateTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={handleDeprecateConfirm}
+            >
+              Deprecate
             </Button>
           </DialogFooter>
         </DialogContent>
