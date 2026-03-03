@@ -100,7 +100,7 @@ Plans:
   3. Org Admin can set password policy (length, complexity, expiry) and users are required to comply on their next login or password change without immediate lockout
   4. Users can view all their active sessions and revoke any specific session, and Org Admin can force-logout a user from all sessions
   5. Users can update their display name and avatar, and cannot change their own email or role
-**Plans**: 9 plans in 4 waves
+**Plans**: 10 plans in 4 waves
 
 Plans:
 - [ ] 04-01-PLAN.md -- Schema changes + service layer foundation + Tabs UI + dependency installation (Wave 1)
@@ -112,6 +112,7 @@ Plans:
 - [x] 04-07-PLAN.md -- Gap closure: Zod validation fix (personalMcpMaxCount nonnegative) + role description pre-fill + chat textarea disabled state (Wave 1, standalone)
 - [x] 04-08-PLAN.md -- Gap closure: Org login slug fix + 403 FORCE_PASSWORD_CHANGE interceptor in chat (Wave 1, standalone)
 - [x] 04-09-PLAN.md -- Gap closure: Non-admin password policy endpoint for force-password-change + session lastUsedAt tracking + sessions tab current highlighting (Wave 1, standalone)
+- [ ] 04-10-PLAN.md -- Gap closure: requireOrgAuth session-based org fallback for flat /api/* paths + UsageBanner unconditional mount (Wave 1, standalone)
 
 ### Phase 5: Super Admin Dashboard
 **Goal**: Super Admin has a complete management panel at admin.llmatscale.ai with org management, API key management, platform analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts
@@ -193,7 +194,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Schema and Auth Foundation | 3/3 | Complete | 2026-02-26 |
 | 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
 | 3. Chat Integration and Core RBAC | 14/14 | Complete | 2026-02-28 |
-| 4. Role Configuration and Usage Limits | 9/9 | Complete | 2026-03-02 |
+| 4. Role Configuration and Usage Limits | 9/10 | In progress | - |
 | 5. Super Admin Dashboard | 0/3 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |
 | 7. Theming, Branding, and Compliance | 0/3 | Not started | - |
