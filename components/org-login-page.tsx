@@ -62,6 +62,9 @@ export function OrgLoginPage({ org }: OrgLoginPageProps) {
       try {
         const session = JSON.parse(sessionData)
         if (session.expiresAt && new Date(session.expiresAt) > new Date()) {
+          // Super Admin sessions must NOT be auto-redirected into org chat.
+          // SA should log in explicitly as an org member on this page.
+          if (session.isSuperAdmin === true) return
           router.replace(`/org/${org.slug}/chat`)
         } else {
           window.localStorage.removeItem(AUTH_SESSION_KEY)
