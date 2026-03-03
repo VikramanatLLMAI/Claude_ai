@@ -1537,9 +1537,11 @@ function ChatContent({
           </div>
         ) : (
         <ChatContainerRoot className={cn("h-full", isWelcomeVisible && "!overflow-hidden")}>
-              {/* Usage limit banner - rendered above scrollable chat content */}
-              {orgSlug && !isWelcomeVisible && (
-                <div className="px-5 pt-2">
+              {/* Usage limit banner - always mounted when orgSlug is set so polling starts immediately.
+                  Visual wrapper is CSS-hidden on welcome screen; onBlockedChange fires on first poll
+                  regardless of welcome-screen state, ensuring usageBlocked is accurate from mount. */}
+              {orgSlug && (
+                <div className={cn("px-5 pt-2", isWelcomeVisible && "hidden")}>
                   <UsageBanner orgSlug={orgSlug} onBlockedChange={setUsageBlocked} />
                 </div>
               )}
