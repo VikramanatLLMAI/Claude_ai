@@ -31,14 +31,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 4 complete: Role Configuration and Usage Limits (all gap closures done)
+**Current focus:** Phase 4 complete: Role Configuration and Usage Limits (all gap closures done including 04-14 catch-all)
 
 ## Current Position
 
 Phase: 4 of 7 (complete)
-Plan: 13 of 13 in current phase (13 complete, 0 pending)
-Status: Phase 4 fully complete -- all gap closures done (04-12 session isolation + 04-13 deprecate confirm)
-Last activity: 2026-03-03 -- Completed 04-13-PLAN.md (Deprecate model confirmation dialog, BUG-4 resolved)
+Plan: 14 of 14 in current phase (14 complete, 0 pending)
+Status: Phase 4 fully complete -- all gap closures done (04-12 session isolation + 04-13 deprecate confirm + 04-14 admin catch-all)
+Last activity: 2026-03-03 -- Completed 04-14-PLAN.md (Admin catch-all page, fixes org-user /admin/* 404 UAT gap)
 
 Progress: [####################] 100%
 
@@ -56,10 +56,10 @@ Progress: [####################] 100%
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
 | 03 | 7+7 | 65 min | 5 min |
-| 04 | 13 | 57 min | 4 min |
+| 04 | 14 | 58 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-09 (2 min), 04-08 (5 min), 04-11 (10 min), 04-12 (2 min), 04-13 (3 min)
+- Last 5 plans: 04-08 (5 min), 04-11 (10 min), 04-12 (2 min), 04-13 (3 min), 04-14 (1 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -189,6 +189,7 @@ Recent decisions affecting current work:
 - [04-12]: find-my-org reads org slug from localStorage before fetch to avoid extra API call
 - [04-13]: deprecateTarget state and handleDeprecateConfirm mirror deleteTarget/handleDeleteConfirm exactly -- consistent pattern, no new abstractions needed
 - [04-13]: Pre-existing TypeScript error in app/api/artifacts/[id]/route.ts (tenantDb.artifact unknown type) confirmed pre-existing via git stash test -- deferred to deferred-items.md, out of scope
+- [04-14]: Catch-all page mirrors app/admin/page.tsx exactly -- no auth logic added; admin layout owns all auth/redirect decisions; Next.js catch-all route ([...catchAll]/page.tsx) activates layout for any unmatched /admin/* path
 
 ### Pending Todos
 
@@ -203,5 +204,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 04-13-PLAN.md (deprecate confirmation dialog, BUG-4). Phase 4 fully complete including all gap closures.
+Stopped at: Completed 04-14-PLAN.md (admin catch-all page). Phase 4 fully complete including all gap closures.
 Resume file: N/A -- Phase 4 complete, ready for Phase 5
