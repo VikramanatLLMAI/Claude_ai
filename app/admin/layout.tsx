@@ -21,6 +21,8 @@ function hasValidSession(): boolean {
       window.localStorage.removeItem(AUTH_TOKEN_KEY)
       return false
     }
+    // Only Super Admin sessions may access /admin/*
+    if (parsed.isSuperAdmin !== true) return false
     return true
   } catch {
     return false
@@ -37,7 +39,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isLoginPage) return
     if (typeof window === "undefined") return
-    if (!hasValidSession()) {
+
+    const sessionData = window.localStorage.getItem(AUTH_SESSION_KEY)
+    const token = window.localStorage.getItem(AUTH_TOKEN_KEY)
+
+    if (!sessionData || !token) {
+      router.replace("/admin/login")
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(sessionData)
+      const expired = parsed.expiresAt && new Date(parsed.expiresAt) <= new Date()
+      if (expired) {
+        window.localStorage.removeItem(AUTH_SESSION_KEY)
+        window.localStorage.removeItem(AUTH_TOKEN_KEY)
+        router.replace("/admin/login")
+        return
+      }
+      if (parsed.isSuperAdmin !== true) {
+        // Org user accidentally navigated to /admin — redirect to their org chat
+        const orgSlug = parsed.organization?.slug ?? null
+        router.replace(orgSlug ? `/org/${orgSlug}/chat` : "/")
+      }
+    } catch {
       router.replace("/admin/login")
     }
   }, [router, isLoginPage])
