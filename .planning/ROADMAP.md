@@ -112,7 +112,8 @@ Plans:
 - [x] 04-07-PLAN.md -- Gap closure: Zod validation fix (personalMcpMaxCount nonnegative) + role description pre-fill + chat textarea disabled state (Wave 1, standalone)
 - [x] 04-08-PLAN.md -- Gap closure: Org login slug fix + 403 FORCE_PASSWORD_CHANGE interceptor in chat (Wave 1, standalone)
 - [x] 04-09-PLAN.md -- Gap closure: Non-admin password policy endpoint for force-password-change + session lastUsedAt tracking + sessions tab current highlighting (Wave 1, standalone)
-- [ ] 04-10-PLAN.md -- Gap closure: requireOrgAuth session-based org fallback for flat /api/* paths + UsageBanner unconditional mount (Wave 1, standalone)
+- [x] 04-10-PLAN.md -- Gap closure: requireOrgAuth session-based org fallback for flat /api/* paths + UsageBanner unconditional mount (Wave 1, standalone)
+- [x] 04-11-PLAN.md -- Gap closure: UsageBanner welcome-screen visibility when blocked + highest-percentage metric selection (Wave 1, standalone)
 
 ### Phase 5: Super Admin Dashboard
 **Goal**: Super Admin has a complete management panel at admin.llmatscale.ai with org management, API key management, platform analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts

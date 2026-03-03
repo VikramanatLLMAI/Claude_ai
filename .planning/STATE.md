@@ -2,39 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-03T05:16:41.888Z"
-progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 32
-  completed_plans: 32
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-02T13:25:27.093Z"
-progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 31
-  completed_plans: 31
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in-progress
-last_updated: "2026-03-02T10:48:33Z"
+last_updated: "2026-03-03T06:20:16Z"
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 31
-  completed_plans: 31
+  total_plans: 32
+  completed_plans: 32
 ---
 
 # Project State
@@ -49,16 +23,16 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 4 of 7 (complete)
-Plan: 10 of 10 in current phase (10 complete, 0 pending)
-Status: Phase 4 complete -- all role configuration and usage limits plans done (including gap closure 04-10)
-Last activity: 2026-03-03 -- Completed 04-10-PLAN.md (Org Auth Session Fallback and UsageBanner Mount Fix)
+Plan: 11 of 11 in current phase (11 complete, 0 pending)
+Status: Phase 4 complete -- all role configuration and usage limits plans done (including gap closures 04-10 and 04-11)
+Last activity: 2026-03-03 -- Completed 04-11-PLAN.md (UsageBanner welcome-screen visibility and metric selection fixes)
 
 Progress: [####################] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
+- Total plans completed: 32
 - Average duration: 8 min
 - Total execution time: 3.9 hours
 
@@ -69,11 +43,11 @@ Progress: [####################] 100%
 | 01 | 3 | 91 min | 30 min |
 | 02 | 4 | 24 min | 6 min |
 | 03 | 7+7 | 65 min | 5 min |
-| 04 | 9 | 42 min | 5 min |
+| 04 | 10 | 52 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-04 (7 min), 04-05 (7 min), 04-07 (2 min), 04-09 (2 min), 04-08 (5 min)
-- Trend: Improving
+- Last 5 plans: 04-05 (7 min), 04-07 (2 min), 04-09 (2 min), 04-08 (5 min), 04-11 (10 min)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -193,6 +167,9 @@ Recent decisions affecting current work:
 - [04-10]: Session-based org fallback in requireOrgAuth uses prisma.session.findUnique(id) to get organizationId when resolveOrgSlug returns null -- fixes flat /api/* path 400 errors for org users
 - [04-10]: UsageBanner always mounted when orgSlug set; CSS hidden class on wrapper suppresses visual output on welcome screen -- ensures onBlockedChange fires on first poll
 - [04-10]: resolvedSlug = slug ?? orgMember.organization.slug for forcePasswordChange redirect handles both URL-slug and session-based resolution paths
+- [04-11]: isWelcomeVisible && !usageBlocked as hidden gate -- blocked users see banner on welcome screen; unblocked users do not (no visual regression)
+- [04-11]: reqPct >= tokPct tie-break for primaryStatus selection -- requests win when equal, maintaining prior behaviour; null metrics use -1 so any active metric wins
+- [04-11]: isRequestBased uses identity comparison (primaryStatus === status.requestStatus) after percentage-based selection for consistency
 
 ### Pending Todos
 
@@ -207,5 +184,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 04-10-PLAN.md (Org Auth Session Fallback and UsageBanner Mount Fix) -- Phase 4 gap closure complete
-Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-10-SUMMARY.md
+Stopped at: Completed 04-11-PLAN.md (UsageBanner welcome-screen visibility and metric selection fixes) -- Phase 4 fully signed off
+Resume file: .planning/phases/04-role-configuration-and-usage-limits/04-11-SUMMARY.md
