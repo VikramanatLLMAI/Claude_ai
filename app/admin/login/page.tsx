@@ -88,6 +88,7 @@ export default function SuperAdminLoginPage() {
           user: data.user,
           signedInAt: new Date().toISOString(),
           expiresAt: data.expiresAt,
+          isSuperAdmin: data.isSuperAdmin ?? false,
         })
       )
 
