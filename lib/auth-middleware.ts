@@ -239,28 +239,63 @@ export async function requireOrgAuth(
 
   // 3. Resolve org slug from request URL
   const slug = resolveOrgSlug(req);
-  if (!slug) {
-    return NextResponse.json(
-      { error: 'Organization context required' },
-      { status: 400 }
-    );
-  }
 
   // 4. Query org membership with organization and role included
-  const orgMember = await prisma.orgMember.findFirst({
-    where: {
-      userId: user.id,
-      organization: {
-        slug,
-        deletedAt: null,
-        status: 'ACTIVE',
+  // Dual-path approach: slug from URL (Path A) or organizationId from session (Path B)
+  let orgMember: (Awaited<ReturnType<typeof prisma.orgMember.findFirst>> & {
+    organization: Organization;
+    role: Role;
+  }) | null = null;
+
+  if (slug) {
+    // Path A: slug from URL (e.g., /api/org/:slug/... routes)
+    orgMember = await prisma.orgMember.findFirst({
+      where: {
+        userId: user.id,
+        organization: {
+          slug,
+          deletedAt: null,
+          status: 'ACTIVE',
+        },
       },
-    },
-    include: {
-      organization: true,
-      role: true,
-    },
-  });
+      include: {
+        organization: true,
+        role: true,
+      },
+    });
+  } else {
+    // Path B: no slug in URL — resolve org from session.organizationId
+    // For flat /api/* paths (conversations, chat, mcp/connections) that carry no org slug
+    const sessionRecord = auth.sessionId
+      ? await prisma.session.findUnique({
+          where: { id: auth.sessionId },
+          select: { organizationId: true },
+        })
+      : null;
+
+    const orgId = sessionRecord?.organizationId ?? null;
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'Organization context required' },
+        { status: 400 }
+      );
+    }
+
+    orgMember = await prisma.orgMember.findFirst({
+      where: {
+        userId: user.id,
+        organizationId: orgId,
+        organization: {
+          deletedAt: null,
+          status: 'ACTIVE',
+        },
+      },
+      include: {
+        organization: true,
+        role: true,
+      },
+    });
+  }
 
   if (!orgMember) {
     return NextResponse.json(
@@ -288,11 +323,13 @@ export async function requireOrgAuth(
       pathname.endsWith('/password-policy');
 
     if (!isExemptPath) {
+      // When slug is null (session path), derive it from the resolved orgMember
+      const resolvedSlug = slug ?? orgMember.organization.slug;
       return NextResponse.json(
         {
           error: 'Password change required',
           code: 'FORCE_PASSWORD_CHANGE',
-          redirectTo: `/org/${slug}/force-password-change`,
+          redirectTo: `/org/${resolvedSlug}/force-password-change`,
         },
         { status: 403 }
       );
