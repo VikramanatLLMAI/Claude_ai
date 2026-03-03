@@ -124,9 +124,11 @@ export function UsageBanner({ orgSlug, onBlockedChange }: UsageBannerProps) {
   const isBlocked = status.blocked
   const resetTimeStr = formatResetTime(status.resetAt)
 
-  // Build the display text
-  const primaryStatus = status.requestStatus ?? status.tokenStatus
-  const isRequestBased = !!status.requestStatus
+  // Build the display text — select whichever metric has the higher percentage
+  const reqPct = status.requestStatus?.percentage ?? -1
+  const tokPct = status.tokenStatus?.percentage ?? -1
+  const primaryStatus = reqPct >= tokPct ? status.requestStatus : status.tokenStatus
+  const isRequestBased = primaryStatus === status.requestStatus
   const label = isRequestBased ? "requests" : "tokens"
   const currentFormatted = primaryStatus ? formatNumber(primaryStatus.current) : ""
   const limitFormatted = primaryStatus ? formatNumber(primaryStatus.limit) : ""
