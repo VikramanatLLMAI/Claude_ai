@@ -349,6 +349,7 @@ model PlatformSettings {
   sessionExpiryDays Int      @default(30) @map("session_expiry_days")
   maintenanceMode   Boolean  @default(false) @map("maintenance_mode")
   featureToggles    Json     @default("{}") @map("feature_toggles")
+  platformPrompt    String?  @map("platform_prompt") @db.Text
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
