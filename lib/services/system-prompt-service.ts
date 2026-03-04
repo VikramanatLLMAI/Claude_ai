@@ -2,7 +2,7 @@
  * System Prompt Composition Service
  *
  * Composes the 4-layer system prompt stack with XML delimiters:
- * 1. Platform instructions (hardcoded, not editable via UI)
+ * 1. Platform instructions (from PlatformSettings DB or hardcoded fallback)
  * 2. Org instructions (from OrgSettings, sanitized)
  * 3. Role instructions (from Role, sanitized)
  * 4. User context (name, role, custom instructions if enabled, sanitized)
@@ -16,8 +16,56 @@
  * Covers: PRMT-01, PRMT-02, PRMT-03, PRMT-04, PRMT-06, SAFE-08
  */
 
-import { buildSystemPromptWithTools } from '@/lib/system-prompts';
+import { buildSystemPromptWithTools, DEFAULT_PLATFORM_PROMPT } from '@/lib/system-prompts';
 import { sanitizePromptLayer } from '@/lib/prompt-sanitizer';
+import { getPlatformSettings } from '@/lib/services/platform-settings-service';
+
+// ============================================
+// Platform Prompt Accessor
+// ============================================
+
+/**
+ * Get the platform prompt for Layer 1 of the 4-layer prompt stack.
+ *
+ * Checks PlatformSettings DB record first; falls back to the hardcoded default
+ * when no custom prompt has been configured.
+ *
+ * This is an async function because it reads from the database.
+ * Use it in the chat route (server-side) when composing the system prompt.
+ *
+ * @param availableTools - Tool names for tool section generation
+ * @param mcpToolDescriptions - MCP tool descriptions
+ */
+export async function getPlatformPrompt(
+  availableTools: string[],
+  mcpToolDescriptions: { name: string; description: string }[]
+): Promise<string> {
+  try {
+    const settings = await getPlatformSettings();
+    if (settings.platformPrompt && settings.platformPrompt.trim()) {
+      return settings.platformPrompt;
+    }
+  } catch {
+    // Silently fall back to default if DB read fails
+  }
+  return buildSystemPromptWithTools(availableTools, mcpToolDescriptions);
+}
+
+/**
+ * Get just the raw platform prompt text (without tool sections).
+ * Used by the system prompt editor to display and save the prompt.
+ */
+export async function getRawPlatformPrompt(): Promise<string> {
+  try {
+    const settings = await getPlatformSettings();
+    if (settings.platformPrompt && settings.platformPrompt.trim()) {
+      return settings.platformPrompt;
+    }
+  } catch {
+    // Silently fall back to default
+  }
+  return DEFAULT_PLATFORM_PROMPT;
+}
 
 // ============================================
 // Types
@@ -57,7 +105,9 @@ export function composeSystemPrompt(
   const parts: string[] = [];
 
   // Layer 1: Platform instructions (PRMT-01)
-  // The platform prompt is hardcoded and not editable via UI.
+  // Note: composeSystemPrompt is synchronous; callers should use getPlatformPrompt()
+  // for the DB-backed prompt. This sync version uses the hardcoded default.
+  // For the full async version, use the chat route which calls getPlatformPrompt().
   const platformPrompt = buildSystemPromptWithTools(availableTools, mcpToolDescriptions);
   parts.push(`<platform-instructions>\n${platformPrompt}\n</platform-instructions>`);
 

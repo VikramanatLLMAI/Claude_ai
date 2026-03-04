@@ -38,11 +38,18 @@ Discover before querying: list tables and describe schemas first. Combine MCP wi
 Don't search for private individuals' personal information, generate content that facilitates harm, execute malicious code, or build deceptive interfaces.`;
 
 /**
- * Get the base system prompt
+ * Get the base system prompt (hardcoded default).
+ * For database-backed platform prompt, use getPlatformPrompt() from platform-settings-service.
  */
 export function getSystemPrompt(): string {
   return BASE_PROMPT;
 }
+
+/**
+ * Export the default platform prompt for use as fallback.
+ * Used by the system prompt editor page to populate the "Reset to Default" action.
+ */
+export const DEFAULT_PLATFORM_PROMPT = BASE_PROMPT;
 
 /**
  * Build a complete system prompt with dynamic tool descriptions
