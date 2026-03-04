@@ -318,6 +318,24 @@ export const RoleInstructionsSchema = z.object({
   systemInstructions: z.string().max(Math.ceil(500 * 4 * 1.05), 'Instructions text is too long'),
 });
 
+// ============================================
+// Audit Log Filter Schema (Phase 5 Plan 07)
+// ============================================
+
+export const AuditLogFilterSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(10).max(50).default(25),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  organizationId: z.string().uuid().optional(),
+  action: z.string().optional(),
+  userId: z.string().uuid().optional(),
+  sortBy: z.enum(['createdAt', 'action']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type AuditLogFilterInput = z.infer<typeof AuditLogFilterSchema>;
+
 // Export types inferred from schemas
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
@@ -346,3 +364,27 @@ export type CreateModelInput = z.infer<typeof CreateModelSchema>;
 export type UpdateModelInput = z.infer<typeof UpdateModelSchema>;
 export type OrgInstructionsInput = z.infer<typeof OrgInstructionsSchema>;
 export type RoleInstructionsInput = z.infer<typeof RoleInstructionsSchema>;
+
+// ============================================
+// Phase 5: Platform Settings Schemas
+// ============================================
+
+export const UpdatePlatformSettingsSchema = z.object({
+  platformName: z.string().min(1).max(100).optional(),
+  sessionExpiryDays: z.number().int().min(1).max(365).optional(),
+  maintenanceMode: z.boolean().optional(),
+  featureToggles: z.object({
+    webSearch: z.boolean().optional(),
+    fileUploads: z.boolean().optional(),
+    mcpTools: z.boolean().optional(),
+    artifactGeneration: z.boolean().optional(),
+    extendedThinking: z.boolean().optional(),
+  }).optional(),
+});
+
+export const UpdatePlatformPromptSchema = z.object({
+  prompt: z.string().max(100000, 'Prompt must be less than 100,000 characters'),
+});
+
+export type UpdatePlatformSettingsInput = z.infer<typeof UpdatePlatformSettingsSchema>;
+export type UpdatePlatformPromptInput = z.infer<typeof UpdatePlatformPromptSchema>;
