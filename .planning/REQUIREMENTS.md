@@ -106,8 +106,8 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Super Admin — Admin Panel UI (SUI)
 
 - [ ] **SUI-01**: Super Admin panel at admin.llmatscale.ai using shadcn sidebar component as base layout
-- [ ] **SUI-02**: All Super Admin tables use TanStack Table with sorting, filtering, pagination
-- [ ] **SUI-03**: All Super Admin forms, modals, dialogs, dropdowns, tabs, switches use shadcn components
+- [x] **SUI-02**: All Super Admin tables use TanStack Table with sorting, filtering, pagination
+- [x] **SUI-03**: All Super Admin forms, modals, dialogs, dropdowns, tabs, switches use shadcn components
 - [ ] **SUI-04**: All Super Admin analytics dashboards use Recharts
 
 ### Org Admin — System Instructions (OINST)
@@ -487,8 +487,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UPRF-03 | Phase 4 | Complete |
 | UPRF-04 | Phase 4 | Complete |
 | SUI-01 | Phase 5 | Pending |
-| SUI-02 | Phase 5 | Pending |
-| SUI-03 | Phase 5 | Pending |
+| SUI-02 | Phase 5 | Complete |
+| SUI-03 | Phase 5 | Complete |
 | SUI-04 | Phase 5 | Pending |
 | SKEY-01 | Phase 5 | Pending |
 | SKEY-02 | Phase 5 | Pending |
