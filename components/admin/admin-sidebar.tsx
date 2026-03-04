@@ -49,14 +49,30 @@ interface NavGroup {
   items: NavItem[]
 }
 
-const SUPER_ADMIN_NAV_ITEMS: NavItem[] = [
-  { label: "Models", icon: Cpu, href: "/admin/models", enabled: true },
-  { label: "Organizations", icon: Building2, href: "/admin/organizations", enabled: false },
-  { label: "Super Admins", icon: Shield, href: "/admin/super-admins", enabled: false },
-  { label: "API Keys", icon: Key, href: "/admin/api-keys", enabled: false },
-  { label: "Settings", icon: Settings, href: "/admin/settings", enabled: false },
-  { label: "Analytics", icon: BarChart3, href: "/admin/analytics", enabled: false },
-  { label: "Audit Logs", icon: FileText, href: "/admin/audit-logs", enabled: false },
+const SUPER_ADMIN_NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Management",
+    items: [
+      { label: "Models", icon: Cpu, href: "/super-admin/models", enabled: true },
+      { label: "Organizations", icon: Building2, href: "/super-admin/organizations", enabled: true },
+      { label: "Super Admins", icon: Shield, href: "/super-admin/super-admins", enabled: true },
+      { label: "API Keys", icon: Key, href: "/super-admin/api-keys", enabled: true },
+    ],
+  },
+  {
+    label: "Monitoring",
+    items: [
+      { label: "Analytics", icon: BarChart3, href: "/super-admin/analytics", enabled: true },
+      { label: "Audit Logs", icon: FileText, href: "/super-admin/audit-logs", enabled: true },
+    ],
+  },
+  {
+    label: "Configuration",
+    items: [
+      { label: "Settings", icon: Settings, href: "/super-admin/settings", enabled: true },
+      { label: "System Prompt", icon: MessageSquare, href: "/super-admin/system-prompt", enabled: true },
+    ],
+  },
 ]
 
 function getOrgAdminNavGroups(orgSlug: string): NavGroup[] {
@@ -129,7 +145,7 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
     if (variant === "org-admin" && orgSlug) {
       router.push(`/org/${orgSlug}/login`)
     } else {
-      router.push("/admin/login")
+      router.push("/super-admin/login")
     }
   }, [router, variant, orgSlug])
 
@@ -200,13 +216,15 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
             </SidebarGroup>
           ))
         ) : (
-          // Super Admin: Flat navigation (unchanged)
-          <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
-            <SidebarMenu>
-              {SUPER_ADMIN_NAV_ITEMS.map(renderNavItem)}
-            </SidebarMenu>
-          </SidebarGroup>
+          // Super Admin: Grouped navigation (Management, Monitoring, Configuration)
+          SUPER_ADMIN_NAV_GROUPS.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarMenu>
+                {group.items.map(renderNavItem)}
+              </SidebarMenu>
+            </SidebarGroup>
+          ))
         )}
       </SidebarContent>
 
