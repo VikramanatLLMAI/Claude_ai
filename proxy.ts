@@ -3,14 +3,14 @@
  *
  * Next.js 16 proxy file (replaces deprecated middleware.ts).
  * Handles subdomain-to-path rewriting ONLY in production.
- * Development uses path-based routing directly (/org/:slug/..., /admin/...).
+ * Development uses path-based routing directly (/org/:slug/..., /super-admin/...).
  *
  * CRITICAL: This file does NO authentication, NO database queries.
  * It is a thin URL rewriter only. Auth is enforced at route handler level
  * per AUTH-07 (CVE-2025-29927 defense-in-depth).
  *
  * Production routing:
- *   admin.llmatscale.ai/* -> /admin/*
+ *   super-admin.llmatscale.ai/* -> /super-admin/*
  *   {org-slug}.llmatscale.ai/* -> /org/{slug}/*
  *   llmatscale.ai (bare domain) -> serves bare domain pages as-is
  *   www.llmatscale.ai -> serves bare domain pages as-is
@@ -56,10 +56,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // admin.llmatscale.ai -> /admin/... (ROUTE-01)
-  if (subdomain === 'admin') {
+  // super-admin.llmatscale.ai -> /super-admin/... (ROUTE-01)
+  // Production subdomain is super-admin.llmatscale.ai
+  if (subdomain === 'super-admin') {
     const url = request.nextUrl.clone();
-    url.pathname = `/admin${pathname}`;
+    url.pathname = `/super-admin${pathname}`;
     return NextResponse.rewrite(url);
   }
 

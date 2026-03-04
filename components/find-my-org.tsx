@@ -63,7 +63,7 @@ export function FindMyOrg() {
             })
             .then((data) => {
               if (data.user?.isSuperAdmin) {
-                router.replace("/admin")
+                router.replace("/super-admin")
               } else {
                 // Use org slug from localStorage session (stored by org-login-page on login)
                 if (localOrgSlug) {
@@ -133,7 +133,7 @@ export function FindMyOrg() {
 
       if (data.type === "super_admin") {
         setRedirecting(true)
-        router.push("/admin/login")
+        router.push("/super-admin/login")
       } else if (data.type === "org" && data.slug) {
         setRedirecting(true)
         router.push(`/org/${data.slug}/login`)

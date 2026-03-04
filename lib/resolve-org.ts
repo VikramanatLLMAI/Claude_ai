@@ -18,7 +18,7 @@ import { NextRequest } from 'next/server';
 const ROOT_DOMAIN = process.env.ROOT_DOMAIN || 'llmatscale.ai';
 
 /** Subdomains that are NOT org slugs (reserved for platform use). */
-const PLATFORM_SUBDOMAINS = new Set(['admin', 'www', 'api', 'app']);
+const PLATFORM_SUBDOMAINS = new Set(['admin', 'super-admin', 'www', 'api', 'app']);
 
 /** Regex for extracting org slug from dev path: /org/:slug/... */
 const DEV_ORG_PATH_REGEX = /^\/org\/([^/]+)/;
@@ -82,17 +82,17 @@ export function resolveOrgSlug(req: NextRequest): string | null {
 /**
  * Check if the request is targeting the Super Admin context.
  *
- * In development: path starts with `/admin`
- * In production: host is `admin.{ROOT_DOMAIN}`
+ * In development: path starts with `/super-admin`
+ * In production: host is `super-admin.{ROOT_DOMAIN}`
  *
  * @returns true if this is a Super Admin context request.
  */
 export function isSuperAdminContext(req: NextRequest): boolean {
   if (process.env.NODE_ENV === 'development') {
-    return req.nextUrl.pathname.startsWith('/admin');
+    return req.nextUrl.pathname.startsWith('/super-admin');
   }
 
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
   const hostname = host.split(':')[0];
-  return hostname === `admin.${ROOT_DOMAIN}`;
+  return hostname === `super-admin.${ROOT_DOMAIN}`;
 }
