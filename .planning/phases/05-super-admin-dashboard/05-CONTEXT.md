@@ -13,6 +13,15 @@ Complete the Super Admin management panel at admin.llmatscale.ai by implementing
 <decisions>
 ## Implementation Decisions
 
+### Route Restructure
+- **Rename Super Admin routes** from `/admin/*` to `/super-admin/*`
+- Reserve `/admin/*` for Org Admin (currently at `/org/[slug]/admin/*` — Phase 6 will implement Org Admin at `/admin/*`)
+- Super Admin pages: `/super-admin/models`, `/super-admin/organizations`, `/super-admin/analytics`, etc.
+- Super Admin login: `/super-admin/login`
+- Super Admin API routes: `/api/super-admin/*` (rename from `/api/admin/*`)
+- Production subdomain: `super-admin.llmatscale.ai` (instead of `admin.llmatscale.ai`)
+- **Migration scope**: Move `app/admin/` → `app/super-admin/`, update all internal links, sidebar hrefs, API route paths, layout auth guards, and catch-all route
+
 ### Sidebar Navigation
 - Upgrade from flat list to **grouped sections** (matching org admin pattern)
 - Groups:
@@ -186,10 +195,10 @@ Complete the Super Admin management panel at admin.llmatscale.ai by implementing
 - **SAFE-06**: System must maintain at least 1 Super Admin — prevent last SA deletion
 - **SAFE-02**: Cannot remove last admin from org — validated server-side, show error in UI
 
-### Integration Points
-- `app/admin/layout.tsx`: Wraps all admin pages with `SidebarProvider` + `AdminSidebar`
-- `app/admin/page.tsx`: Root redirect (currently → /admin/models, may change to /admin/analytics or stay)
-- `app/admin/[...catchAll]/page.tsx`: Catch-all ensures layout loads for unmatched admin paths
+### Integration Points (will be renamed /admin → /super-admin)
+- `app/admin/layout.tsx` → `app/super-admin/layout.tsx`: Wraps all pages with `SidebarProvider` + `AdminSidebar`
+- `app/admin/page.tsx` → `app/super-admin/page.tsx`: Root redirect (currently → /admin/models)
+- `app/admin/[...catchAll]/page.tsx` → `app/super-admin/[...catchAll]/page.tsx`: Catch-all for unmatched paths
 - `lib/constants/role-templates.ts`: DEFAULT_ROLE_TEMPLATES + AVAILABLE_MODELS constant for UI dropdowns
 - `lib/user-agent.ts`: Browser/OS/device parsing for session display
 
@@ -198,13 +207,19 @@ Complete the Super Admin management panel at admin.llmatscale.ai by implementing
 - `recharts` — Charting library (may already be installed from Phase 4 — verify)
 - `date-fns` or similar — Date range picker support (check if already installed)
 
-### New API Routes Needed
-- `/api/admin/api-keys/` — CRUD for PlatformApiKey (list, create, update, delete)
-- `/api/admin/api-keys/[id]/test/` — Test API key validity
-- `/api/admin/settings/` — Platform settings CRUD
-- `/api/admin/analytics/` — Aggregated platform analytics (org stats, usage trends, error rates, etc.)
-- `/api/admin/audit-logs/` — Filtered audit log listing with export (CSV/JSON)
-- `/api/admin/system-prompt/` — Platform system prompt CRUD
+### New API Routes Needed (under /api/super-admin/)
+- `/api/super-admin/api-keys/` — CRUD for PlatformApiKey (list, create, update, delete)
+- `/api/super-admin/api-keys/[id]/test/` — Test API key validity
+- `/api/super-admin/settings/` — Platform settings CRUD
+- `/api/super-admin/analytics/` — Aggregated platform analytics (org stats, usage trends, error rates, etc.)
+- `/api/super-admin/audit-logs/` — Filtered audit log listing with export (CSV/JSON)
+- `/api/super-admin/system-prompt/` — Platform system prompt CRUD
+
+### Existing API Routes to Rename (/api/admin/ → /api/super-admin/)
+- `/api/admin/organizations/*` → `/api/super-admin/organizations/*`
+- `/api/admin/super-admins/*` → `/api/super-admin/super-admins/*`
+- `/api/admin/models/*` → `/api/super-admin/models/*`
+- `/api/admin/role-templates/*` → `/api/super-admin/role-templates/*`
 
 </code_context>
 
