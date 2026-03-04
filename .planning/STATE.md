@@ -57,14 +57,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 5 in progress: Super Admin Dashboard -- platform settings + system prompt editor complete (05-05)
+**Current focus:** Phase 5 in progress: Super Admin Dashboard -- analytics dashboard complete (05-06)
 
 ## Current Position
 
 Phase: 5 of 7 (in progress)
-Plan: 8 of 8 in current phase (8 complete -- awaiting human-verify checkpoint)
-Status: Phase 5 plan 08 Task 1 complete -- Model Registry upgraded to TanStack Table. Awaiting human verification (Task 2 checkpoint) to finalize Phase 5.
-Last activity: 2026-03-04 -- Completed 05-08-PLAN.md Task 1 (Model Registry TanStack Table upgrade)
+Plan: 6 of 8 in current phase (6 complete, 2 pending)
+Status: 05-06 complete -- Full platform analytics dashboard with KPI cards, 9 chart types, and all 12 SANA requirements covered
+Last activity: 2026-03-04 -- Completed 05-06-PLAN.md (Platform Analytics Dashboard)
 
 Progress: [##########----------] 63% (phase 5 in progress)
 
@@ -92,6 +92,7 @@ Progress: [##########----------] 63% (phase 5 in progress)
 | Phase 05 P02 | 2 | 1 tasks | 3 files |
 | Phase 05-super-admin-dashboard P07 | 4 | 2 tasks | 5 files |
 | Phase 05-super-admin-dashboard P08 | 15 | 1 tasks | 2 files |
+| Phase 05-super-admin-dashboard P06 | 25 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -227,6 +228,10 @@ Recent decisions affecting current work:
 - [Phase 05-super-admin-dashboard]: 05-07: Export via fetch+blob pattern to attach auth header (prevents 401 on export)
 - [Phase 05-super-admin-dashboard]: 05-07: Meta endpoint (?meta=true) returns actions/users/orgs in single request for filter dropdowns
 - [Phase 05]: Option B chosen for generation grouping in Model Registry TanStack Table -- visual section headers outside table structure preserves collapsible design
+- [05-06]: Recharts v3 Tooltip formatter types require `as any` cast -- types are stricter than runtime API allows (React 19 compatibility pattern)
+- [05-06]: PeakUsageHeatmap uses CSS grid instead of Recharts -- no native heatmap component in Recharts library
+- [05-06]: Analytics API supports section-based loading (kpi/trends/topOrgs/etc.) for frontend parallel fetching performance
+- [05-06]: Error rate returns empty array when no errorType in message metadata -- non-breaking, populates as errors occur over time
 
 ### Pending Todos
 
@@ -241,5 +246,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 05-05-PLAN.md (Platform Settings + System Prompt editor). Phase 5 plan 05 complete.
-Resume file: N/A -- continue with 05-03-PLAN.md (Organizations table)
+Stopped at: Completed 05-06-PLAN.md (Platform Analytics Dashboard). All 12 SANA requirements implemented.
+Resume file: N/A -- continue with next pending Phase 5 plan
