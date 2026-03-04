@@ -99,34 +99,112 @@ Complete the Super Admin management panel at admin.llmatscale.ai by implementing
 <code_context>
 ## Existing Code Insights
 
-### Reusable Assets
-- `components/admin/admin-sidebar.tsx`: Sidebar with `SUPER_ADMIN_NAV_ITEMS` array (currently flat, needs grouped conversion)
-- `components/admin/admin-breadcrumb.tsx`: Breadcrumb component ready for all admin pages
-- `components/admin/model-registry-table.tsx`: Custom table with generation grouping (to be upgraded to TanStack Table)
-- `components/admin/model-registry-form.tsx`: Modal form pattern for add/edit (reusable pattern for API key form)
-- `components/ui/sidebar.tsx`: Full shadcn sidebar with SidebarGroup, SidebarGroupLabel, SidebarMenu components
-- `components/ui/skeleton-loaders.tsx`: Skeleton components for loading states
-- `components/ui/badge.tsx`: Status badges for table cells
-- `components/ui/dialog.tsx`: Modal dialog for forms
-- `components/ui/button.tsx`, `input.tsx`, `switch.tsx`, `label.tsx`: Form components
+### Reusable Admin Components
+- `components/admin/admin-sidebar.tsx`: Sidebar with `SUPER_ADMIN_NAV_ITEMS` (flat, needs grouped conversion); org admin variant already uses `NavGroup[]` with `SidebarGroupLabel` — replicate for super admin
+- `components/admin/admin-breadcrumb.tsx`: Pathname-based breadcrumb navigation for all admin pages
+- `components/admin/model-registry-table.tsx`: Custom table with generation grouping, deprecate/delete confirmation dialogs (to be upgraded to TanStack Table)
+- `components/admin/model-registry-form.tsx`: Modal form pattern for add/edit with MTok price conversion
+- `components/admin/role-form-modal.tsx`: 4-tab Dialog modal (General, Models, Limits, Permissions) — reusable modal CRUD pattern for org/user forms
+- `components/admin/role-card.tsx`: Read-only card component pattern
+- `components/admin/instruction-editor.tsx`: Auto-growing textarea with live token counter, color-coded progress bar, Ctrl+S shortcut
+- `components/admin/mcp-assignment-panel.tsx`: Org-wide + role-specific sections with add/edit/delete dialogs
 
-### Established Patterns
-- Admin layout auth guard: synchronous localStorage check in render, effect redirect for unauthenticated
-- Admin page API call pattern: `getAuthHeaders()` helper with Bearer token from localStorage
-- Admin sidebar variant prop for super-admin/org-admin reuse
-- Org admin sidebar already uses grouped sections with `SidebarGroupLabel` (pattern to replicate for super admin)
+### Reusable UI Components
+- `components/ui/sidebar.tsx`: Full shadcn sidebar with SidebarGroup, SidebarGroupLabel, SidebarMenu
+- `components/ui/skeleton-loaders.tsx`: Admin skeleton loaders (AdminInstructionsSkeleton, AdminRoleCardsSkeleton, AdminMcpSkeleton)
+- `components/ui/confirmation-dialog.tsx`: Styled wrapper for destructive actions (Radix AlertDialog)
+- `components/ui/toast.tsx`: Toast notifications via sonner (`toast.success()`, `toast.error()`)
+- `components/ui/tabs.tsx`: Radix Tabs wrapper for admin forms
+- `components/ui/checkbox.tsx`: Radix-backed with indeterminate state (used for batch model selection)
+- `components/ui/badge.tsx`, `dialog.tsx`, `button.tsx`, `input.tsx`, `switch.tsx`, `label.tsx`: Standard form/display components
+
+### Service Layer (Backend)
+- `lib/services/org-service.ts`: 9 org lifecycle functions (create, update, suspend, activate, delete, restore, list, get, updateOrgLogo) — all use `$transaction` + `auditLog.record()`
+- `lib/services/super-admin-service.ts`: Super Admin CRUD with safety rules (SAFE-01: can't delete self, SAFE-06: min 1 Super Admin)
+- `lib/services/audit-service.ts`: Transactional audit log service, exports `PrismaTransactionClient` type
+- `lib/services/role-template-service.ts`: Role template CRUD with file-based overrides (`.data/role-templates.json`)
+- `lib/services/usage-service.ts`: Usage tracking, org summaries, daily trend aggregation (raw SQL DATE() grouping)
+- `lib/services/role-service.ts`: Role CRUD with validation
+- `lib/services/session-service.ts`: Session list/revoke/force-logout with device-enriched data
+- `lib/services/password-policy-service.ts`: Password policy CRUD & validation
+- `lib/services/invitation-service.ts`: Invitation CRUD + email sending via Resend
+- `lib/services/model-registry-service.ts`: getAllModels(), getModelsGroupedByGeneration(), create/update/delete with deprecation validation
+- `lib/services/system-prompt-service.ts`: 4-layer XML-delimited prompt composition
+- `lib/services/instruction-service.ts`: Token budget validation, save with audit logging
+- `lib/token-counter.ts`: estimateTokenCount() with SERVER_MARGIN, TOKEN_LIMITS constants
+
+### Existing Admin API Routes (Ready for UI)
+- `GET/POST /api/admin/organizations/` — List, create orgs
+- `GET/PATCH/DELETE /api/admin/organizations/[id]/` — Single org CRUD
+- `POST /api/admin/organizations/[id]/suspend/` — Soft suspend (invalidates all org sessions)
+- `POST /api/admin/organizations/[id]/activate/` — Reactivate suspended
+- `POST /api/admin/organizations/[id]/restore/` — Restore soft-deleted (30-day grace)
+- `PATCH /api/admin/organizations/[id]/logo/` — Upload logo
+- `GET/POST /api/admin/super-admins/` — List, create Super Admins
+- `GET/PATCH/DELETE /api/admin/super-admins/[id]/` — Single Super Admin CRUD
+- `GET /api/admin/role-templates/` — List templates
+- `GET/PATCH/POST /api/admin/role-templates/[id]/` — Template CRUD + reset
+- `GET/POST/PATCH/DELETE /api/admin/models/` + `/api/admin/models/[id]/` — Model Registry CRUD
+
+### Auth & Data Access Patterns
+- `requireSuperAdmin(req)` middleware for all `/api/admin/*` routes — returns `{ user }`, uses raw `prisma` (not tenant-scoped)
+- `requireOrgAuth(req)` for org-scoped routes — returns `{ user, org, role, permissions, tenantDb }`
+- `tenantPrisma(orgId)` in `lib/tenant.ts` for org-scoped queries — Super Admin uses raw `prisma` for cross-org
+- Soft delete pattern: filter `deletedAt: null` in all queries; Organization has 30-day restore grace period
+- Service mutation pattern: `prisma.$transaction()` with co-located `auditLog.record()` for atomic audit trail
+- `getIpAddress(req)` extracted in all admin API routes for audit logging
+- `getAuthHeaders()` helper in frontend admin pages for Bearer token from localStorage
+
+### Database Models Available
+- **PlatformApiKey**: Exists in schema — encrypted API keys for AI providers, org-scoped
+- **AuditLog**: `userId`, `action`, `resourceType`, `resourceId`, `changes`, `metadata`, `organizationId` — ready for audit dashboard
+- **UsageRecord**: `inputTokens`, `outputTokens`, `thinkingTokens`, `cacheCreationTokens`, `cacheReadTokens`, `conversationId`, `costUsd` — ready for analytics
+- **Organization**: `monthlyRequestCeiling`, `monthlyTokenCeiling` (Super Admin ceilings), `logoDisplayMode`, soft delete
+- **OrgSettings**: `monthlyRequestLimit`, `monthlyTokenLimit` (Org Admin limits, capped by org ceilings)
+- **Model**: Platform-level registry with pricing (Decimal 20,12), capabilities, status, thinkingType
+- **Session**: `organizationId`, `userAgent`, `ipAddress` for session tracking
+
+### Established Dashboard Patterns (from Phase 4 Org Admin)
+- Dashboard layout: summary cards row → chart → filterable table with skeleton loading
+- Recharts: 30-day trend chart with raw SQL DATE() grouping (Prisma groupBy lacks date truncation)
+- Progress bar: green <80%, amber 80-99%, red 100%+ with current/limit text
+- Filter tabs with counts pattern for table filtering
+- Modal-based CRUD: read-only cards + Dialog modal for create/edit (4-tab pattern)
+- Confirmation dialogs for all destructive actions (delete, suspend, force-logout)
+- Toast notifications for success/error feedback
+
+### Validation Schemas (in `lib/validation.ts`)
+- CreateOrgSchema, UpdateOrgSchema
+- CreateSuperAdminSchema, UpdateSuperAdminSchema
+- CreateModelSchema, UpdateModelSchema
+- OrgInstructionsSchema, RoleInstructionsSchema
+- CreateInvitationSchema, SetDefaultRoleSchema
+- (Phase 5 will add: PlatformApiKeySchema, PlatformSettingsSchema, AuditLogFilterSchema)
+
+### Safety Rules (Must Enforce in Dashboard UI)
+- **SAFE-01**: Super Admin cannot delete themselves — disable delete button for current user
+- **SAFE-06**: System must maintain at least 1 Super Admin — prevent last SA deletion
+- **SAFE-02**: Cannot remove last admin from org — validated server-side, show error in UI
 
 ### Integration Points
 - `app/admin/layout.tsx`: Wraps all admin pages with `SidebarProvider` + `AdminSidebar`
 - `app/admin/page.tsx`: Root redirect (currently → /admin/models, may change to /admin/analytics or stay)
-- Existing admin API routes: `/api/admin/models`, `/api/admin/organizations`, `/api/admin/super-admins`, `/api/admin/role-templates`
-- `prisma/schema.prisma`: PlatformApiKey model exists; need PlatformSettings table
-- `lib/storage.ts`: CRUD operations (add new sections for API keys, settings, analytics queries)
+- `app/admin/[...catchAll]/page.tsx`: Catch-all ensures layout loads for unmatched admin paths
+- `lib/constants/role-templates.ts`: DEFAULT_ROLE_TEMPLATES + AVAILABLE_MODELS constant for UI dropdowns
+- `lib/user-agent.ts`: Browser/OS/device parsing for session display
 
 ### New Dependencies to Install
 - `@tanstack/react-table` — Data table library
-- `recharts` — Charting library
+- `recharts` — Charting library (may already be installed from Phase 4 — verify)
 - `date-fns` or similar — Date range picker support (check if already installed)
+
+### New API Routes Needed
+- `/api/admin/api-keys/` — CRUD for PlatformApiKey (list, create, update, delete)
+- `/api/admin/api-keys/[id]/test/` — Test API key validity
+- `/api/admin/settings/` — Platform settings CRUD
+- `/api/admin/analytics/` — Aggregated platform analytics (org stats, usage trends, error rates, etc.)
+- `/api/admin/audit-logs/` — Filtered audit log listing with export (CSV/JSON)
+- `/api/admin/system-prompt/` — Platform system prompt CRUD
 
 </code_context>
 
