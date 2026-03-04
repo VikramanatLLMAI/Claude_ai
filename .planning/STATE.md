@@ -232,6 +232,10 @@ Recent decisions affecting current work:
 - [05-06]: PeakUsageHeatmap uses CSS grid instead of Recharts -- no native heatmap component in Recharts library
 - [05-06]: Analytics API supports section-based loading (kpi/trends/topOrgs/etc.) for frontend parallel fetching performance
 - [05-06]: Error rate returns empty array when no errorType in message metadata -- non-breaking, populates as errors occur over time
+- [05-03]: Used userCount (not _count.orgMembers) since listOrganizations() returns flat shape with userCount alias
+- [05-03]: Slug field disabled on edit -- slug is org identity, cannot change after creation
+- [05-03]: Replaced Radix Tooltip with native title attribute for disabled delete in super-admins page -- Radix Tooltip unreliable inside DropdownMenuContent portals
+- [05-03]: SUPER_ADMIN_NAV_ITEMS flat array replaced with SUPER_ADMIN_NAV_GROUPS NavGroup[] -- 3 sections (Management, Monitoring, Configuration), all 8 items enabled
 
 ### Pending Todos
 
@@ -246,5 +250,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 05-06-PLAN.md (Platform Analytics Dashboard). All 12 SANA requirements implemented.
+Stopped at: Completed 05-03-PLAN.md (Organizations and Super Admins management pages + sidebar grouped navigation).
 Resume file: N/A -- continue with next pending Phase 5 plan
