@@ -57,16 +57,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 5 in progress: Super Admin Dashboard -- analytics dashboard complete (05-06)
+**Current focus:** Phase 5 in progress: Super Admin Dashboard -- API key management complete (05-04)
 
 ## Current Position
 
 Phase: 5 of 7 (in progress)
-Plan: 6 of 8 in current phase (6 complete, 2 pending)
-Status: 05-06 complete -- Full platform analytics dashboard with KPI cards, 9 chart types, and all 12 SANA requirements covered
-Last activity: 2026-03-04 -- Completed 05-06-PLAN.md (Platform Analytics Dashboard)
+Plan: 7 of 8 in current phase (7 complete, 1 pending)
+Status: 05-04 complete -- API key management with encrypted storage, multi-org assignment, click-to-reveal, and test endpoint
+Last activity: 2026-03-04 -- Completed 05-04-PLAN.md (API Keys Management)
 
-Progress: [##########----------] 63% (phase 5 in progress)
+Progress: [###########---------] 75% (phase 5 in progress)
 
 ## Performance Metrics
 
@@ -236,6 +236,11 @@ Recent decisions affecting current work:
 - [05-03]: Slug field disabled on edit -- slug is org identity, cannot change after creation
 - [05-03]: Replaced Radix Tooltip with native title attribute for disabled delete in super-admins page -- Radix Tooltip unreliable inside DropdownMenuContent portals
 - [05-03]: SUPER_ADMIN_NAV_ITEMS flat array replaced with SUPER_ADMIN_NAV_GROUPS NavGroup[] -- 3 sections (Management, Monitoring, Configuration), all 8 items enabled
+- [05-04]: revealApiKey writes AuditLog directly (outside transaction) -- no business mutation needed alongside reveal, audit-only operation
+- [05-04]: Test result (Valid/Invalid) stored in component state only -- schema has lastTestedAt but no testStatus field; badges reset on page reload
+- [05-04]: In-modal test flow: create temp key -> POST test -> DELETE cleanup (avoids a separate raw-key-test endpoint)
+- [05-04]: PlatformApiKey.organizationId field unused; PlatformApiKeyAssignment junction table used for multi-org support
+- [05-04]: maskKey format: first 7 chars + "..." + last 4 chars, per CONTEXT.md spec
 
 ### Pending Todos
 
@@ -250,5 +255,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 05-03-PLAN.md (Organizations and Super Admins management pages + sidebar grouped navigation).
+Stopped at: Completed 05-04-PLAN.md (API Keys management -- encrypted storage, multi-org assignment, click-to-reveal, Anthropic SDK test).
 Resume file: N/A -- continue with next pending Phase 5 plan
