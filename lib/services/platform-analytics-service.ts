@@ -291,14 +291,15 @@ export async function getTopOrgsByUsage(
 
   let convCounts: Array<{ organizationId: string; _count: { id: number } }> = [];
   if (orgIds.length > 0) {
-    convCounts = await prisma.conversation.groupBy({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    convCounts = (await (prisma.conversation.groupBy as any)({
       by: ['organizationId'],
       where: {
         organizationId: { in: orgIds },
         createdAt: { gte: startDate, lte: endDate },
       },
       _count: { id: true },
-    });
+    })) as Array<{ organizationId: string; _count: { id: number } }>;
   }
 
   const convCountMap = new Map(
