@@ -366,6 +366,24 @@ export type OrgInstructionsInput = z.infer<typeof OrgInstructionsSchema>;
 export type RoleInstructionsInput = z.infer<typeof RoleInstructionsSchema>;
 
 // ============================================
+// Phase 5: API Key Schemas
+// ============================================
+
+export const CreateApiKeySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  apiKey: z.string().min(10, 'API key must be at least 10 characters'),
+  provider: z.string().max(50).default('anthropic'),
+  organizationIds: z.array(z.string().uuid()).optional().default([]),
+});
+
+export const UpdateApiKeyAssignmentsSchema = z.object({
+  organizationIds: z.array(z.string().uuid()),
+});
+
+export type CreateApiKeyInput = z.infer<typeof CreateApiKeySchema>;
+export type UpdateApiKeyAssignmentsInput = z.infer<typeof UpdateApiKeyAssignmentsSchema>;
+
+// ============================================
 // Phase 5: Platform Settings Schemas
 // ============================================
 
