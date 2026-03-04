@@ -119,7 +119,7 @@ Plans:
 - [x] 04-14-PLAN.md -- Gap closure: Admin catch-all page so admin layout loads for all /admin/* paths, fixing org-user redirect (Wave 1, standalone)
 
 ### Phase 5: Super Admin Dashboard
-**Goal**: Super Admin has a complete management panel at admin.llmatscale.ai with org management, API key management, platform analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts
+**Goal**: Super Admin has a complete management panel at super-admin.llmatscale.ai with org management, API key management, platform analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts. Routes restructured from /admin/* to /super-admin/*.
 **Depends on**: Phase 4
 **Requirements**: SUI-01, SUI-02, SUI-03, SUI-04, SKEY-01, SKEY-02, SKEY-03, SKEY-04, SSET-01, SSET-02, SANA-01, SANA-02, SANA-03, SANA-04, SANA-05, SANA-06, SANA-07, SANA-08, SANA-09, SANA-10, SANA-11, SANA-12, SAUD-01, SAUD-02, SAUD-03
 **Phase 3 handoff notes**:
@@ -129,17 +129,22 @@ Plans:
   - Add Recharts in Phase 5 (not installed in Phase 3) for analytics dashboards
   - Add TanStack Table in Phase 5 for data tables
 **Success Criteria** (what must be TRUE):
-  1. Super Admin can navigate the admin.llmatscale.ai panel using a shadcn sidebar layout and manage organizations, Super Admin users, API keys, and platform settings through shadcn-based forms and modals
+  1. Super Admin can navigate the super-admin.llmatscale.ai panel using a shadcn sidebar layout and manage organizations, Super Admin users, API keys, and platform settings through shadcn-based forms and modals
   2. Super Admin can add, test, and assign Anthropic API keys to specific organizations, and remove keys that are no longer needed
   3. Platform analytics dashboard displays org statistics, user counts, token consumption by org/model, usage trends over time, and top orgs by usage -- all rendered with Recharts
   4. Super Admin can view, filter (by date, org, action type, user), and export (CSV/JSON) platform-wide audit logs
   5. All data tables (orgs, users, API keys, audit logs) use TanStack Table with sorting, filtering, and pagination
-**Plans**: TBD
+**Plans**: 8 plans in 4 waves
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md -- Route restructure (/admin to /super-admin), install TanStack Table, schema changes (PlatformSettings, PlatformApiKeyAssignment) (Wave 1)
+- [ ] 05-02-PLAN.md -- Reusable DataTable component system (DataTable, DataTablePagination, DataTableColumnHeader) (Wave 1)
+- [ ] 05-03-PLAN.md -- Organizations page + Super Admins page + sidebar grouped navigation upgrade (Wave 2, depends on 05-01, 05-02)
+- [ ] 05-04-PLAN.md -- API Key management: service layer, CRUD API, test endpoint, management page (Wave 2, depends on 05-01, 05-02)
+- [ ] 05-05-PLAN.md -- Platform Settings page (general + feature toggles) + System Prompt editor page (Wave 2, depends on 05-01)
+- [ ] 05-06-PLAN.md -- Platform Analytics: service layer, API endpoint, KPI cards, 9 Recharts chart sections (Wave 3, depends on 05-01, 05-03)
+- [ ] 05-07-PLAN.md -- Audit Logs: service layer, server-side paginated API, filter/sort, CSV/JSON export (Wave 3, depends on 05-01, 05-02)
+- [ ] 05-08-PLAN.md -- Model Registry TanStack Table upgrade + final human verification checkpoint (Wave 4, depends on all)
 
 ### Phase 6: Org Admin Dashboard
 **Goal**: Org Admin has a complete management panel at {org-slug}.llmatscale.ai/admin with user management, role management, invitation management, org analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts
@@ -199,6 +204,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Organization Management and Invitations | 4/4 | Complete | 2026-02-27 |
 | 3. Chat Integration and Core RBAC | 14/14 | Complete | 2026-02-28 |
 | 4. Role Configuration and Usage Limits | 14/14 | Complete | 2026-03-03 |
-| 5. Super Admin Dashboard | 0/3 | Not started | - |
+| 5. Super Admin Dashboard | 0/8 | Not started | - |
 | 6. Org Admin Dashboard | 0/3 | Not started | - |
 | 7. Theming, Branding, and Compliance | 0/3 | Not started | - |
