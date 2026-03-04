@@ -110,6 +110,7 @@ model Organization {
   usageRecords         UsageRecord[]
   onboardingAgreements OnboardingAgreement[]
   platformApiKeys      PlatformApiKey[]
+  apiKeyAssignments    PlatformApiKeyAssignment[]
   passwordPolicy       PasswordPolicy?
   themeAssignments     OrgThemeAssignment[]
   settings             OrgSettings?
@@ -320,10 +321,38 @@ model PlatformApiKey {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignments  PlatformApiKeyAssignment[]
 
   @@index([organizationId])
   @@index([provider])
   @@map("platform_api_keys")
+}
+
+// PlatformApiKeyAssignment - junction table for assigning platform API keys to organizations
+model PlatformApiKeyAssignment {
+  id             String   @id @default(uuid())
+  apiKeyId       String   @map("api_key_id")
+  organizationId String   @map("organization_id")
+  assignedAt     DateTime @default(now()) @map("assigned_at")
+
+  apiKey       PlatformApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([apiKeyId, organizationId])
+  @@map("platform_api_key_assignments")
+}
+
+// PlatformSettings - singleton table for platform-level configuration
+model PlatformSettings {
+  id                String   @id @default("singleton")
+  platformName      String   @default("LLMatscale.ai") @map("platform_name")
+  sessionExpiryDays Int      @default(30) @map("session_expiry_days")
+  maintenanceMode   Boolean  @default(false) @map("maintenance_mode")
+  featureToggles    Json     @default("{}") @map("feature_toggles")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
 }
 
 // PasswordPolicy - per-org password requirements

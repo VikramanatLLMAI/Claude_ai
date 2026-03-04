@@ -35,6 +35,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@react-email/components": "^1.0.8",
+    "@tanstack/react-table": "^8.21.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^6.0.97",
     "class-variance-authority": "^0.7.1",
