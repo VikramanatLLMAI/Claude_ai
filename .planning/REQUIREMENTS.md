@@ -83,18 +83,18 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — Platform Analytics (SANA)
 
-- [ ] **SANA-01**: Total organizations (active, suspended, deleted) and growth over time
-- [ ] **SANA-02**: Total users across all orgs with active vs suspended breakdown
-- [ ] **SANA-03**: Total conversations and messages platform-wide
-- [ ] **SANA-04**: Total token consumption broken down by org, provider, and model
-- [ ] **SANA-05**: Daily / weekly / monthly usage trend charts (Recharts)
-- [ ] **SANA-06**: Top organizations by message count, token consumption, and conversations
-- [ ] **SANA-07**: Platform-wide AI response error rate broken down by error type
-- [ ] **SANA-08**: Peak usage hours across the platform
-- [ ] **SANA-09**: API key consumption per org and per provider
-- [ ] **SANA-10**: MCP server and tool usage trends across all orgs
-- [ ] **SANA-11**: New organizations and users registered over time
-- [ ] **SANA-12**: Feature adoption trends across the platform
+- [x] **SANA-01**: Total organizations (active, suspended, deleted) and growth over time
+- [x] **SANA-02**: Total users across all orgs with active vs suspended breakdown
+- [x] **SANA-03**: Total conversations and messages platform-wide
+- [x] **SANA-04**: Total token consumption broken down by org, provider, and model
+- [x] **SANA-05**: Daily / weekly / monthly usage trend charts (Recharts)
+- [x] **SANA-06**: Top organizations by message count, token consumption, and conversations
+- [x] **SANA-07**: Platform-wide AI response error rate broken down by error type
+- [x] **SANA-08**: Peak usage hours across the platform
+- [x] **SANA-09**: API key consumption per org and per provider
+- [x] **SANA-10**: MCP server and tool usage trends across all orgs
+- [x] **SANA-11**: New organizations and users registered over time
+- [x] **SANA-12**: Feature adoption trends across the platform
 
 ### Super Admin — Platform Audit Logs (SAUD)
 
@@ -496,18 +496,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKEY-04 | Phase 5 | Pending |
 | SSET-01 | Phase 5 | Complete |
 | SSET-02 | Phase 5 | Complete |
-| SANA-01 | Phase 5 | Pending |
-| SANA-02 | Phase 5 | Pending |
-| SANA-03 | Phase 5 | Pending |
-| SANA-04 | Phase 5 | Pending |
-| SANA-05 | Phase 5 | Pending |
-| SANA-06 | Phase 5 | Pending |
-| SANA-07 | Phase 5 | Pending |
-| SANA-08 | Phase 5 | Pending |
-| SANA-09 | Phase 5 | Pending |
-| SANA-10 | Phase 5 | Pending |
-| SANA-11 | Phase 5 | Pending |
-| SANA-12 | Phase 5 | Pending |
+| SANA-01 | Phase 5 | Complete |
+| SANA-02 | Phase 5 | Complete |
+| SANA-03 | Phase 5 | Complete |
+| SANA-04 | Phase 5 | Complete |
+| SANA-05 | Phase 5 | Complete |
+| SANA-06 | Phase 5 | Complete |
+| SANA-07 | Phase 5 | Complete |
+| SANA-08 | Phase 5 | Complete |
+| SANA-09 | Phase 5 | Complete |
+| SANA-10 | Phase 5 | Complete |
+| SANA-11 | Phase 5 | Complete |
+| SANA-12 | Phase 5 | Complete |
 | SAUD-01 | Phase 5 | Complete |
 | SAUD-02 | Phase 5 | Complete |
 | SAUD-03 | Phase 5 | Complete |
