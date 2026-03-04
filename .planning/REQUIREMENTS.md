@@ -55,8 +55,8 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — Platform Settings (SSET)
 
-- [ ] **SSET-01**: Super Admin can manage platform-wide settings
-- [ ] **SSET-02**: Super Admin can enable/disable features across the entire platform (feature toggles)
+- [x] **SSET-01**: Super Admin can manage platform-wide settings
+- [x] **SSET-02**: Super Admin can enable/disable features across the entire platform (feature toggles)
 
 ### Super Admin — Platform API Keys (SKEY)
 
@@ -494,8 +494,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKEY-02 | Phase 5 | Pending |
 | SKEY-03 | Phase 5 | Pending |
 | SKEY-04 | Phase 5 | Pending |
-| SSET-01 | Phase 5 | Pending |
-| SSET-02 | Phase 5 | Pending |
+| SSET-01 | Phase 5 | Complete |
+| SSET-02 | Phase 5 | Complete |
 | SANA-01 | Phase 5 | Pending |
 | SANA-02 | Phase 5 | Pending |
 | SANA-03 | Phase 5 | Pending |

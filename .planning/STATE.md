@@ -44,16 +44,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 5 in progress: Super Admin Dashboard -- reusable DataTable infrastructure complete (05-02)
+**Current focus:** Phase 5 in progress: Super Admin Dashboard -- platform settings + system prompt editor complete (05-05)
 
 ## Current Position
 
 Phase: 5 of 7 (in progress)
-Plan: 2 of 8 in current phase (2 complete, 6 pending)
-Status: Phase 5 plan 02 complete -- DataTable component system (DataTable, DataTableColumnHeader, DataTablePagination) built
-Last activity: 2026-03-04 -- Completed 05-02-PLAN.md (DataTable component system with TanStack Table v8)
+Plan: 5 of 8 in current phase (5 complete, 3 pending)
+Status: Phase 5 plan 05 complete -- Platform Settings page (general settings + feature toggles) and Platform System Prompt editor
+Last activity: 2026-03-04 -- Completed 05-05-PLAN.md (Platform Settings and System Prompt editor)
 
-Progress: [####----------------] 25% (phase 5 started)
+Progress: [##########----------] 63% (phase 5 in progress)
 
 ## Performance Metrics
 
@@ -72,7 +72,7 @@ Progress: [####----------------] 25% (phase 5 started)
 | 04 | 14 | 58 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-08 (5 min), 04-11 (10 min), 04-12 (2 min), 04-13 (3 min), 04-14 (1 min)
+- Last 5 plans: 04-14 (1 min), 05-01 (8 min), 05-02 (10 min), 05-05 (5 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -205,6 +205,9 @@ Recent decisions affecting current work:
 - [04-13]: Pre-existing TypeScript error in app/api/artifacts/[id]/route.ts (tenantDb.artifact unknown type) confirmed pre-existing via git stash test -- deferred to deferred-items.md, out of scope
 - [04-14]: Catch-all page mirrors app/admin/page.tsx exactly -- no auth logic added; admin layout owns all auth/redirect decisions; Next.js catch-all route ([...catchAll]/page.tsx) activates layout for any unmatched /admin/* path
 - [Phase 05]: DataTable uses @tanstack/react-table v8 (installed as missing dep); column definitions drive all sorting/filtering; DataTablePagination handles rows-per-page (10/25/50)
+- [05-05]: platformPrompt stored as nullable Text field in PlatformSettings -- null means use hardcoded default, avoids storing duplicate default text
+- [05-05]: composeSystemPrompt remains synchronous using hardcoded default -- async getPlatformPrompt() added separately for callers that need DB-backed prompt
+- [05-05]: Feature toggles default to true for all features when not set in DB featureToggles JSON
 
 ### Pending Todos
 
@@ -219,5 +222,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 05-02-PLAN.md (DataTable component system). Phase 5 plan 02 complete.
+Stopped at: Completed 05-05-PLAN.md (Platform Settings + System Prompt editor). Phase 5 plan 05 complete.
 Resume file: N/A -- continue with 05-03-PLAN.md (Organizations table)
