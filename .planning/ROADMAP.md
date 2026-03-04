@@ -137,7 +137,7 @@ Plans:
 **Plans**: 8 plans in 4 waves
 
 Plans:
-- [ ] 05-01-PLAN.md -- Route restructure (/admin to /super-admin), install TanStack Table, schema changes (PlatformSettings, PlatformApiKeyAssignment) (Wave 1)
+- [x] 05-01-PLAN.md -- Route restructure (/admin to /super-admin), install TanStack Table, schema changes (PlatformSettings, PlatformApiKeyAssignment) (Wave 1)
 - [ ] 05-02-PLAN.md -- Reusable DataTable component system (DataTable, DataTablePagination, DataTableColumnHeader) (Wave 1)
 - [ ] 05-03-PLAN.md -- Organizations page + Super Admins page + sidebar grouped navigation upgrade (Wave 2, depends on 05-01, 05-02)
 - [ ] 05-04-PLAN.md -- API Key management: service layer, CRUD API, test endpoint, management page (Wave 2, depends on 05-01, 05-02)
