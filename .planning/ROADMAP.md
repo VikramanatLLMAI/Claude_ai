@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Chat Integration and Core RBAC** - Role-filtered model access, 4-layer prompt stack, usage tracking, MCP role assignment, org-scoped conversations
 - [x] **Phase 4: Role Configuration and Usage Limits** - Custom roles, per-role limits, password policy, session management, usage enforcement with alerts
 - [ ] **Phase 5: Super Admin Dashboard** - Platform admin panel at admin.llmatscale.ai with org management, API keys, analytics, and audit logs
-- [ ] **Phase 6: Org Admin Dashboard** - Org admin panel at {org-slug}.llmatscale.ai/admin with user/role management, org analytics, and audit logs
+- [x] **Phase 6: Org Admin Dashboard** - Org admin panel at {org-slug}.llmatscale.ai/admin with user/role management, org analytics, and audit logs
 - [ ] **Phase 7: Theming, Branding, and Compliance** - Theme assignment and fallback, org branding, conversation visibility, user impersonation, scheduled tasks
 
 ## Phase Details
@@ -175,7 +175,7 @@ Plans:
 - [x] 06-04-PLAN.md -- Invitations page with filter tabs, send modal, resend/revoke actions (Wave 2, depends on 06-01)
 - [x] 06-05-PLAN.md -- Analytics dashboard page with KPI cards, 10+ chart sections, per-section CSV export (Wave 2, depends on 06-02)
 - [x] 06-06-PLAN.md -- Audit logs page (mirror Super Admin) + Settings page with API key viewer (Wave 2, depends on 06-01)
-- [ ] 06-07-PLAN.md -- Human verification checkpoint for all 33 Phase 6 requirements (Wave 3, depends on all)
+- [x] 06-07-PLAN.md -- Human verification checkpoint for all 33 Phase 6 requirements (Wave 3, depends on all)
 
 ### Phase 7: Theming, Branding, and Compliance
 **Goal**: Organizations have visual identity through theme selection and branding, conversation visibility gives Org Admin compliance oversight, user impersonation enables support, and scheduled tasks keep the system clean
