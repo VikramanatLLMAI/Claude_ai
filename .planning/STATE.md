@@ -119,11 +119,11 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 7 of 7 (in progress)
-Plan: 6 of 7 in current phase (3 complete, 4 pending)
-Status: 07-05 complete -- User impersonation with search, session management, banner, auto-expiry, audit trail
-Last activity: 2026-03-05 -- Completed 07-05-PLAN.md (User Impersonation for IT Support)
+Plan: 5 of 7 in current phase (4 complete, 3 pending)
+Status: 07-04 complete -- Conversation visibility compliance feature with toggle, filtering, export, onboarding APIs
+Last activity: 2026-03-05 -- Completed 07-04-PLAN.md (Conversation Visibility + Onboarding APIs)
 
-Progress: [################----] 90% (phase 7 plan 6 of 7)
+Progress: [################----] 90% (phase 7 plan 5 of 7)
 
 ## Performance Metrics
 
@@ -319,6 +319,9 @@ Recent decisions affecting current work:
 - [07-05]: Original SA session token stored in localStorage (llmatscale_impersonation_original_session) for post-impersonation restoration
 - [07-05]: Auth middleware auto-expires impersonation sessions with fire-and-forget delete
 - [07-05]: ImpersonationBanner placed inside Providers in root layout for global visibility
+- [07-04]: JSZip generates uint8array (not nodebuffer) to satisfy NextResponse BodyInit typing
+- [07-04]: Visibility gate on all conversation endpoints: 403 if conversationVisibility is false
+- [07-04]: Conversation viewer uses Markdown component from prompt-kit for message rendering
 
 ### Pending Todos
 
@@ -333,5 +336,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 07-05-PLAN.md (User Impersonation for IT Support)
+Stopped at: Completed 07-04-PLAN.md (Conversation Visibility + Onboarding APIs)
 Resume file: N/A

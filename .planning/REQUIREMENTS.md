@@ -150,13 +150,13 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Conversation Visibility (OVIS)
 
-- [ ] **OVIS-01**: Org Admin can toggle org-level conversation visibility (default: off — all conversations private)
-- [ ] **OVIS-02**: When enabled, Org Admin gains read-only access to all conversations in the org
-- [ ] **OVIS-03**: Org Admin can filter conversations by user, date, or model
-- [ ] **OVIS-04**: Org Admin can export conversations for compliance purposes
-- [ ] **OVIS-05**: Org Admin cannot modify or delete user conversations
-- [ ] **OVIS-06**: When enabled, users acknowledge conversation visibility during org-customizable onboarding agreement (no in-chat indicator per Phase 3 decision)
-- [ ] **OVIS-07**: Visibility setting change is logged in audit logs
+- [x] **OVIS-01**: Org Admin can toggle org-level conversation visibility (default: off — all conversations private)
+- [x] **OVIS-02**: When enabled, Org Admin gains read-only access to all conversations in the org
+- [x] **OVIS-03**: Org Admin can filter conversations by user, date, or model
+- [x] **OVIS-04**: Org Admin can export conversations for compliance purposes
+- [x] **OVIS-05**: Org Admin cannot modify or delete user conversations
+- [x] **OVIS-06**: When enabled, users acknowledge conversation visibility during org-customizable onboarding agreement (no in-chat indicator per Phase 3 decision)
+- [x] **OVIS-07**: Visibility setting change is logged in audit logs
 
 ### Org Admin — User Management (OUSR)
 
