@@ -36,6 +36,7 @@ export interface AuthResult {
   authenticated: boolean;
   user?: User;
   sessionId?: string;
+  impersonatorId?: string | null;
   error?: string;
   status?: number;
 }
@@ -118,10 +119,25 @@ export async function validateSession(req: NextRequest): Promise<AuthResult> {
       };
     }
 
+    // Check impersonation expiry — auto-expire impersonation sessions
+    if (
+      session.impersonationExpiresAt &&
+      session.impersonationExpiresAt < new Date()
+    ) {
+      // Auto-expire: delete the impersonation session
+      prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+      return {
+        authenticated: false,
+        error: 'Impersonation session has expired',
+        status: 401,
+      };
+    }
+
     return {
       authenticated: true,
       user: session.user,
       sessionId: session.id,
+      impersonatorId: session.impersonatorId ?? null,
     };
   } catch (error) {
     console.error('Session validation error:', error);
