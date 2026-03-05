@@ -197,7 +197,7 @@ Plans:
 **Plans**: 7 plans in 4 waves
 
 Plans:
-- [ ] 07-01-PLAN.md -- Schema extensions + theme service + cleanup service + theme API routes (Wave 1)
+- [x] 07-01-PLAN.md -- Schema extensions + theme service + cleanup service + theme API routes (Wave 1)
 - [x] 07-02-PLAN.md -- User theme mode (light/dark/system) + remove color theme picker from settings modal (Wave 1)
 - [ ] 07-03-PLAN.md -- Super Admin theme assignment UI + Org Admin theme selection + org-wide theme application (Wave 2, depends on 07-01)
 - [ ] 07-04-PLAN.md -- Conversation visibility service + compliance page + onboarding APIs (Wave 2, depends on 07-01)

@@ -114,14 +114,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 02 complete (user theme mode persistence)
+**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 01 complete (schema foundation + theme service + cleanup service)
 
 ## Current Position
 
 Phase: 7 of 7 (in progress)
 Plan: 2 of 7 in current phase (2 complete, 5 pending)
-Status: 07-02 complete -- Color theme picker removed, light/dark/system mode persists to User.preferences via API
-Last activity: 2026-03-05 -- Completed 07-02-PLAN.md (User Theme Mode Persistence)
+Status: 07-01 complete -- Schema extended with theme/onboarding/impersonation fields, theme service with fallback chain, cleanup service, 4 API routes
+Last activity: 2026-03-05 -- Completed 07-01-PLAN.md (Schema Foundation + Theme Service + Cleanup)
 
 Progress: [################----] 88% (phase 7 plan 2 of 7)
 
@@ -310,6 +310,9 @@ Recent decisions affecting current work:
 - [06-06]: API key test endpoint records audit log via prisma.$transaction for atomicity
 - [06-06]: Org settings page reads org info from localStorage session (no extra API call)
 - [06-06]: User filter restricted to org members by cross-referencing OrgMember table
+- [07-01]: Cleanup service uses per-org transactions for isolation during purge (prevents partial deletes)
+- [07-01]: Cron cleanup route uses CRON_SECRET bearer token (not session-based auth) for Vercel cron compatibility
+- [07-01]: Platform-level audit log entries for cleanup operations use userId=null (system actions)
 - [07-02]: Created separate /api/user/preferences route using requireAuth (not requireOrgAuth) so it works for Super Admins and org users alike
 - [07-02]: Fire-and-forget PATCH on theme change for instant UX; sync from API on modal open for cross-session consistency
 
@@ -326,5 +329,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 07-02-PLAN.md (User Theme Mode Persistence)
+Stopped at: Completed 07-01-PLAN.md (Schema Foundation + Theme Service + Cleanup)
 Resume file: N/A

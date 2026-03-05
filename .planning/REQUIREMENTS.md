@@ -43,8 +43,8 @@ Requirements for initial release. All features from the RBAC specification are v
 - [x] **SORG-05**: Super Admin can delete an organization (30-day grace period before permanent deletion)
 - [x] **SORG-06**: Super Admin can view all organizations with stats (user count, usage, status)
 - [x] **SORG-07**: Super Admin can upload or update org logo (converted to Base64, stored in database)
-- [ ] **SORG-08**: Super Admin can assign available themes to each org (from 5 platform themes)
-- [ ] **SORG-09**: Super Admin can set the default theme for each org
+- [x] **SORG-08**: Super Admin can assign available themes to each org (from 5 platform themes)
+- [x] **SORG-09**: Super Admin can set the default theme for each org
 
 ### Super Admin — User Management (SUSR)
 
@@ -130,9 +130,9 @@ Requirements for initial release. All features from the RBAC specification are v
 - [ ] **OTHM-02**: Org Admin cannot access or see themes outside of what Super Admin assigned
 - [ ] **OTHM-03**: Available themes: Claude, Vercel, Solar Dusk, Twitter, Violet Bloom
 - [ ] **OTHM-04**: Theme applies to entire org and all users within it
-- [ ] **OTHM-05**: If Super Admin removes a currently active theme, system falls back to org's default theme
-- [ ] **OTHM-06**: If all assigned themes are removed, org falls back to platform default styling
-- [ ] **OTHM-07**: Org Admin cannot set active theme outside assigned themes — validated server-side
+- [x] **OTHM-05**: If Super Admin removes a currently active theme, system falls back to org's default theme
+- [x] **OTHM-06**: If all assigned themes are removed, org falls back to platform default styling
+- [x] **OTHM-07**: Org Admin cannot set active theme outside assigned themes — validated server-side
 
 ### Org Admin — Password Policy (OPWD)
 
@@ -319,9 +319,9 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Scheduled Tasks (CRON)
 
-- [ ] **CRON-01**: Auto-purge organizations 30 days after soft delete (Super Admin can restore before then)
-- [ ] **CRON-02**: Cleanup expired invitation tokens
-- [ ] **CRON-03**: Cleanup expired sessions
+- [x] **CRON-01**: Auto-purge organizations 30 days after soft delete (Super Admin can restore before then)
+- [x] **CRON-02**: Cleanup expired invitation tokens
+- [x] **CRON-03**: Cleanup expired sessions
 
 ## v2 Requirements
 
@@ -545,15 +545,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OAUD-01 | Phase 6 | Complete |
 | OAUD-02 | Phase 6 | Complete |
 | OAUD-03 | Phase 6 | Complete |
-| SORG-08 | Phase 7 | Pending |
-| SORG-09 | Phase 7 | Pending |
+| SORG-08 | Phase 7 | Complete |
+| SORG-09 | Phase 7 | Complete |
 | OTHM-01 | Phase 7 | Pending |
 | OTHM-02 | Phase 7 | Pending |
 | OTHM-03 | Phase 7 | Pending |
 | OTHM-04 | Phase 7 | Pending |
-| OTHM-05 | Phase 7 | Pending |
-| OTHM-06 | Phase 7 | Pending |
-| OTHM-07 | Phase 7 | Pending |
+| OTHM-05 | Phase 7 | Complete |
+| OTHM-06 | Phase 7 | Complete |
+| OTHM-07 | Phase 7 | Complete |
 | OBRN-01 | Phase 7 | Pending |
 | OBRN-02 | Phase 7 | Pending |
 | OBRN-03 | Phase 7 | Pending |
@@ -569,9 +569,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OVIS-06 | Phase 7 | Pending |
 | OVIS-07 | Phase 7 | Pending |
 | SAUD-04 | Phase 7 | Pending |
-| CRON-01 | Phase 7 | Pending |
-| CRON-02 | Phase 7 | Pending |
-| CRON-03 | Phase 7 | Pending |
+| CRON-01 | Phase 7 | Complete |
+| CRON-02 | Phase 7 | Complete |
+| CRON-03 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 195 total
