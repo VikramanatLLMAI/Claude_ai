@@ -224,21 +224,21 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Org Analytics (OANA)
 
-- [ ] **OANA-01**: Total users (active, suspended, pending invite)
-- [ ] **OANA-02**: Total conversations and messages within the org
-- [ ] **OANA-03**: Token usage broken down by user, role, and model
-- [ ] **OANA-04**: Which Anthropic models are used most within the org
-- [ ] **OANA-05**: Top users by message count and token consumption
-- [ ] **OANA-06**: Per role usage breakdown
-- [ ] **OANA-07**: Daily / weekly / monthly usage trend charts (Recharts)
-- [ ] **OANA-08**: MCP server and tool usage frequency within the org
-- [ ] **OANA-09**: Average response time per model
-- [ ] **OANA-10**: AI response error rate within the org
-- [ ] **OANA-11**: Peak usage hours within the org
-- [ ] **OANA-12**: Invitation status overview (accepted, pending, expired)
-- [ ] **OANA-13**: API key usage breakdown per assigned key
-- [ ] **OANA-14**: Users approaching or exceeding their limits
-- [ ] **OANA-15**: Inactive users report (not logged in for 30+ days)
+- [x] **OANA-01**: Total users (active, suspended, pending invite)
+- [x] **OANA-02**: Total conversations and messages within the org
+- [x] **OANA-03**: Token usage broken down by user, role, and model
+- [x] **OANA-04**: Which Anthropic models are used most within the org
+- [x] **OANA-05**: Top users by message count and token consumption
+- [x] **OANA-06**: Per role usage breakdown
+- [x] **OANA-07**: Daily / weekly / monthly usage trend charts (Recharts)
+- [x] **OANA-08**: MCP server and tool usage frequency within the org
+- [x] **OANA-09**: Average response time per model
+- [x] **OANA-10**: AI response error rate within the org
+- [x] **OANA-11**: Peak usage hours within the org
+- [x] **OANA-12**: Invitation status overview (accepted, pending, expired)
+- [x] **OANA-13**: API key usage breakdown per assigned key
+- [x] **OANA-14**: Users approaching or exceeding their limits
+- [x] **OANA-15**: Inactive users report (not logged in for 30+ days)
 
 ### Org Admin — Org Audit Logs (OAUD)
 
@@ -527,21 +527,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUSR-12 | Phase 6 | Pending |
 | OAKEY-01 | Phase 6 | Pending |
 | OAKEY-02 | Phase 6 | Pending |
-| OANA-01 | Phase 6 | Pending |
-| OANA-02 | Phase 6 | Pending |
-| OANA-03 | Phase 6 | Pending |
-| OANA-04 | Phase 6 | Pending |
-| OANA-05 | Phase 6 | Pending |
-| OANA-06 | Phase 6 | Pending |
-| OANA-07 | Phase 6 | Pending |
-| OANA-08 | Phase 6 | Pending |
-| OANA-09 | Phase 6 | Pending |
-| OANA-10 | Phase 6 | Pending |
-| OANA-11 | Phase 6 | Pending |
-| OANA-12 | Phase 6 | Pending |
-| OANA-13 | Phase 6 | Pending |
-| OANA-14 | Phase 6 | Pending |
-| OANA-15 | Phase 6 | Pending |
+| OANA-01 | Phase 6 | Complete |
+| OANA-02 | Phase 6 | Complete |
+| OANA-03 | Phase 6 | Complete |
+| OANA-04 | Phase 6 | Complete |
+| OANA-05 | Phase 6 | Complete |
+| OANA-06 | Phase 6 | Complete |
+| OANA-07 | Phase 6 | Complete |
+| OANA-08 | Phase 6 | Complete |
+| OANA-09 | Phase 6 | Complete |
+| OANA-10 | Phase 6 | Complete |
+| OANA-11 | Phase 6 | Complete |
+| OANA-12 | Phase 6 | Complete |
+| OANA-13 | Phase 6 | Complete |
+| OANA-14 | Phase 6 | Complete |
+| OANA-15 | Phase 6 | Complete |
 | OAUD-01 | Phase 6 | Pending |
 | OAUD-02 | Phase 6 | Pending |
 | OAUD-03 | Phase 6 | Pending |

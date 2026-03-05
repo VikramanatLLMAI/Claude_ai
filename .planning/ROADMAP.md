@@ -170,7 +170,7 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md -- Org user management service, API endpoints, sidebar navigation update (Wave 1)
-- [ ] 06-02-PLAN.md -- Org analytics service layer and API endpoint covering all 15 OANA requirements (Wave 1)
+- [x] 06-02-PLAN.md -- Org analytics service layer and API endpoint covering all 15 OANA requirements (Wave 1)
 - [ ] 06-03-PLAN.md -- Members page with DataTable, side panel, bulk actions, all user management UI (Wave 2, depends on 06-01)
 - [ ] 06-04-PLAN.md -- Invitations page with filter tabs, send modal, resend/revoke actions (Wave 2, depends on 06-01)
 - [ ] 06-05-PLAN.md -- Analytics dashboard page with KPI cards, 10+ chart sections, per-section CSV export (Wave 2, depends on 06-02)
@@ -212,5 +212,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Chat Integration and Core RBAC | 14/14 | Complete | 2026-02-28 |
 | 4. Role Configuration and Usage Limits | 14/14 | Complete | 2026-03-03 |
 | 5. Super Admin Dashboard | 10/11 | In Progress|  |
-| 6. Org Admin Dashboard | 1/7 | In Progress | - |
+| 6. Org Admin Dashboard | 2/7 | In Progress | - |
 | 7. Theming, Branding, and Compliance | 0/3 | Not started | - |
