@@ -56,6 +56,9 @@ model Session {
   expiresAt      DateTime  @map("expires_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   lastUsedAt     DateTime? @map("last_used_at")
+  impersonatorId          String?   @map("impersonator_id")
+  impersonationReason     String?   @map("impersonation_reason")
+  impersonationExpiresAt  DateTime? @map("impersonation_expires_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -402,6 +405,11 @@ model OrgSettings {
   defaultRoleId               String?  @map("default_role_id")
   monthlyRequestLimit         Int?     @map("monthly_request_limit")
   monthlyTokenLimit           Int?     @map("monthly_token_limit")
+  activeTheme                 String?  @map("active_theme")
+  loginTagline                String?  @map("login_tagline")
+  loginWelcomeMessage         String?  @map("login_welcome_message") @db.Text
+  onboardingText              String?  @map("onboarding_text") @db.Text
+  onboardingVersion           Int      @default(1) @map("onboarding_version")
   createdAt                   DateTime @default(now()) @map("created_at")
   updatedAt                   DateTime @updatedAt @map("updated_at")
 
