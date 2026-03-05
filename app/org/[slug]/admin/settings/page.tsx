@@ -22,10 +22,12 @@ import {
   Building2,
   Calendar,
   Globe,
+  Palette,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { ThemeSelector } from "@/components/admin/theme-selector"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
@@ -312,6 +314,18 @@ export default function OrgSettingsPage() {
             </div>
           </section>
         )}
+
+        {/* Theme Section */}
+        <section>
+          <div className="flex items-center gap-2 mb-1">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-foreground">Theme</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Select the active theme for your organization. Changes apply to all users.
+          </p>
+          <ThemeSelector orgSlug={slug} />
+        </section>
 
         {/* Platform API Keys Section */}
         <section>

@@ -31,6 +31,7 @@ import { DataTable } from "@/components/admin/data-table"
 import { DataTableColumnHeader } from "@/components/admin/data-table-column-header"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 import { toast } from "@/components/ui/toast"
+import { ThemeAssignmentPanel } from "@/components/admin/theme-assignment-panel"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
@@ -151,7 +152,7 @@ function OrgFormDialog({ open, onOpenChange, org, onSubmit }: OrgFormDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Organization" : "Create Organization"}</DialogTitle>
           <DialogDescription>
@@ -224,6 +225,17 @@ function OrgFormDialog({ open, onOpenChange, org, onSubmit }: OrgFormDialogProps
             </Button>
           </DialogFooter>
         </form>
+
+        {/* Theme Assignment (edit only, outside form since it saves independently) */}
+        {isEdit && org && (
+          <div className="border-t border-border pt-4 mt-2">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Theme Assignments</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Assign themes this organization can use. Select a default theme for new users.
+            </p>
+            <ThemeAssignmentPanel orgId={org.id} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
