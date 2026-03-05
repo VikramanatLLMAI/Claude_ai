@@ -607,6 +607,10 @@ export default function ApiKeysPage() {
         method: "POST",
         headers: getAuthHeaders(),
       })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || `Test failed (${res.status})`)
+      }
       const data = await res.json()
       setTestResults((prev) => ({
         ...prev,
@@ -628,8 +632,8 @@ export default function ApiKeysPage() {
           k.id === apiKey.id ? { ...k, lastTestedAt: data.lastTestedAt } : k
         )
       )
-    } catch {
-      toast.error("Failed to test key")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to test key")
     } finally {
       setTestingId(null)
     }
@@ -651,7 +655,8 @@ export default function ApiKeysPage() {
         headers: getAuthHeaders(),
       })
       if (!res.ok) {
-        throw new Error("Failed to reveal key")
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || "Failed to reveal key")
       }
       const data = await res.json()
       setRevealedKeys((prev) => ({ ...prev, [id]: data.apiKey }))
@@ -660,9 +665,9 @@ export default function ApiKeysPage() {
       setTimeout(() => {
         setRevealedKeys((prev) => ({ ...prev, [id]: null }))
       }, 10000)
-    } catch {
+    } catch (err) {
       setRevealedKeys((prev) => ({ ...prev, [id]: null }))
-      toast.error("Failed to reveal API key")
+      toast.error(err instanceof Error ? err.message : "Failed to reveal API key")
     }
   }
 
