@@ -205,15 +205,22 @@ export default function OrgAdminInvitationsPage() {
   // ============================================
 
   async function handleSendInvitation() {
-    if (!sendForm.email || !sendForm.roleId) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (!sendForm.email && !sendForm.roleId) {
       toast.error("Please fill in email and select a role")
       return
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!sendForm.email) {
+      toast.error("Please enter an email address")
+      return
+    }
     if (!emailRegex.test(sendForm.email)) {
       toast.error("Please enter a valid email address")
+      return
+    }
+    if (!sendForm.roleId) {
+      toast.error("Please select a role")
       return
     }
 
@@ -399,7 +406,7 @@ export default function OrgAdminInvitationsPage() {
   // ============================================
 
   const tabs: { key: FilterTab; label: string; count?: number }[] = [
-    { key: "all", label: "All" },
+    { key: "all", label: "All", count: invitations.length },
     { key: "pending", label: "Pending", count: counts.pending },
     { key: "accepted", label: "Accepted", count: counts.accepted },
     { key: "expired", label: "Expired", count: counts.expired },
@@ -537,6 +544,7 @@ export default function OrgAdminInvitationsPage() {
               <DropdownMenu
                 open={roleMenuOpen}
                 onOpenChange={setRoleMenuOpen}
+                modal={false}
               >
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -555,6 +563,10 @@ export default function OrgAdminInvitationsPage() {
                 <DropdownMenuContent
                   className="w-[--radix-dropdown-menu-trigger-width]"
                   align="start"
+                  onEscapeKeyDown={(e) => {
+                    e.preventDefault()
+                    setRoleMenuOpen(false)
+                  }}
                 >
                   {roles.map((role) => (
                     <DropdownMenuItem

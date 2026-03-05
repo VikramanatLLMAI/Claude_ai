@@ -247,7 +247,31 @@ export async function getAvailableActions(): Promise<string[]> {
     distinct: ['action'],
     orderBy: { action: 'asc' },
   });
-  return result.map((r) => r.action);
+  // Normalize action names to lowercase dot-separated format and deduplicate.
+  // Handles legacy entries using UPPER_SNAKE_CASE (e.g., API_KEY_REVEALED -> api_key.revealed).
+  const seen = new Set<string>();
+  const actions: string[] = [];
+  for (const r of result) {
+    let normalized: string;
+    if (r.action.includes('.')) {
+      // Already dot-separated (e.g., api_key.revealed) - just lowercase
+      normalized = r.action.toLowerCase();
+    } else {
+      // Legacy UPPER_SNAKE_CASE (e.g., API_KEY_REVEALED)
+      // Convert: split into segments, find the natural category break
+      // Pattern: CATEGORY_action -> category.action (e.g., API_KEY_REVEALED -> api_key.revealed)
+      const lower = r.action.toLowerCase();
+      const lastUnderscore = lower.lastIndexOf('_');
+      normalized = lastUnderscore > 0
+        ? lower.slice(0, lastUnderscore) + '.' + lower.slice(lastUnderscore + 1)
+        : lower;
+    }
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      actions.push(normalized);
+    }
+  }
+  return actions.sort();
 }
 
 /**

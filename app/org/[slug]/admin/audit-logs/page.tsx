@@ -41,6 +41,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -186,6 +187,9 @@ function MetadataModal({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Audit Log Details</DialogTitle>
+          <DialogDescription className="sr-only">
+            Detailed information about the selected audit log entry
+          </DialogDescription>
         </DialogHeader>
         {log && (
           <div className="space-y-3 text-sm">
