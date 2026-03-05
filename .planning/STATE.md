@@ -88,14 +88,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 6 in progress: Org Admin Dashboard -- analytics dashboard complete (06-05)
+**Current focus:** Phase 6 in progress: Org Admin Dashboard -- audit logs and settings complete (06-06)
 
 ## Current Position
 
 Phase: 6 of 7 (in progress)
-Plan: 5 of 7 in current phase (5 complete, 2 pending)
-Status: 06-05 complete -- Org analytics dashboard with 13 chart/table components and section-based loading
-Last activity: 2026-03-05 -- Completed 06-05-PLAN.md (Org Analytics Dashboard)
+Plan: 6 of 7 in current phase (6 complete, 1 pending)
+Status: 06-06 complete -- Org audit logs page and settings page with API key viewer
+Last activity: 2026-03-05 -- Completed 06-06-PLAN.md (Audit Logs & Settings)
 
 Progress: [############--------] 80% (phase 6 in progress)
 
@@ -124,6 +124,7 @@ Progress: [############--------] 80% (phase 6 in progress)
 | Phase 05-super-admin-dashboard P07 | 4 | 2 tasks | 5 files |
 | Phase 05-super-admin-dashboard P08 | 15 | 1 tasks | 2 files |
 | Phase 05-super-admin-dashboard P06 | 25 | 2 tasks | 5 files |
+| Phase 06-org-admin-dashboard P06 | 5 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -278,6 +279,10 @@ Recent decisions affecting current work:
 - [06-04]: Used DropdownMenu (not HTML select) for role dropdown in send dialog -- consistent with MCP assignment panel pattern
 - [06-04]: Client-side tab filtering since invitation list is typically small (no server-side filtering needed)
 - [06-04]: Revoked invitations remain visible in table (no auto-cleanup) per CONTEXT.md spec
+- [06-06]: Audit logs page mirrors Super Admin exactly minus org filter dropdown and org column
+- [06-06]: API key test endpoint records audit log via prisma.$transaction for atomicity
+- [06-06]: Org settings page reads org info from localStorage session (no extra API call)
+- [06-06]: User filter restricted to org members by cross-referencing OrgMember table
 
 ### Pending Todos
 
@@ -292,5 +297,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-05-PLAN.md (Org Analytics Dashboard)
+Stopped at: Completed 06-06-PLAN.md (Audit Logs & Settings)
 Resume file: N/A

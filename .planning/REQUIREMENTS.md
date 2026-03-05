@@ -205,8 +205,8 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — API Key Management (OAKEY)
 
-- [ ] **OAKEY-01**: Org Admin can view platform API keys assigned to the org (read-only)
-- [ ] **OAKEY-02**: Org Admin can test assigned API key validity
+- [x] **OAKEY-01**: Org Admin can view platform API keys assigned to the org (read-only)
+- [x] **OAKEY-02**: Org Admin can test assigned API key validity
 
 ### Org Admin — Usage & Limits (OUSE)
 
@@ -242,9 +242,9 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Org Audit Logs (OAUD)
 
-- [ ] **OAUD-01**: Org Admin can view all admin actions within the org
-- [ ] **OAUD-02**: Filter by date, action type, user
-- [ ] **OAUD-03**: Export org audit logs as CSV or JSON
+- [x] **OAUD-01**: Org Admin can view all admin actions within the org
+- [x] **OAUD-02**: Filter by date, action type, user
+- [x] **OAUD-03**: Export org audit logs as CSV or JSON
 
 ### Org Admin — Admin Panel UI (OUI)
 
@@ -525,8 +525,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUSR-10 | Phase 6 | Complete |
 | OUSR-11 | Phase 6 | Complete |
 | OUSR-12 | Phase 6 | Complete |
-| OAKEY-01 | Phase 6 | Pending |
-| OAKEY-02 | Phase 6 | Pending |
+| OAKEY-01 | Phase 6 | Complete |
+| OAKEY-02 | Phase 6 | Complete |
 | OANA-01 | Phase 6 | Complete |
 | OANA-02 | Phase 6 | Complete |
 | OANA-03 | Phase 6 | Complete |
@@ -542,9 +542,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OANA-13 | Phase 6 | Complete |
 | OANA-14 | Phase 6 | Complete |
 | OANA-15 | Phase 6 | Complete |
-| OAUD-01 | Phase 6 | Pending |
-| OAUD-02 | Phase 6 | Pending |
-| OAUD-03 | Phase 6 | Pending |
+| OAUD-01 | Phase 6 | Complete |
+| OAUD-02 | Phase 6 | Complete |
+| OAUD-03 | Phase 6 | Complete |
 | SORG-08 | Phase 7 | Pending |
 | SORG-09 | Phase 7 | Pending |
 | OTHM-01 | Phase 7 | Pending |
