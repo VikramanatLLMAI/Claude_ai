@@ -65,7 +65,12 @@ async function getDecryptedKey(id: string): Promise<string> {
     throw new Error('API key not found');
   }
 
-  return decrypt(key.encryptedKey);
+  try {
+    return decrypt(key.encryptedKey);
+  } catch (err) {
+    console.error(`Failed to decrypt API key ${id}:`, err);
+    throw new Error('Failed to decrypt API key — encryption key may have changed');
+  }
 }
 
 /**
@@ -371,7 +376,7 @@ export async function revealApiKey(
   await prisma.auditLog.create({
     data: {
       userId: actorId,
-      action: 'API_KEY_REVEALED',
+      action: 'api_key.revealed',
       targetType: 'PlatformApiKey',
       targetId: id,
       ipAddress,

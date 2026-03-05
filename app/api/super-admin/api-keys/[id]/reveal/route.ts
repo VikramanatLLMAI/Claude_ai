@@ -37,6 +37,9 @@ export async function GET(
     if (error instanceof Error && error.message === 'API key not found') {
       return NextResponse.json({ error: 'API key not found' }, { status: 404 });
     }
+    if (error instanceof Error && error.message.includes('Failed to decrypt')) {
+      return NextResponse.json({ error: 'Failed to decrypt API key' }, { status: 500 });
+    }
     console.error('API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
