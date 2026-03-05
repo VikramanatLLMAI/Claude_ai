@@ -149,6 +149,16 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         );
       }
     }
+    // Handle Prisma foreign key constraint errors
+    if (error instanceof Error && 'code' in error) {
+      const prismaError = error as { code: string; meta?: { cause?: string } };
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json(
+          { error: 'Cannot delete: this user has associated records that prevent deletion.' },
+          { status: 409 }
+        );
+      }
+    }
     console.error('API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

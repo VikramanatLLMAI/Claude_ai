@@ -184,6 +184,19 @@ export async function deleteSuperAdmin(
     // Delete all their sessions
     await tx.session.deleteMany({ where: { userId } });
 
+    // Nullify audit log references (preserve audit trail with null userId for deleted user)
+    await tx.auditLog.updateMany({
+      where: { userId },
+      data: { userId: null },
+    });
+
+    // Reassign invitations sent by this user: set invitedById to the actor (the SA performing the delete)
+    // This prevents FK constraint violation since Invitation.invitedBy has no onDelete cascade
+    await tx.invitation.updateMany({
+      where: { invitedById: userId },
+      data: { invitedById: actorId },
+    });
+
     // Delete the user
     await tx.user.delete({ where: { id: userId } });
 
