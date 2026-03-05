@@ -166,12 +166,16 @@ Plans:
   3. Org analytics dashboard displays user stats, conversation/message counts, token usage by user/role/model, model distribution, usage trends, MCP usage, and limit alerts -- all rendered with Recharts
   4. Org Admin can view, filter (by date, action type, user), and export (CSV/JSON) org-scoped audit logs
   5. Org Admin can view platform API keys assigned to their org (read-only) and test key validity
-**Plans**: TBD
+**Plans**: 7 plans in 3 waves
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md -- Org user management service, API endpoints, sidebar navigation update (Wave 1)
+- [ ] 06-02-PLAN.md -- Org analytics service layer and API endpoint covering all 15 OANA requirements (Wave 1)
+- [ ] 06-03-PLAN.md -- Members page with DataTable, side panel, bulk actions, all user management UI (Wave 2, depends on 06-01)
+- [ ] 06-04-PLAN.md -- Invitations page with filter tabs, send modal, resend/revoke actions (Wave 2, depends on 06-01)
+- [ ] 06-05-PLAN.md -- Analytics dashboard page with KPI cards, 10+ chart sections, per-section CSV export (Wave 2, depends on 06-02)
+- [ ] 06-06-PLAN.md -- Audit logs page (mirror Super Admin) + Settings page with API key viewer (Wave 2, depends on 06-01)
+- [ ] 06-07-PLAN.md -- Human verification checkpoint for all 33 Phase 6 requirements (Wave 3, depends on all)
 
 ### Phase 7: Theming, Branding, and Compliance
 **Goal**: Organizations have visual identity through theme selection and branding, conversation visibility gives Org Admin compliance oversight, user impersonation enables support, and scheduled tasks keep the system clean
@@ -208,5 +212,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Chat Integration and Core RBAC | 14/14 | Complete | 2026-02-28 |
 | 4. Role Configuration and Usage Limits | 14/14 | Complete | 2026-03-03 |
 | 5. Super Admin Dashboard | 10/11 | In Progress|  |
-| 6. Org Admin Dashboard | 0/3 | Not started | - |
+| 6. Org Admin Dashboard | 0/7 | Not started | - |
 | 7. Theming, Branding, and Compliance | 0/3 | Not started | - |
