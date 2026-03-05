@@ -21,6 +21,7 @@ import {
   Lock,
   Mail,
   ScrollText,
+  MessageCircle,
 } from "lucide-react"
 import {
   Sidebar,
@@ -99,6 +100,7 @@ function getOrgAdminNavGroups(orgSlug: string): NavGroup[] {
     {
       label: "Monitoring",
       items: [
+        { label: "Conversations", icon: MessageCircle, href: `${base}/conversations`, enabled: true },
         { label: "Analytics", icon: BarChart3, href: `${base}/analytics`, enabled: true },
         { label: "Audit Logs", icon: ScrollText, href: `${base}/audit-logs`, enabled: true },
       ],
