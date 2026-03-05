@@ -190,16 +190,20 @@ Plans:
   - Org branding colors applied to login page + org admin console + chat UI
 **Success Criteria** (what must be TRUE):
   1. Super Admin can assign available themes to an org, Org Admin can choose the active theme from assigned themes, and if an assigned theme is removed the system falls back gracefully to the default
-  2. Org Admin can set primary and accent brand colors and upload a logo, and branding applies across the entire org UI instantly
+  2. Org Admin can upload a logo, and branding applies across the org login page and chat sidebar (brand colors dropped per CONTEXT.md decision)
   3. Users can toggle between light, dark, and system mode independently from the org theme, and their preference persists across sessions
   4. Org Admin can enable conversation visibility, gaining read-only access to all org conversations with filtering and export, while users acknowledged conversation visibility during onboarding agreement (no in-chat indicator per Phase 3 decision)
   5. Scheduled tasks automatically purge soft-deleted orgs after 30 days, clean up expired invitations, and clean up expired sessions
-**Plans**: TBD
+**Plans**: 7 plans in 4 waves
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [ ] 07-01-PLAN.md -- Schema extensions + theme service + cleanup service + theme API routes (Wave 1)
+- [ ] 07-02-PLAN.md -- User theme mode (light/dark/system) + remove color theme picker from settings modal (Wave 1)
+- [ ] 07-03-PLAN.md -- Super Admin theme assignment UI + Org Admin theme selection + org-wide theme application (Wave 2, depends on 07-01)
+- [ ] 07-04-PLAN.md -- Conversation visibility service + compliance page + onboarding APIs (Wave 2, depends on 07-01)
+- [ ] 07-05-PLAN.md -- User impersonation service + search page + impersonation banner (Wave 2, depends on 07-01)
+- [ ] 07-06-PLAN.md -- Org Admin logo upload + login page redesign + onboarding wizard (Wave 3, depends on 07-01, 07-03, 07-04)
+- [ ] 07-07-PLAN.md -- Human verification checkpoint for all Phase 7 requirements (Wave 4, depends on all)
 
 ## Progress
 
@@ -214,4 +218,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Role Configuration and Usage Limits | 14/14 | Complete | 2026-03-03 |
 | 5. Super Admin Dashboard | 10/11 | In Progress|  |
 | 6. Org Admin Dashboard | 8/8 | Complete | 2026-03-05 |
-| 7. Theming, Branding, and Compliance | 0/3 | Not started | - |
+| 7. Theming, Branding, and Compliance | 0/7 | Not started | - |
