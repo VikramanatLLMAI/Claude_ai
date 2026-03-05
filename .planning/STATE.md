@@ -101,14 +101,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 6 complete: Org Admin Dashboard -- all 7 plans finished, human verification checkpoint passed automated checks
+**Current focus:** Phase 6 complete: Org Admin Dashboard -- all 8 plans finished including gap closure fix for self-action protection
 
 ## Current Position
 
-Phase: 6 of 7 (in progress)
-Plan: 7 of 7 in current phase (7 complete, 0 pending)
-Status: 06-07 complete -- Human verification checkpoint (automated checks passed, awaiting human sign-off)
-Last activity: 2026-03-05 -- Completed 06-07-PLAN.md (Human Verification Checkpoint)
+Phase: 6 of 7 (complete)
+Plan: 8 of 8 in current phase (8 complete, 0 pending)
+Status: 06-08 complete -- Self-action protection fix applied (getCurrentUserId reads from correct localStorage key)
+Last activity: 2026-03-05 -- Completed 06-08-PLAN.md (Self-Action Protection Fix)
 
 Progress: [################----] 85% (phase 6 complete)
 
@@ -311,5 +311,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-07-PLAN.md (Human Verification Checkpoint)
+Stopped at: Completed 06-08-PLAN.md (Self-Action Protection Fix)
 Resume file: N/A
