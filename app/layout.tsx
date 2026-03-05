@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toast";
+import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 import "./globals.css";
 import "./artifact-panel.css";
 
@@ -45,7 +46,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
         suppressHydrationWarning
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <ImpersonationBanner />
+          {children}
+        </Providers>
         <Toaster />
       </body>
     </html>
