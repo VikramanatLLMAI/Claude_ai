@@ -173,7 +173,7 @@ Plans:
 - [x] 06-02-PLAN.md -- Org analytics service layer and API endpoint covering all 15 OANA requirements (Wave 1)
 - [x] 06-03-PLAN.md -- Members page with DataTable, side panel, bulk actions, all user management UI (Wave 2, depends on 06-01)
 - [x] 06-04-PLAN.md -- Invitations page with filter tabs, send modal, resend/revoke actions (Wave 2, depends on 06-01)
-- [ ] 06-05-PLAN.md -- Analytics dashboard page with KPI cards, 10+ chart sections, per-section CSV export (Wave 2, depends on 06-02)
+- [x] 06-05-PLAN.md -- Analytics dashboard page with KPI cards, 10+ chart sections, per-section CSV export (Wave 2, depends on 06-02)
 - [ ] 06-06-PLAN.md -- Audit logs page (mirror Super Admin) + Settings page with API key viewer (Wave 2, depends on 06-01)
 - [ ] 06-07-PLAN.md -- Human verification checkpoint for all 33 Phase 6 requirements (Wave 3, depends on all)
 
