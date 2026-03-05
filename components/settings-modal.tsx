@@ -37,22 +37,12 @@ import { cn } from "@/lib/utils"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 const THEME_KEY = "llmatscale_theme"
-const COLOR_THEME_KEY = "llmatscale_color_theme"
 const FONT_SIZE_KEY = "llmatscale_font_size"
 const CODE_THEME_KEY = "llmatscale_code_theme"
 const INSTRUCTIONS_KEY = "llmatscale_custom_instructions"
 
 type Theme = "light" | "dark" | "system"
-type ColorTheme = "claude" | "vercel" | "solar-dusk" | "twitter" | "violet-bloom"
 type CodeTheme = "github-dark" | "one-dark-pro" | "dracula"
-
-const COLOR_THEMES: { id: ColorTheme; label: string; description: string; accent: string }[] = [
-  { id: "claude", label: "Claude", description: "Warm earthy tones", accent: "#D97757" },
-  { id: "vercel", label: "Vercel", description: "Clean monochrome", accent: "#000000" },
-  { id: "solar-dusk", label: "Solar Dusk", description: "Amber & sunset", accent: "#C0630A" },
-  { id: "twitter", label: "Twitter", description: "Blue accent", accent: "#1D9BF0" },
-  { id: "violet-bloom", label: "Violet Bloom", description: "Rich violet", accent: "#7C3AED" },
-]
 
 type SettingsTab = "profile" | "general" | "appearance" | "api-keys" | "mcp" | "instructions" | "sessions" | "advanced"
 
@@ -117,7 +107,6 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
   // Appearance state
   const [theme, setTheme] = useState<Theme>("system")
-  const [colorTheme, setColorTheme] = useState<ColorTheme>("claude")
   const [fontSize, setFontSize] = useState(16)
   const [codeTheme, setCodeTheme] = useState<CodeTheme>("github-dark")
 
@@ -199,13 +188,14 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
     // Load theme preferences
     const savedTheme = localStorage.getItem(THEME_KEY) as Theme | null
-    const savedColorTheme = localStorage.getItem(COLOR_THEME_KEY) as ColorTheme | null
     const savedFontSize = localStorage.getItem(FONT_SIZE_KEY)
     const savedCodeTheme = localStorage.getItem(CODE_THEME_KEY) as CodeTheme | null
     if (savedTheme) setTheme(savedTheme)
-    if (savedColorTheme) setColorTheme(savedColorTheme)
     if (savedFontSize) setFontSize(parseInt(savedFontSize))
     if (savedCodeTheme) setCodeTheme(savedCodeTheme)
+
+    // Sync theme mode from API (server is source of truth)
+    syncThemeModeFromApi()
 
     // Load profile and settings
     loadUserProfile()
@@ -526,21 +516,33 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
     }
   }
 
+  const syncThemeModeFromApi = async () => {
+    try {
+      const res = await fetch("/api/user/preferences", { headers: getAuthHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        const serverThemeMode = data.preferences?.themeMode as Theme | undefined
+        if (serverThemeMode && serverThemeMode !== theme) {
+          setTheme(serverThemeMode)
+          localStorage.setItem(THEME_KEY, serverThemeMode)
+          applyTheme(serverThemeMode)
+        }
+      }
+    } catch (error) {
+      console.error("Error syncing theme preferences:", error)
+    }
+  }
+
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme)
     localStorage.setItem(THEME_KEY, newTheme)
     applyTheme(newTheme)
-  }
-
-  const handleColorThemeChange = (newColorTheme: ColorTheme) => {
-    setColorTheme(newColorTheme)
-    localStorage.setItem(COLOR_THEME_KEY, newColorTheme)
-    const root = document.documentElement
-    if (newColorTheme === "claude") {
-      root.removeAttribute("data-theme")
-    } else {
-      root.setAttribute("data-theme", newColorTheme)
-    }
+    // Persist to API (fire-and-forget)
+    fetch("/api/user/preferences", {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ themeMode: newTheme }),
+    }).catch((err) => console.error("Error persisting theme mode:", err))
   }
 
   const handleFontSizeChange = (newSize: number) => {
@@ -1143,31 +1145,6 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                           >
                             <t.icon className="size-4" />
                             {t.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Color Theme */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-foreground mb-2 block">Color Theme</label>
-                      <div className="grid grid-cols-5 gap-2">
-                        {COLOR_THEMES.map((ct) => (
-                          <button
-                            key={ct.id}
-                            onClick={() => handleColorThemeChange(ct.id)}
-                            className={cn(
-                              "flex flex-col items-center gap-1.5 rounded-lg border-2 p-2.5 transition-colors hover:border-primary/50",
-                              colorTheme === ct.id
-                                ? "border-primary bg-primary/5"
-                                : "border-border"
-                            )}
-                          >
-                            <div
-                              className="size-6 rounded-full border border-border/50"
-                              style={{ backgroundColor: ct.accent }}
-                            />
-                            <span className="text-[11px] font-medium text-foreground leading-tight text-center">{ct.label}</span>
                           </button>
                         ))}
                       </div>
