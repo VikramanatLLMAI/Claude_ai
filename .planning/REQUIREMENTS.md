@@ -101,7 +101,7 @@ Requirements for initial release. All features from the RBAC specification are v
 - [x] **SAUD-01**: Super Admin can view audit logs for all admin actions across all orgs
 - [x] **SAUD-02**: Filter audit logs by date, org, action type, user
 - [x] **SAUD-03**: Export audit logs as CSV or JSON
-- [ ] **SAUD-04**: User impersonation for support purposes (read-only, logged in audit)
+- [x] **SAUD-04**: User impersonation for support purposes (read-only, logged in audit)
 
 ### Super Admin — Admin Panel UI (SUI)
 
@@ -568,7 +568,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OVIS-05 | Phase 7 | Pending |
 | OVIS-06 | Phase 7 | Pending |
 | OVIS-07 | Phase 7 | Pending |
-| SAUD-04 | Phase 7 | Pending |
+| SAUD-04 | Phase 7 | Complete |
 | CRON-01 | Phase 7 | Complete |
 | CRON-02 | Phase 7 | Complete |
 | CRON-03 | Phase 7 | Complete |

@@ -114,16 +114,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 01 complete (schema foundation + theme service + cleanup service)
+**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 04 complete (conversation visibility + onboarding APIs)
 
 ## Current Position
 
 Phase: 7 of 7 (in progress)
-Plan: 2 of 7 in current phase (2 complete, 5 pending)
-Status: 07-01 complete -- Schema extended with theme/onboarding/impersonation fields, theme service with fallback chain, cleanup service, 4 API routes
-Last activity: 2026-03-05 -- Completed 07-01-PLAN.md (Schema Foundation + Theme Service + Cleanup)
+Plan: 6 of 7 in current phase (3 complete, 4 pending)
+Status: 07-05 complete -- User impersonation with search, session management, banner, auto-expiry, audit trail
+Last activity: 2026-03-05 -- Completed 07-05-PLAN.md (User Impersonation for IT Support)
 
-Progress: [################----] 88% (phase 7 plan 2 of 7)
+Progress: [################----] 90% (phase 7 plan 6 of 7)
 
 ## Performance Metrics
 
@@ -315,6 +315,10 @@ Recent decisions affecting current work:
 - [07-01]: Platform-level audit log entries for cleanup operations use userId=null (system actions)
 - [07-02]: Created separate /api/user/preferences route using requireAuth (not requireOrgAuth) so it works for Super Admins and org users alike
 - [07-02]: Fire-and-forget PATCH on theme change for instant UX; sync from API on modal open for cross-session consistency
+- [07-05]: Impersonation creates a real session as the target user -- impersonatorId is audit metadata only, not authorization
+- [07-05]: Original SA session token stored in localStorage (llmatscale_impersonation_original_session) for post-impersonation restoration
+- [07-05]: Auth middleware auto-expires impersonation sessions with fire-and-forget delete
+- [07-05]: ImpersonationBanner placed inside Providers in root layout for global visibility
 
 ### Pending Todos
 
@@ -329,5 +333,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 07-01-PLAN.md (Schema Foundation + Theme Service + Cleanup)
+Stopped at: Completed 07-05-PLAN.md (User Impersonation for IT Support)
 Resume file: N/A
