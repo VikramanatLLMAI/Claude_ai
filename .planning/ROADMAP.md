@@ -134,7 +134,7 @@ Plans:
   3. Platform analytics dashboard displays org statistics, user counts, token consumption by org/model, usage trends over time, and top orgs by usage -- all rendered with Recharts
   4. Super Admin can view, filter (by date, org, action type, user), and export (CSV/JSON) platform-wide audit logs
   5. All data tables (orgs, users, API keys, audit logs) use TanStack Table with sorting, filtering, and pagination
-**Plans**: 8 plans in 4 waves
+**Plans**: 11 plans in 4 waves
 
 Plans:
 - [x] 05-01-PLAN.md -- Route restructure (/admin to /super-admin), install TanStack Table, schema changes (PlatformSettings, PlatformApiKeyAssignment) (Wave 1)
@@ -145,6 +145,9 @@ Plans:
 - [ ] 05-06-PLAN.md -- Platform Analytics: service layer, API endpoint, KPI cards, 9 Recharts chart sections (Wave 3, depends on 05-01, 05-03)
 - [ ] 05-07-PLAN.md -- Audit Logs: service layer, server-side paginated API, filter/sort, CSV/JSON export (Wave 3, depends on 05-01, 05-02)
 - [ ] 05-08-PLAN.md -- Model Registry TanStack Table upgrade + final human verification checkpoint (Wave 4, depends on all)
+- [x] 05-09-PLAN.md -- Gap closure: Fix API key individual-key operations 500 errors (reveal, test, update, delete) (Wave 1, standalone)
+- [ ] 05-10-PLAN.md -- Gap closure: Fix Super Admin Delete 500 error (Wave 1, standalone)
+- [ ] 05-11-PLAN.md -- Gap closure: UAT dialog state bug and password placeholder fixes (Wave 1, standalone)
 
 ### Phase 6: Org Admin Dashboard
 **Goal**: Org Admin has a complete management panel at {org-slug}.llmatscale.ai/admin with user management, role management, invitation management, org analytics, and audit logs -- all built with shadcn sidebar, TanStack Table, and Recharts

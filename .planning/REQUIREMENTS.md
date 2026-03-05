@@ -60,10 +60,10 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — Platform API Keys (SKEY)
 
-- [ ] **SKEY-01**: Super Admin can add API keys per AI provider (v1: Anthropic only)
-- [ ] **SKEY-02**: Super Admin can remove API keys
-- [ ] **SKEY-03**: Super Admin can test API key validity
-- [ ] **SKEY-04**: Super Admin can assign API keys to specific organizations
+- [x] **SKEY-01**: Super Admin can add API keys per AI provider (v1: Anthropic only)
+- [x] **SKEY-02**: Super Admin can remove API keys
+- [x] **SKEY-03**: Super Admin can test API key validity
+- [x] **SKEY-04**: Super Admin can assign API keys to specific organizations
 
 ### Super Admin — Platform Model Registry (MODL)
 
@@ -490,10 +490,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SUI-02 | Phase 5 | Complete |
 | SUI-03 | Phase 5 | Complete |
 | SUI-04 | Phase 5 | Complete |
-| SKEY-01 | Phase 5 | Pending |
-| SKEY-02 | Phase 5 | Pending |
-| SKEY-03 | Phase 5 | Pending |
-| SKEY-04 | Phase 5 | Pending |
+| SKEY-01 | Phase 5 | Complete |
+| SKEY-02 | Phase 5 | Complete |
+| SKEY-03 | Phase 5 | Complete |
+| SKEY-04 | Phase 5 | Complete |
 | SSET-01 | Phase 5 | Complete |
 | SSET-02 | Phase 5 | Complete |
 | SANA-01 | Phase 5 | Complete |
