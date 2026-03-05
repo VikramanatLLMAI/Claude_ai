@@ -579,8 +579,10 @@ export default function OrganizationsPage() {
       <OrgFormDialog
         open={formOpen}
         onOpenChange={(open) => {
+          if (!open) {
+            setEditingOrg(null)
+          }
           setFormOpen(open)
-          if (!open) setEditingOrg(null)
         }}
         org={editingOrg}
         onSubmit={editingOrg ? handleEdit : handleCreate}

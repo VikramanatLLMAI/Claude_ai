@@ -158,7 +158,7 @@ function CreateSuperAdminDialog({ open, onOpenChange, onSubmit }: CreateSuperAdm
               type="password"
               value={form.password}
               onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-              placeholder="Min. 8 characters"
+              placeholder="Min. 8 chars, uppercase, lowercase, number"
               required
               minLength={8}
             />
