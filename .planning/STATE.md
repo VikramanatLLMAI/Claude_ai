@@ -70,14 +70,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 5 in progress: Super Admin Dashboard -- API key management complete (05-04)
+**Current focus:** Phase 5 in progress: Super Admin Dashboard -- SA delete fix complete (05-10)
 
 ## Current Position
 
 Phase: 5 of 7 (in progress)
-Plan: 7 of 8 in current phase (7 complete, 1 pending)
-Status: 05-04 complete -- API key management with encrypted storage, multi-org assignment, click-to-reveal, and test endpoint
-Last activity: 2026-03-04 -- Completed 05-04-PLAN.md (API Keys Management)
+Plan: 10 of 11 in current phase (10 complete, 1 pending)
+Status: 05-10 complete -- Fixed Super Admin delete 500 error (FK constraint on Invitation.invitedBy)
+Last activity: 2026-03-05 -- Completed 05-10-PLAN.md (Fix Super Admin Delete 500)
 
 Progress: [###########---------] 75% (phase 5 in progress)
 
@@ -254,6 +254,7 @@ Recent decisions affecting current work:
 - [05-04]: In-modal test flow: create temp key -> POST test -> DELETE cleanup (avoids a separate raw-key-test endpoint)
 - [05-04]: PlatformApiKey.organizationId field unused; PlatformApiKeyAssignment junction table used for multi-org support
 - [05-04]: maskKey format: first 7 chars + "..." + last 4 chars, per CONTEXT.md spec
+- [05-10]: Reassign invitations to actor (not delete) before SA user deletion -- preserves invitation history; nullify AuditLog.userId to preserve audit trail
 
 ### Pending Todos
 
@@ -267,6 +268,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-04
-Stopped at: Completed 05-04-PLAN.md (API Keys management -- encrypted storage, multi-org assignment, click-to-reveal, Anthropic SDK test).
+Last session: 2026-03-05
+Stopped at: Completed 05-10-PLAN.md (Fix Super Admin delete 500 -- FK constraint on Invitation.invitedBy handled).
 Resume file: N/A -- continue with next pending Phase 5 plan
