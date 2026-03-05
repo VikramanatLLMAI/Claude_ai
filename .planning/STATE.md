@@ -88,16 +88,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 5 in progress: Super Admin Dashboard -- UAT bug fixes complete (05-11)
+**Current focus:** Phase 6 in progress: Org Admin Dashboard -- analytics service and API complete (06-02)
 
 ## Current Position
 
-Phase: 5 of 7 (in progress)
-Plan: 11 of 11 in current phase (10 complete, 1 pending -- 05-09 remaining)
-Status: 05-09 complete -- API key operations hardened with decryption error handling and frontend error toasts
-Last activity: 2026-03-05 -- Completed 05-09-PLAN.md (API Key Operations Fix)
+Phase: 6 of 7 (in progress)
+Plan: 2 of 7 in current phase (2 complete, 5 pending)
+Status: 06-02 complete -- Org analytics service with 14 query functions and section-based API endpoint covering all 15 OANA requirements
+Last activity: 2026-03-05 -- Completed 06-02-PLAN.md (Org Analytics Service & API)
 
-Progress: [###########---------] 75% (phase 5 in progress)
+Progress: [############--------] 80% (phase 6 in progress)
 
 ## Performance Metrics
 
@@ -289,5 +289,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 05-09-PLAN.md (API key operations fix -- hardened error handling, audit log normalization, frontend error toasts).
-Resume file: N/A -- continue with next pending Phase 5 plan
+Stopped at: Completed 06-01-PLAN.md (Org user management service, API endpoints, sidebar nav update)
+Resume file: N/A -- continue with 06-02-PLAN.md

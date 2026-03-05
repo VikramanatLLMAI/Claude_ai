@@ -161,17 +161,17 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — User Management (OUSR)
 
 - [x] **OUSR-01**: Org Admin can invite users to the org via email (Resend API)
-- [ ] **OUSR-02**: Org Admin can view all users in the org with their name, role, avatar, and last active date
-- [ ] **OUSR-03**: Org Admin can edit user details (name only — email change not allowed)
-- [ ] **OUSR-04**: Org Admin can change a user's role
-- [ ] **OUSR-05**: Org Admin can promote a user to Org Admin (same org only)
-- [ ] **OUSR-06**: Org Admin can suspend a user (blocks access without deleting)
-- [ ] **OUSR-07**: Org Admin can activate a suspended user
-- [ ] **OUSR-08**: Org Admin can delete a user
+- [x] **OUSR-02**: Org Admin can view all users in the org with their name, role, avatar, and last active date
+- [x] **OUSR-03**: Org Admin can edit user details (name only — email change not allowed)
+- [x] **OUSR-04**: Org Admin can change a user's role
+- [x] **OUSR-05**: Org Admin can promote a user to Org Admin (same org only)
+- [x] **OUSR-06**: Org Admin can suspend a user (blocks access without deleting)
+- [x] **OUSR-07**: Org Admin can activate a suspended user
+- [x] **OUSR-08**: Org Admin can delete a user
 - [x] **OUSR-09**: Org Admin can resend or revoke pending invitations
-- [ ] **OUSR-10**: Org Admin can view a user's custom instructions (read-only, for compliance)
-- [ ] **OUSR-11**: Org Admin can force-logout a specific user from all active sessions
-- [ ] **OUSR-12**: Org Admin can view inactive users (users who have not logged in for 30+ days)
+- [x] **OUSR-10**: Org Admin can view a user's custom instructions (read-only, for compliance)
+- [x] **OUSR-11**: Org Admin can force-logout a specific user from all active sessions
+- [x] **OUSR-12**: Org Admin can view inactive users (users who have not logged in for 30+ days)
 
 ### Org Admin — Role Management (OROL)
 
@@ -248,7 +248,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Admin Panel UI (OUI)
 
-- [ ] **OUI-01**: Org Admin panel at {org-slug}.llmatscale.ai/admin using shadcn sidebar component as base layout
+- [x] **OUI-01**: Org Admin panel at {org-slug}.llmatscale.ai/admin using shadcn sidebar component as base layout
 - [ ] **OUI-02**: All Org Admin tables use TanStack Table with sorting, filtering, pagination
 - [ ] **OUI-03**: All Org Admin forms, modals, dialogs, dropdowns, tabs, switches use shadcn components
 - [ ] **OUI-04**: All Org Admin analytics dashboards use Recharts
