@@ -249,8 +249,8 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — Admin Panel UI (OUI)
 
 - [x] **OUI-01**: Org Admin panel at {org-slug}.llmatscale.ai/admin using shadcn sidebar component as base layout
-- [ ] **OUI-02**: All Org Admin tables use TanStack Table with sorting, filtering, pagination
-- [ ] **OUI-03**: All Org Admin forms, modals, dialogs, dropdowns, tabs, switches use shadcn components
+- [x] **OUI-02**: All Org Admin tables use TanStack Table with sorting, filtering, pagination
+- [x] **OUI-03**: All Org Admin forms, modals, dialogs, dropdowns, tabs, switches use shadcn components
 - [ ] **OUI-04**: All Org Admin analytics dashboards use Recharts
 
 ### Regular User — Authentication & Registration (UATH)
@@ -512,8 +512,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAUD-02 | Phase 5 | Complete |
 | SAUD-03 | Phase 5 | Complete |
 | OUI-01 | Phase 6 | Pending |
-| OUI-02 | Phase 6 | Pending |
-| OUI-03 | Phase 6 | Pending |
+| OUI-02 | Phase 6 | Complete |
+| OUI-03 | Phase 6 | Complete |
 | OUI-04 | Phase 6 | Pending |
 | OUSR-02 | Phase 6 | Pending |
 | OUSR-03 | Phase 6 | Pending |

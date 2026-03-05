@@ -93,9 +93,9 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 6 of 7 (in progress)
-Plan: 2 of 7 in current phase (2 complete, 5 pending)
-Status: 06-02 complete -- Org analytics service with 14 query functions and section-based API endpoint covering all 15 OANA requirements
-Last activity: 2026-03-05 -- Completed 06-02-PLAN.md (Org Analytics Service & API)
+Plan: 4 of 7 in current phase (3 complete, 4 pending)
+Status: 06-04 complete -- Invitations management page with DataTable, filter tabs, send modal, resend/revoke row actions
+Last activity: 2026-03-05 -- Completed 06-04-PLAN.md (Invitations Page)
 
 Progress: [############--------] 80% (phase 6 in progress)
 
@@ -275,6 +275,9 @@ Recent decisions affecting current work:
 - [05-11]: Org dialog fix: clear editingOrg before setFormOpen(false) to prevent React state batching race on close
 - [05-11]: API key mask format confirmed correct (slice(0,7) = 7 chars) -- UAT tester miscounted
 - [05-10]: Reassign invitations to actor (not delete) before SA user deletion -- preserves invitation history; nullify AuditLog.userId to preserve audit trail
+- [06-04]: Used DropdownMenu (not HTML select) for role dropdown in send dialog -- consistent with MCP assignment panel pattern
+- [06-04]: Client-side tab filtering since invitation list is typically small (no server-side filtering needed)
+- [06-04]: Revoked invitations remain visible in table (no auto-cleanup) per CONTEXT.md spec
 
 ### Pending Todos
 
@@ -289,5 +292,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-02-PLAN.md (Org Analytics Service & API)
-Resume file: N/A -- continue with 06-02-PLAN.md
+Stopped at: Completed 06-04-PLAN.md (Invitations Page)
+Resume file: N/A
