@@ -119,7 +119,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Org Admin — Logo & Branding (OBRN)
 
-- [ ] **OBRN-01**: Org Admin can upload org logo (converted to Base64, stored in database)
+- [x] **OBRN-01**: Org Admin can upload org logo (converted to Base64, stored in database)
 - [ ] **OBRN-02**: Org Admin can set primary brand color
 - [ ] **OBRN-03**: Org Admin can set accent color
 - [ ] **OBRN-04**: Branding changes apply across the entire org UI instantly
@@ -554,7 +554,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OTHM-05 | Phase 7 | Complete |
 | OTHM-06 | Phase 7 | Complete |
 | OTHM-07 | Phase 7 | Complete |
-| OBRN-01 | Phase 7 | Pending |
+| OBRN-01 | Phase 7 | Complete |
 | OBRN-02 | Phase 7 | Pending |
 | OBRN-03 | Phase 7 | Pending |
 | OBRN-04 | Phase 7 | Pending |

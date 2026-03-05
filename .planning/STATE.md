@@ -114,16 +114,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 04 complete (conversation visibility + onboarding APIs)
+**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 06 complete (logo upload, login redesign, onboarding wizard)
 
 ## Current Position
 
 Phase: 7 of 7 (in progress)
-Plan: 5 of 7 in current phase (4 complete, 3 pending)
-Status: 07-04 complete -- Conversation visibility compliance feature with toggle, filtering, export, onboarding APIs
-Last activity: 2026-03-05 -- Completed 07-04-PLAN.md (Conversation Visibility + Onboarding APIs)
+Plan: 7 of 7 in current phase (6 complete, 1 pending)
+Status: 07-06 complete -- Logo upload, login page redesign with branding, onboarding wizard with conversation visibility notice
+Last activity: 2026-03-05 -- Completed 07-06-PLAN.md (Logo Upload, Login Page Redesign, Onboarding Wizard)
 
-Progress: [################----] 90% (phase 7 plan 5 of 7)
+Progress: [##################--] 95% (phase 7 plan 7 of 7)
 
 ## Performance Metrics
 
@@ -322,6 +322,10 @@ Recent decisions affecting current work:
 - [07-04]: JSZip generates uint8array (not nodebuffer) to satisfy NextResponse BodyInit typing
 - [07-04]: Visibility gate on all conversation endpoints: 403 if conversationVisibility is false
 - [07-04]: Conversation viewer uses Markdown component from prompt-kit for message rendering
+- [07-06]: Login page server component fetches OrgSettings via Prisma relation include (single query)
+- [07-06]: Login page theme applied via client-side useEffect setting data-theme (cleaned up on unmount)
+- [07-06]: Onboarding wizard uses Framer Motion slide transitions between 3 steps
+- [07-06]: Chat page conversation visibility check gracefully falls back to false for non-admin users (403 from admin endpoint)
 
 ### Pending Todos
 
@@ -336,5 +340,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 07-04-PLAN.md (Conversation Visibility + Onboarding APIs)
+Stopped at: Completed 07-06-PLAN.md (Logo Upload, Login Page Redesign, Onboarding Wizard)
 Resume file: N/A

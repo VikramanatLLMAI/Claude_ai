@@ -199,10 +199,10 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md -- Schema extensions + theme service + cleanup service + theme API routes (Wave 1)
 - [x] 07-02-PLAN.md -- User theme mode (light/dark/system) + remove color theme picker from settings modal (Wave 1)
-- [ ] 07-03-PLAN.md -- Super Admin theme assignment UI + Org Admin theme selection + org-wide theme application (Wave 2, depends on 07-01)
+- [x] 07-03-PLAN.md -- Super Admin theme assignment UI + Org Admin theme selection + org-wide theme application (Wave 2, depends on 07-01) [DONE: 2 tasks, 8 files]
 - [x] 07-04-PLAN.md -- Conversation visibility service + compliance page + onboarding APIs (Wave 2, depends on 07-01) [DONE: 2 tasks, 11 files]
 - [x] 07-05-PLAN.md -- User impersonation service + search page + impersonation banner (Wave 2, depends on 07-01) [DONE: 2 tasks, 9 files]
-- [ ] 07-06-PLAN.md -- Org Admin logo upload + login page redesign + onboarding wizard (Wave 3, depends on 07-01, 07-03, 07-04)
+- [x] 07-06-PLAN.md -- Org Admin logo upload + login page redesign + onboarding wizard (Wave 3, depends on 07-01, 07-03, 07-04) [DONE: 2 tasks, 7 files]
 - [ ] 07-07-PLAN.md -- Human verification checkpoint for all Phase 7 requirements (Wave 4, depends on all)
 
 ## Progress
