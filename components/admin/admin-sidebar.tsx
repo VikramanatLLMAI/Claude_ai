@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Lock,
   Mail,
+  ScrollText,
 } from "lucide-react"
 import {
   Sidebar,
@@ -87,9 +88,17 @@ function getOrgAdminNavGroups(orgSlug: string): NavGroup[] {
       ],
     },
     {
+      label: "People",
+      items: [
+        { label: "Members", icon: Users2, href: `${base}/users`, enabled: true },
+        { label: "Invitations", icon: Mail, href: `${base}/invitations`, enabled: true },
+      ],
+    },
+    {
       label: "Monitoring",
       items: [
-        { label: "Usage", icon: BarChart3, href: `${base}/usage`, enabled: true },
+        { label: "Analytics", icon: BarChart3, href: `${base}/analytics`, enabled: true },
+        { label: "Audit Logs", icon: ScrollText, href: `${base}/audit-logs`, enabled: true },
       ],
     },
     {
@@ -99,10 +108,9 @@ function getOrgAdminNavGroups(orgSlug: string): NavGroup[] {
       ],
     },
     {
-      label: "People",
+      label: "Settings",
       items: [
-        { label: "Members", icon: Users2, href: `${base}/users`, enabled: false },
-        { label: "Invitations", icon: Mail, href: `${base}/invitations`, enabled: false },
+        { label: "Settings", icon: Settings, href: `${base}/settings`, enabled: true },
       ],
     },
   ]
