@@ -66,10 +66,10 @@ function getAuthHeaders(): HeadersInit {
 function getCurrentUserId(): string | null {
   if (typeof window === "undefined") return null
   try {
-    const raw = localStorage.getItem("llmatscale_user")
+    const raw = localStorage.getItem("llmatscale_auth_session")
     if (!raw) return null
-    const user = JSON.parse(raw)
-    return user.id || null
+    const session = JSON.parse(raw)
+    return session.user?.id || null
   } catch {
     return null
   }
