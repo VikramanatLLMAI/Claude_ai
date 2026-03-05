@@ -70,14 +70,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 5 in progress: Super Admin Dashboard -- SA delete fix complete (05-10)
+**Current focus:** Phase 5 in progress: Super Admin Dashboard -- UAT bug fixes complete (05-11)
 
 ## Current Position
 
 Phase: 5 of 7 (in progress)
-Plan: 10 of 11 in current phase (10 complete, 1 pending)
-Status: 05-10 complete -- Fixed Super Admin delete 500 error (FK constraint on Invitation.invitedBy)
-Last activity: 2026-03-05 -- Completed 05-10-PLAN.md (Fix Super Admin Delete 500)
+Plan: 11 of 11 in current phase (10 complete, 1 pending -- 05-09 remaining)
+Status: 05-11 complete -- Fixed org dialog state bug, password placeholder, verified API key mask format
+Last activity: 2026-03-05 -- Completed 05-11-PLAN.md (UAT Bug Fixes)
 
 Progress: [###########---------] 75% (phase 5 in progress)
 
@@ -254,6 +254,8 @@ Recent decisions affecting current work:
 - [05-04]: In-modal test flow: create temp key -> POST test -> DELETE cleanup (avoids a separate raw-key-test endpoint)
 - [05-04]: PlatformApiKey.organizationId field unused; PlatformApiKeyAssignment junction table used for multi-org support
 - [05-04]: maskKey format: first 7 chars + "..." + last 4 chars, per CONTEXT.md spec
+- [05-11]: Org dialog fix: clear editingOrg before setFormOpen(false) to prevent React state batching race on close
+- [05-11]: API key mask format confirmed correct (slice(0,7) = 7 chars) -- UAT tester miscounted
 - [05-10]: Reassign invitations to actor (not delete) before SA user deletion -- preserves invitation history; nullify AuditLog.userId to preserve audit trail
 
 ### Pending Todos
@@ -269,5 +271,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 05-10-PLAN.md (Fix Super Admin delete 500 -- FK constraint on Invitation.invitedBy handled).
-Resume file: N/A -- continue with next pending Phase 5 plan
+Stopped at: Completed 05-11-PLAN.md (UAT bug fixes -- dialog state, password placeholder, mask format verification).
+Resume file: N/A -- 05-09 still pending in Phase 5
