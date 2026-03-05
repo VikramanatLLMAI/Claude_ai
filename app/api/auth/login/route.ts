@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     // Resolve org context from URL (if present) with body.slug fallback for org login page
     const slug = resolveOrgSlug(req) || body.slug || null;
     let organizationId: string | null = null;
-    let orgInfo: { id: string; name: string; slug: string } | null = null;
+    let orgInfo: { id: string; name: string; slug: string; logoBase64: string | null; logoDisplayMode: string } | null = null;
 
     if (!user.isSuperAdmin && slug) {
       // Verify user is a member of this organization
@@ -81,6 +81,8 @@ export async function POST(req: NextRequest) {
         id: orgMember.organization.id,
         name: orgMember.organization.name,
         slug: orgMember.organization.slug,
+        logoBase64: orgMember.organization.logoBase64 || null,
+        logoDisplayMode: orgMember.organization.logoDisplayMode || 'PLATFORM_AND_ORG',
       };
     }
 

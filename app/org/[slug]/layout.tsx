@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
+import { getActiveTheme } from "@/lib/services/theme-service";
+import { OrgThemeProvider } from "@/components/org-theme-provider";
 
 /**
  * Org-scoped layout - wraps all pages under /org/[slug]/*.
@@ -9,7 +11,7 @@ import { notFound, redirect } from "next/navigation";
  * - Looks up organization by slug (unscoped -- org lookup is by slug, not orgId)
  * - If org not found or soft-deleted: triggers Next.js not-found page
  * - If org is SUSPENDED: shows suspension message
- * - Passes org context to children via searchParams or props
+ * - Fetches active theme server-side and applies via OrgThemeProvider (no FOUC)
  */
 
 interface OrgLayoutProps {
@@ -83,5 +85,12 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
     );
   }
 
-  return <>{children}</>;
+  // Fetch active theme from DB (server-side, no FOUC)
+  const activeTheme = await getActiveTheme(org.id);
+
+  return (
+    <OrgThemeProvider activeTheme={activeTheme}>
+      {children}
+    </OrgThemeProvider>
+  );
 }

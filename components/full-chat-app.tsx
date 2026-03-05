@@ -364,6 +364,8 @@ function ChatSidebar({
   onOpenSettings,
   isOrgAdmin,
   orgSlug,
+  orgLogo,
+  orgLogoDisplayMode,
 }: {
   conversations: Conversation[]
   selectedId: string | null
@@ -377,6 +379,8 @@ function ChatSidebar({
   onOpenSettings: () => void
   isOrgAdmin: boolean
   orgSlug: string | null
+  orgLogo: string | null
+  orgLogoDisplayMode: string
 }) {
   const router = useRouter()
 
@@ -437,10 +441,13 @@ function ChatSidebar({
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader>
         <div className="flex w-full items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-medium">
-              LLMatscale.ai
-            </span>
+          <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+            {orgLogo && (
+              <img src={orgLogo} alt="Organization logo" className="h-6 w-auto" />
+            )}
+            {(!orgLogo || orgLogoDisplayMode === "PLATFORM_AND_ORG") && (
+              <span className="text-sm font-medium">LLMatscale.ai</span>
+            )}
           </div>
           <SidebarTrigger className="size-8 shrink-0 border-0 bg-transparent shadow-none hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
         </div>
@@ -2078,6 +2085,8 @@ function FullChatApp() {
   const [permittedModels, setPermittedModels] = useState<PermittedModel[]>([])
   const [isOrgAdmin, setIsOrgAdmin] = useState(false)
   const [orgSlug, setOrgSlug] = useState<string | null>(null)
+  const [orgLogo, setOrgLogo] = useState<string | null>(null)
+  const [orgLogoDisplayMode, setOrgLogoDisplayMode] = useState<string>("PLATFORM_AND_ORG")
   const router = useRouter()
 
   // Load user name, email, and org context from session on mount
@@ -2085,6 +2094,15 @@ function FullChatApp() {
     setUserName(getUserNameFromSession())
     setUserEmail(getUserEmailFromSession())
     setOrgSlug(getOrgSlugFromUrl())
+    // Read org logo from session
+    try {
+      const sessionData = localStorage.getItem(AUTH_SESSION_KEY)
+      if (sessionData) {
+        const session = JSON.parse(sessionData)
+        if (session.organization?.logoBase64) setOrgLogo(session.organization.logoBase64)
+        if (session.organization?.logoDisplayMode) setOrgLogoDisplayMode(session.organization.logoDisplayMode)
+      }
+    } catch { /* ignore */ }
   }, [])
 
   // Fetch permitted models from API (replaces hardcoded CLAUDE_MODELS)
@@ -2250,6 +2268,8 @@ function FullChatApp() {
           onOpenSettings={() => setSettingsOpen(true)}
           isOrgAdmin={isOrgAdmin}
           orgSlug={orgSlug}
+          orgLogo={orgLogo}
+          orgLogoDisplayMode={orgLogoDisplayMode}
         />
         <SidebarInset className="overflow-hidden">
           <ChatContent
