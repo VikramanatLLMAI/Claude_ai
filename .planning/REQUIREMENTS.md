@@ -274,9 +274,9 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Regular User — Theme Preference (UTHEM)
 
-- [ ] **UTHEM-01**: User can toggle between light, dark, or system mode
-- [ ] **UTHEM-02**: Personal preference stored per user
-- [ ] **UTHEM-03**: Completely independent from org theme — applies light/dark on top of whatever org theme is active
+- [x] **UTHEM-01**: User can toggle between light, dark, or system mode
+- [x] **UTHEM-02**: Personal preference stored per user
+- [x] **UTHEM-03**: Completely independent from org theme — applies light/dark on top of whatever org theme is active
 
 ### Regular User — Custom Instructions (UCUST)
 
@@ -558,9 +558,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OBRN-02 | Phase 7 | Pending |
 | OBRN-03 | Phase 7 | Pending |
 | OBRN-04 | Phase 7 | Pending |
-| UTHEM-01 | Phase 7 | Pending |
-| UTHEM-02 | Phase 7 | Pending |
-| UTHEM-03 | Phase 7 | Pending |
+| UTHEM-01 | Phase 7 | Complete |
+| UTHEM-02 | Phase 7 | Complete |
+| UTHEM-03 | Phase 7 | Complete |
 | OVIS-01 | Phase 7 | Pending |
 | OVIS-02 | Phase 7 | Pending |
 | OVIS-03 | Phase 7 | Pending |

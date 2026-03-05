@@ -114,21 +114,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 6 complete: Org Admin Dashboard -- all 8 plans finished including gap closure fix for self-action protection
+**Current focus:** Phase 7 in progress: Theming, Branding, and Compliance -- Plan 02 complete (user theme mode persistence)
 
 ## Current Position
 
-Phase: 6 of 7 (complete)
-Plan: 8 of 8 in current phase (8 complete, 0 pending)
-Status: 06-08 complete -- Self-action protection fix applied (getCurrentUserId reads from correct localStorage key)
-Last activity: 2026-03-05 -- Completed 06-08-PLAN.md (Self-Action Protection Fix)
+Phase: 7 of 7 (in progress)
+Plan: 2 of 7 in current phase (2 complete, 5 pending)
+Status: 07-02 complete -- Color theme picker removed, light/dark/system mode persists to User.preferences via API
+Last activity: 2026-03-05 -- Completed 07-02-PLAN.md (User Theme Mode Persistence)
 
-Progress: [################----] 85% (phase 6 complete)
+Progress: [################----] 88% (phase 7 plan 2 of 7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 8 min
 - Total execution time: ~4.0 hours
 
@@ -310,6 +310,8 @@ Recent decisions affecting current work:
 - [06-06]: API key test endpoint records audit log via prisma.$transaction for atomicity
 - [06-06]: Org settings page reads org info from localStorage session (no extra API call)
 - [06-06]: User filter restricted to org members by cross-referencing OrgMember table
+- [07-02]: Created separate /api/user/preferences route using requireAuth (not requireOrgAuth) so it works for Super Admins and org users alike
+- [07-02]: Fire-and-forget PATCH on theme change for instant UX; sync from API on modal open for cross-session consistency
 
 ### Pending Todos
 
@@ -324,5 +326,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-08-PLAN.md (Self-Action Protection Fix)
+Stopped at: Completed 07-02-PLAN.md (User Theme Mode Persistence)
 Resume file: N/A
