@@ -153,7 +153,7 @@ function UserAvatar({
   size?: "sm" | "lg"
 }) {
   const sizeClass = size === "lg" ? "h-16 w-16 text-xl" : "h-8 w-8 text-xs"
-  const initials = name
+  const initials = (name || "?")
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -233,7 +233,33 @@ export default function MembersPage() {
         throw new Error(data.error || `Failed to load members (${res.status})`)
       }
       const data = await res.json()
-      setUsers(data.users || [])
+      // API returns nested { user: { name, email, ... }, role: { name, ... }, ... }
+      // Flatten to match UserRow interface
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const flatUsers: UserRow[] = (data.users || []).map((m: any) => {
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        const isInactive =
+          m.status === "ACTIVE" &&
+          m.lastActiveAt &&
+          new Date(m.lastActiveAt) < thirtyDaysAgo
+
+        return {
+          id: m.id,
+          userId: m.user?.id || m.userId,
+          name: m.user?.name || m.name || "Unknown",
+          email: m.user?.email || m.email || "",
+          avatarBase64: m.user?.avatarBase64 || m.avatarBase64 || null,
+          roleName: m.role?.name || m.roleName || "Unknown",
+          roleId: m.role?.id || m.roleId || "",
+          status: m.status === "SUSPENDED" ? "Suspended" : isInactive ? "Inactive" : "Active",
+          lastActiveAt: m.lastActiveAt || null,
+          joinedAt: m.joinedAt || "",
+          customInstructions: m.customInstructions || null,
+          isAdmin: Array.isArray(m.role?.permissions) && m.role.permissions.includes("org_admin"),
+        }
+      })
+      setUsers(flatUsers)
       if (data.roles) {
         setRoles(data.roles.map((r: { id: string; name: string }) => ({ id: r.id, name: r.name })))
       }
