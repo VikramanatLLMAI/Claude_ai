@@ -25,7 +25,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import {
-  Users,
   X,
   Ban,
   ShieldAlert,
@@ -41,7 +40,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { DataTablePagination } from "@/components/admin/data-table-pagination"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 import { toast } from "@/components/ui/toast"
@@ -486,16 +485,10 @@ export default function MembersPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">Members</h1>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Members"
+        description="Manage organization members"
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">

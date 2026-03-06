@@ -46,7 +46,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { DataTable } from "@/components/admin/data-table"
 import { DataTableColumnHeader } from "@/components/admin/data-table-column-header"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
@@ -832,23 +832,17 @@ export default function ApiKeysPage() {
   // ---- Render ----
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <div>
-            <h1 className="text-xl font-semibold">API Keys</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage platform-level Anthropic API keys and organization assignments
-            </p>
-          </div>
-        </div>
-        <Button onClick={() => setAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add API Key
-        </Button>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="API Keys"
+        description="Manage platform API keys"
+        actions={
+          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Add API Key
+          </Button>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">

@@ -12,14 +12,14 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Mail, Plus, MoreVertical, Send, XCircle, Loader2 } from "lucide-react"
+import { Plus, MoreVertical, Send, XCircle, Loader2, Mail } from "lucide-react"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "@/components/admin/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import {
   Dialog,
   DialogContent,
@@ -418,14 +418,15 @@ export default function OrgAdminInvitationsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <SidebarTrigger />
-          <Mail className="h-5 w-5" />
-          <h1 className="text-xl font-semibold">Invitations</h1>
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex h-screen flex-col">
+        <AdminPageHeader
+          title="Invitations"
+          description="Manage user invitations"
+        />
+        <div className="flex-1 overflow-auto p-6">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
         </div>
       </div>
     )
@@ -434,19 +435,19 @@ export default function OrgAdminInvitationsPage() {
   const selectedRoleName = roles.find((r) => r.id === sendForm.roleId)?.name
 
   return (
-    <div className="flex-1 p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger />
-          <Mail className="h-5 w-5" />
-          <h1 className="text-xl font-semibold">Invitations</h1>
-        </div>
-        <Button onClick={() => setSendDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Send Invitation
-        </Button>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Invitations"
+        description="Manage user invitations"
+        actions={
+          <Button onClick={() => setSendDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Send Invitation
+          </Button>
+        }
+      />
+
+      <div className="flex-1 overflow-auto p-6 space-y-6">
 
       {/* Filter tabs */}
       <div className="flex gap-1 border-b">
@@ -637,6 +638,7 @@ export default function OrgAdminInvitationsPage() {
         onConfirm={handleRevoke}
         loading={revoking}
       />
+      </div>
     </div>
   )
 }

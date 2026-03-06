@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Plus, Plug } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { McpAssignmentPanel, AddOrgMcpDialog } from "@/components/admin/mcp-assignment-panel"
 import type { RoleInfo } from "@/components/admin/mcp-assignment-panel"
 import { AdminMcpSkeleton } from "@/components/ui/skeleton-loaders"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
 
@@ -83,26 +84,24 @@ export default function OrgAdminMcpPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Plug className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">MCP Server Management</h1>
-            <p className="text-sm text-muted-foreground">
-              Connect and manage MCP servers for your organization.
-            </p>
-          </div>
-        </div>
-        <Button size="sm" onClick={() => setShowAddDialog(true)}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          Add MCP Server
-        </Button>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="MCP Servers"
+        description="Manage Model Context Protocol connections"
+        actions={
+          <Button size="sm" onClick={() => setShowAddDialog(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Add MCP Server
+          </Button>
+        }
+      />
 
-      {/* MCP Connections Panel */}
-      <McpAssignmentPanel key={panelKey} orgSlug={params.slug} roles={roles} />
+      <div className="flex-1 overflow-auto">
+        <div className="mx-auto max-w-3xl px-6 py-6 space-y-6">
+          {/* MCP Connections Panel */}
+          <McpAssignmentPanel key={panelKey} orgSlug={params.slug} roles={roles} />
+        </div>
+      </div>
 
       {/* Add Dialog */}
       <AddOrgMcpDialog

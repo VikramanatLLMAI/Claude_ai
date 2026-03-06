@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import {
-  FileText,
   RefreshCw,
   Download,
   X,
@@ -14,7 +13,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import {
   Dialog,
   DialogContent,
@@ -403,53 +402,49 @@ export default function AuditLogsPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
+      <AdminPageHeader
+        title="Audit Logs"
+        description="Platform activity logs"
+        actions={
           <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">Audit Logs</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchLogs({ page })}
+              disabled={loading}
+            >
+              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExport("csv")}
+              disabled={exportingCsv}
+            >
+              {exportingCsv ? (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExport("json")}
+              disabled={exportingJson}
+            >
+              {exportingJson ? (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Export JSON
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchLogs({ page })}
-            disabled={loading}
-          >
-            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleExport("csv")}
-            disabled={exportingCsv}
-          >
-            {exportingCsv ? (
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-            )}
-            Export CSV
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleExport("json")}
-            disabled={exportingJson}
-          >
-            {exportingJson ? (
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-            )}
-            Export JSON
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6 space-y-4">

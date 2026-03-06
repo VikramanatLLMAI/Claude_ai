@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import {
   Plus,
   MoreVertical,
-  Building2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { DataTable } from "@/components/admin/data-table"
 import { DataTableColumnHeader } from "@/components/admin/data-table-column-header"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
@@ -549,26 +548,22 @@ export default function OrganizationsPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">Organizations</h1>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditingOrg(null)
-            setFormOpen(true)
-          }}
-        >
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          Create Organization
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Organizations"
+        description="Manage tenant organizations"
+        actions={
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingOrg(null)
+              setFormOpen(true)
+            }}
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Create Organization
+          </Button>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">

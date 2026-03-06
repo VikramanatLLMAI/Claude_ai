@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { MessageSquare, Users, Plug, ArrowRight } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 
@@ -67,24 +67,15 @@ export default function OrgAdminPage() {
   ]
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex h-14 items-center gap-3 border-b border-border px-6">
-        <SidebarTrigger />
-        <h1 className="text-lg font-semibold">Admin Console</h1>
-      </header>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title={orgName ? `${orgName} Admin` : "Admin Dashboard"}
+        description="Organization administration overview"
+      />
 
-      <div className="mx-auto w-full max-w-4xl p-6 space-y-8">
-        {/* Welcome header */}
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Welcome to {orgName || "your"} Admin Console
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your organization's AI chat settings
-          </p>
-        </div>
-
-        {/* Quick links grid */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="mx-auto w-full max-w-4xl space-y-8">
+          {/* Quick links grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quickLinks.map((link) => {
             const Icon = link.icon
@@ -109,6 +100,7 @@ export default function OrgAdminPage() {
               </Link>
             )
           })}
+        </div>
         </div>
       </div>
     </div>

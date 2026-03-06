@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Settings, Save, RefreshCw } from "lucide-react"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Save, RefreshCw } from "lucide-react"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -215,38 +215,32 @@ export default function PlatformSettingsPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">
-              Platform Settings
-            </h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {isDirty && (
-            <span className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Unsaved changes
-            </span>
-          )}
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={!isDirty || saving}
-          >
-            {saving ? (
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Save className="mr-1.5 h-3.5 w-3.5" />
+      <AdminPageHeader
+        title="Platform Settings"
+        description="Configure platform defaults"
+        actions={
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <span className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Unsaved changes
+              </span>
             )}
-            Save Changes
-          </Button>
-        </div>
-      </div>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!isDirty || saving}
+            >
+              {saving ? (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
@@ -263,7 +257,7 @@ export default function PlatformSettingsPage() {
           </div>
         )}
 
-        <div className="mx-auto max-w-2xl space-y-8">
+        <div className="mx-auto max-w-3xl space-y-8">
 
           {/* General Settings section */}
           <section>

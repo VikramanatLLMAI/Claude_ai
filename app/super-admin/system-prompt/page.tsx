@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { MessageSquare, Save, RefreshCw, RotateCcw, Sparkles } from "lucide-react"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Save, RefreshCw, RotateCcw, Sparkles } from "lucide-react"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/toast"
@@ -170,12 +170,17 @@ export default function PlatformSystemPromptPage() {
     setEnhancing(true)
     setOriginalBeforeEnhance(value)
 
+    const minDelay = new Promise((r) => setTimeout(r, 400))
+
     try {
-      const res = await fetch("/api/enhance-prompt", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ text: value, type: "platform" }),
-      })
+      const [res] = await Promise.all([
+        fetch("/api/enhance-prompt", {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ text: value, type: "platform" }),
+        }),
+        minDelay,
+      ])
 
       if (res.ok) {
         const data = await res.json()
@@ -206,63 +211,56 @@ export default function PlatformSystemPromptPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">
-              Platform System Prompt
-            </h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {isDirty && (
-            <span className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Unsaved changes
-            </span>
-          )}
-          {/* Reset to Default button */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={saving || !isCustom}>
-                <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                Reset to Default
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset to Default Platform Prompt?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will overwrite your custom platform system prompt with the built-in default.
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleResetToDefault}>
-                  Reset to Default
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={!isDirty || saving}
-          >
-            {saving ? (
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Save className="mr-1.5 h-3.5 w-3.5" />
+      <AdminPageHeader
+        title="System Prompt"
+        description="Configure the platform-level system prompt"
+        actions={
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <span className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Unsaved changes
+              </span>
             )}
-            Save Changes
-          </Button>
-        </div>
-      </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={saving || !isCustom}>
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                  Reset to Default
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset to Default Platform Prompt?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will overwrite your custom platform system prompt with the built-in default.
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleResetToDefault}>
+                    Reset to Default
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!isDirty || saving}
+            >
+              {saving ? (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">

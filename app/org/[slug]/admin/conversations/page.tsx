@@ -24,14 +24,13 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  MessageCircle,
   Search,
   EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { ConversationViewer } from "@/components/admin/conversation-viewer"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -305,23 +304,21 @@ export default function ConversationsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <MessageCircle className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-semibold">Conversations</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Visibility</span>
-          <Switch
-            checked={visibilityEnabled}
-            onCheckedChange={handleToggle}
-            disabled={toggling}
-          />
-        </div>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Conversations"
+        description="Manage and review conversations"
+        actions={
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Visibility</span>
+            <Switch
+              checked={visibilityEnabled}
+              onCheckedChange={handleToggle}
+              disabled={toggling}
+            />
+          </div>
+        }
+      />
 
       {/* Disabled state */}
       {!visibilityEnabled && (

@@ -50,7 +50,7 @@ import {
   type RegistrationTrendPoint,
   type FeatureAdoptionItem,
 } from "@/components/admin/analytics-charts"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 
 // ============================================
 // Constants
@@ -235,13 +235,12 @@ export default function AnalyticsDashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0">
+    <div className="flex h-screen flex-col">
       {/* Page header */}
-      <div className="flex items-center gap-3 border-b px-6 py-4">
-        <SidebarTrigger className="-ml-1" />
-        <div className="flex flex-1 items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold">Platform Analytics</h1>
-
+      <AdminPageHeader
+        title="Analytics"
+        description="Platform-wide usage analytics"
+        actions={
           <div className="flex flex-wrap items-center gap-2">
             {/* Preset buttons */}
             {(["7d", "30d", "90d", "1y"] as const).map((preset) => (
@@ -306,11 +305,11 @@ export default function AnalyticsDashboardPage() {
               <span className="ml-1.5">Refresh</span>
             </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Page content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Error banner */}
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">

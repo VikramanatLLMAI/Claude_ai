@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Shield, Plus } from "lucide-react"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { Button } from "@/components/ui/button"
 import { RoleCard, type RoleData } from "@/components/admin/role-card"
 import { RoleFormModal } from "@/components/admin/role-form-modal"
@@ -142,21 +143,19 @@ export default function OrgAdminRolesPage() {
   // Loading state: skeleton cards
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 animate-pulse rounded-lg bg-muted" />
-            <div className="space-y-1">
-              <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-              <div className="h-4 w-56 animate-pulse rounded bg-muted" />
+      <div className="flex h-screen flex-col">
+        <AdminPageHeader
+          title="Roles"
+          description="Manage roles and permissions"
+        />
+        <div className="flex-1 overflow-auto p-6">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-52 animate-pulse rounded-2xl border bg-muted/30" />
+              ))}
             </div>
           </div>
-          <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-52 animate-pulse rounded-2xl border bg-muted/30" />
-          ))}
         </div>
       </div>
     )
@@ -181,26 +180,20 @@ export default function OrgAdminRolesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Shield className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Roles</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage model access, usage limits, and permissions for each role.
-            </p>
-          </div>
-        </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Role
-        </Button>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Roles"
+        description="Manage roles and permissions"
+        actions={
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Role
+          </Button>
+        }
+      />
 
+      <div className="flex-1 overflow-auto p-6">
+        <div className="mx-auto max-w-6xl">
       {/* Role Grid */}
       {roles.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -223,6 +216,9 @@ export default function OrgAdminRolesPage() {
           </Button>
         </div>
       )}
+
+        </div>
+      </div>
 
       {/* Role Create/Edit Modal */}
       <RoleFormModal

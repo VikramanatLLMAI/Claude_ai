@@ -28,14 +28,13 @@ import {
   AlertTriangle,
   RefreshCw,
   Calendar,
-  BarChart3,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { KpiCard } from "@/components/admin/kpi-card"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import {
   OrgUsageTrendChart,
   OrgTokensByUserChart,
@@ -423,18 +422,12 @@ export default function OrgAnalyticsDashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0">
-      {/* Page header */}
-      <div className="flex items-center gap-3 border-b px-6 py-4">
-        <SidebarTrigger className="-ml-1" />
-        <div className="flex flex-1 items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">Analytics</h1>
-          </div>
-
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Analytics"
+        description="Organization usage analytics"
+        actions={
           <div className="flex flex-wrap items-center gap-2">
-            {/* Preset buttons */}
             {(["7d", "30d", "90d", "1y"] as const).map((preset) => (
               <Button
                 key={preset}
@@ -446,7 +439,6 @@ export default function OrgAnalyticsDashboardPage() {
               </Button>
             ))}
 
-            {/* Custom date range */}
             <Button
               variant={activePreset === "custom" ? "default" : "outline"}
               size="sm"
@@ -484,7 +476,6 @@ export default function OrgAnalyticsDashboardPage() {
               </div>
             )}
 
-            {/* Refresh button */}
             <Button
               variant="outline"
               size="sm"
@@ -497,8 +488,8 @@ export default function OrgAnalyticsDashboardPage() {
               <span className="ml-1.5">Refresh</span>
             </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Section navigation */}
       <div className="border-b px-6">

@@ -17,7 +17,6 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import {
-  Settings,
   Key,
   FlaskConical,
   Loader2,
@@ -38,7 +37,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { ThemeSelector } from "@/components/admin/theme-selector"
 
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -527,18 +526,15 @@ export default function OrgSettingsPage() {
   const displayLogo = logoPreview || currentLogo
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b px-6 py-4 flex items-center gap-3">
-        <SidebarTrigger />
-        <div className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold text-foreground">Settings</h1>
-        </div>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Settings"
+        description="Organization settings and configuration"
+      />
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6 space-y-8">
+      <div className="flex-1 overflow-auto">
+        <div className="mx-auto max-w-3xl px-6 py-6 space-y-8">
         {/* Organization Info Section */}
         {orgInfo && (
           <section>
@@ -874,6 +870,7 @@ export default function OrgSettingsPage() {
             API keys are managed by the platform administrator. Contact them to add or change key assignments.
           </p>
         </section>
+        </div>
       </div>
 
       {/* Toast */}

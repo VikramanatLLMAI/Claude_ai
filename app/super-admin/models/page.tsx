@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Plus, RefreshCw, Cpu } from "lucide-react"
+import { Plus, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import {
   ModelRegistryTable,
   type ModelData,
@@ -149,38 +149,32 @@ export default function ModelRegistryPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Page header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">
-              Model Registry
-            </h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setLoading(true)
-              fetchModels()
-            }}
-            disabled={loading}
-          >
-            <RefreshCw
-              className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-          <Button size="sm" onClick={openCreateForm}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Add Model
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Model Registry"
+        description="Manage AI models available on the platform"
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLoading(true)
+                fetchModels()
+              }}
+              disabled={loading}
+            >
+              <RefreshCw
+                className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+            <Button size="sm" onClick={openCreateForm}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add Model
+            </Button>
+          </>
+        }
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">

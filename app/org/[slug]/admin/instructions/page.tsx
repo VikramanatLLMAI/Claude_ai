@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Save, MessageSquare, Clock, ShieldAlert, Sparkles, RotateCcw } from "lucide-react"
+import { Save, MessageSquare, Clock, ShieldAlert, Sparkles, RotateCcw, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { InstructionEditor } from "@/components/admin/instruction-editor"
 import { InstructionsPreview } from "@/components/admin/instructions-preview"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { TOKEN_LIMITS, CHAR_LIMITS } from "@/lib/token-counter"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
@@ -414,7 +414,7 @@ export default function InstructionsPage() {
     [slug, roleRestrictions, roles]
   )
 
-  // Enhance handler
+  // Enhance handler with minimum loading delay for UX feedback
   const handleEnhance = React.useCallback(
     async (
       fieldKey: string,
@@ -425,12 +425,17 @@ export default function InstructionsPage() {
       setEnhancingField(fieldKey)
       setOriginalBeforeEnhance((prev) => ({ ...prev, [fieldKey]: currentValue }))
 
+      const minDelay = new Promise((r) => setTimeout(r, 400))
+
       try {
-        const res = await fetch("/api/enhance-prompt", {
-          method: "POST",
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ text: currentValue, type }),
-        })
+        const [res] = await Promise.all([
+          fetch("/api/enhance-prompt", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ text: currentValue, type }),
+          }),
+          minDelay,
+        ])
 
         if (res.ok) {
           const data = await res.json()
@@ -517,12 +522,13 @@ export default function InstructionsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-border px-6">
-          <SidebarTrigger />
-          <h1 className="text-lg font-semibold">System Instructions</h1>
-        </header>
-        <div className="mx-auto w-full max-w-3xl space-y-8 p-6">
+      <div className="flex h-screen flex-col">
+        <AdminPageHeader
+          title="Instructions"
+          description="Configure AI system instructions for your organization"
+        />
+        <div className="flex-1 overflow-auto">
+          <div className="mx-auto w-full max-w-3xl px-6 py-6 space-y-8">
           <div className="space-y-4">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-4 w-96" />
@@ -538,19 +544,20 @@ export default function InstructionsPage() {
             ))}
           </div>
         </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex h-14 items-center gap-3 border-b border-border px-6">
-        <SidebarTrigger />
-        <MessageSquare className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-lg font-semibold">System Instructions</h1>
-      </header>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Instructions"
+        description="Configure AI system instructions for your organization"
+      />
 
-      <div className="mx-auto w-full max-w-3xl space-y-10 p-6">
+      <div className="flex-1 overflow-auto">
+        <div className="mx-auto w-full max-w-3xl px-6 py-6 space-y-10">
         {/* Organization-wide Instructions */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -624,7 +631,7 @@ export default function InstructionsPage() {
               className="mt-2"
             >
               <ShieldAlert className="mr-2 h-4 w-4" />
-              Add Restrictions
+              Add Content Restrictions
             </Button>
           ) : (
             <div className="mt-4 space-y-3 rounded-lg border border-border bg-muted/20 p-4">
@@ -639,12 +646,25 @@ export default function InstructionsPage() {
                     These restrictions apply to ALL users in your organization and cannot be overridden.
                   </p>
                 </div>
-                <EnhanceButton
-                  fieldKey="org-restrictions"
-                  value={orgRestrictions}
-                  setter={setOrgRestrictions}
-                  type="org-restrictions"
-                />
+                <div className="flex items-center gap-1.5">
+                  <EnhanceButton
+                    fieldKey="org-restrictions"
+                    value={orgRestrictions}
+                    setter={setOrgRestrictions}
+                    type="org-restrictions"
+                  />
+                  {!orgRestrictions.trim() && !orgRestrictionsDirty && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowOrgRestrictions(false)}
+                      className="h-7 text-xs text-muted-foreground"
+                    >
+                      <ChevronUp className="mr-1 h-3 w-3" />
+                      Collapse
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="relative">
@@ -658,10 +678,10 @@ export default function InstructionsPage() {
                   onChange={(e) => setOrgRestrictions(e.target.value)}
                   disabled={enhancingField === "org-restrictions"}
                   placeholder="e.g., Do not answer questions about HR policies, employee data, or internal administration. Redirect users to appropriate departments."
-                  maxLength={CHAR_LIMITS.orgRestrictions}
                   className={cn(
                     "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 overflow-y-auto resize-none",
-                    enhancingField === "org-restrictions" && "opacity-50"
+                    enhancingField === "org-restrictions" && "opacity-50",
+                    orgRestrictions.length > CHAR_LIMITS.orgRestrictions && "border-destructive focus:ring-destructive"
                   )}
                   style={{ minHeight: "100px", maxHeight: "300px" }}
                 />
@@ -671,12 +691,15 @@ export default function InstructionsPage() {
                 <span className={cn("text-xs tabular-nums", charCountColor(orgRestrictions.length, CHAR_LIMITS.orgRestrictions))}>
                   {orgRestrictions.length} / {CHAR_LIMITS.orgRestrictions} characters
                 </span>
+                {orgRestrictions.length > CHAR_LIMITS.orgRestrictions && (
+                  <span className="text-xs text-destructive">Exceeds character limit</span>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
                 <Button
                   onClick={handleSaveOrgRestrictions}
-                  disabled={orgRestrictionsSaveStatus === "saving" || !orgRestrictionsDirty}
+                  disabled={orgRestrictionsSaveStatus === "saving" || !orgRestrictionsDirty || orgRestrictions.length > CHAR_LIMITS.orgRestrictions}
                   size="sm"
                 >
                   <Save className="mr-2 h-4 w-4" />
@@ -812,7 +835,7 @@ export default function InstructionsPage() {
                       className="mt-2"
                     >
                       <ShieldAlert className="mr-2 h-4 w-4" />
-                      Add Restrictions
+                      Add Content Restrictions
                     </Button>
                   ) : (
                     <div className="mt-2 space-y-3 rounded-lg border border-border bg-muted/20 p-4">
@@ -826,17 +849,35 @@ export default function InstructionsPage() {
                             Define restrictions specific to the {role.name} role.
                           </p>
                         </div>
-                        <EnhanceButton
-                          fieldKey={roleRestrictFieldKey}
-                          value={roleRestrictions[role.id] || ""}
-                          setter={(val) =>
-                            setRoleRestrictions((prev) => ({
-                              ...prev,
-                              [role.id]: val,
-                            }))
-                          }
-                          type="role-restrictions"
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <EnhanceButton
+                            fieldKey={roleRestrictFieldKey}
+                            value={roleRestrictions[role.id] || ""}
+                            setter={(val) =>
+                              setRoleRestrictions((prev) => ({
+                                ...prev,
+                                [role.id]: val,
+                              }))
+                            }
+                            type="role-restrictions"
+                          />
+                          {!(roleRestrictions[role.id] || "").trim() && !restrictIsDirty && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setShowRoleRestrictions((prev) => ({
+                                  ...prev,
+                                  [role.id]: false,
+                                }))
+                              }
+                              className="h-7 text-xs text-muted-foreground"
+                            >
+                              <ChevronUp className="mr-1 h-3 w-3" />
+                              Collapse
+                            </Button>
+                          )}
+                        </div>
                       </div>
 
                       <div className="relative">
@@ -855,10 +896,10 @@ export default function InstructionsPage() {
                           }
                           disabled={enhancingField === roleRestrictFieldKey}
                           placeholder={`e.g., Do not provide advice on topics outside the ${role.name} scope.`}
-                          maxLength={CHAR_LIMITS.roleRestrictions}
                           className={cn(
                             "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 overflow-y-auto resize-none",
-                            enhancingField === roleRestrictFieldKey && "opacity-50"
+                            enhancingField === roleRestrictFieldKey && "opacity-50",
+                            (roleRestrictions[role.id] || "").length > CHAR_LIMITS.roleRestrictions && "border-destructive focus:ring-destructive"
                           )}
                           style={{ minHeight: "80px", maxHeight: "200px" }}
                         />
@@ -868,12 +909,15 @@ export default function InstructionsPage() {
                         <span className={cn("text-xs tabular-nums", charCountColor((roleRestrictions[role.id] || "").length, CHAR_LIMITS.roleRestrictions))}>
                           {(roleRestrictions[role.id] || "").length} / {CHAR_LIMITS.roleRestrictions} characters
                         </span>
+                        {(roleRestrictions[role.id] || "").length > CHAR_LIMITS.roleRestrictions && (
+                          <span className="text-xs text-destructive">Exceeds character limit</span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-3">
                         <Button
                           onClick={() => handleSaveRoleRestrictions(role.id)}
-                          disabled={restrictSaveStatus === "saving" || !restrictIsDirty}
+                          disabled={restrictSaveStatus === "saving" || !restrictIsDirty || (roleRestrictions[role.id] || "").length > CHAR_LIMITS.roleRestrictions}
                           size="sm"
                         >
                           <Save className="mr-2 h-4 w-4" />
@@ -903,6 +947,7 @@ export default function InstructionsPage() {
             })
           )}
         </section>
+        </div>
       </div>
     </div>
   )

@@ -2,14 +2,14 @@
 
 import * as React from "react"
 import { useParams } from "next/navigation"
-import { Shield, Loader2, AlertTriangle } from "lucide-react"
+import { Loader2, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 import { toast } from "@/components/ui/toast"
 
@@ -172,12 +172,13 @@ export default function SecurityPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-border px-6">
-          <SidebarTrigger />
-          <h1 className="text-lg font-semibold">Password Policy</h1>
-        </header>
-        <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
+      <div className="flex h-screen flex-col">
+        <AdminPageHeader
+          title="Security"
+          description="Password policy and security settings"
+        />
+        <div className="flex-1 overflow-auto">
+          <div className="mx-auto w-full max-w-3xl px-6 py-6 space-y-6">
           <Skeleton className="h-6 w-64" />
           <Skeleton className="h-4 w-96" />
           <div className="space-y-4">
@@ -189,19 +190,20 @@ export default function SecurityPage() {
             <Skeleton className="h-10 w-full" />
           </div>
         </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex h-14 items-center gap-3 border-b border-border px-6">
-        <SidebarTrigger />
-        <Shield className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-lg font-semibold">Password Policy</h1>
-      </header>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Security"
+        description="Password policy and security settings"
+      />
 
-      <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
+      <div className="flex-1 overflow-auto">
+        <div className="mx-auto w-full max-w-3xl px-6 py-6 space-y-6">
         {/* Password Policy Card */}
         <Card>
           <CardHeader>
@@ -363,6 +365,7 @@ export default function SecurityPage() {
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}

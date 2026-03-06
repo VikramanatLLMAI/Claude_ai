@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Search, UserCog, AlertTriangle } from "lucide-react"
+import { AdminPageHeader } from "@/components/admin/admin-page-header"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -185,14 +186,13 @@ export default function SuperAdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">User Search</h1>
-        <p className="text-muted-foreground">
-          Search users across all organizations. Start impersonation for IT support.
-        </p>
-      </div>
+    <div className="flex h-screen flex-col">
+      <AdminPageHeader
+        title="Users"
+        description="Cross-organization user management"
+      />
 
+      <div className="flex-1 overflow-auto p-6 space-y-6">
       {/* Search bar */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -400,6 +400,7 @@ export default function SuperAdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   )
 }
