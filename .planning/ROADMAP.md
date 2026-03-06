@@ -46,11 +46,11 @@
   3. Org Admin can edit role-specific restriction instructions per role and they appear in the composed prompt
   4. When restriction fields are left empty, the prompt behaves identically to the existing 4-layer system
   5. Prompt sanitizer does not strip the XML tags used for layer separation
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Schema fields, 6-layer prompt composition, restriction CRUD service, API endpoints, chat route wiring
+- [ ] 08-02-PLAN.md — Restriction textareas in admin UI (collapsible), Enhance button on all prompt surfaces
 
 ### Phase 9: Admin UI Overhaul
 **Goal**: Both admin dashboards have a collapsible sidebar, improved navigation, and Vercel-level visual polish across every page
