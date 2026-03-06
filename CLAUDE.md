@@ -292,7 +292,7 @@ KEY_ENCRYPTION_SECRET=<64-hex-character-key>
 
 # Email (Resend)
 RESEND_API_KEY=<your-resend-api-key>       # Optional; emails log to console in dev if unset
-RESEND_FROM_EMAIL=<sender-email>           # Optional; defaults to "LLMatscale.ai <onboarding@resend.dev>"
+RESEND_FROM_EMAIL=<sender-email>           # Optional; defaults to dev placeholder if unset
 
 # Organization routing
 ROOT_DOMAIN=<your-domain>                  # Used for subdomain routing in production
