@@ -157,6 +157,8 @@ model Role {
   permissions                Json     @default("[]") // array of permission strings
   allowedModels              Json     @default("[]") @map("allowed_models") // array of model IDs
   systemInstructions         String?  @map("system_instructions") @db.Text
+  restrictionInstructions          String?  @map("restriction_instructions") @db.Text
+  restrictionInstructionsMaxLength  Int      @default(1000) @map("restriction_instructions_max_length")
   customInstructionsEnabled  Boolean  @default(true) @map("custom_instructions_enabled")
   customInstructionsMaxLength Int     @default(1000) @map("custom_instructions_max_length")
   personalMcpEnabled         Boolean @default(false) @map("personal_mcp_enabled")
@@ -401,6 +403,8 @@ model OrgSettings {
   organizationId              String   @unique @map("organization_id")
   systemInstructions          String?  @map("system_instructions") @db.Text
   systemInstructionsMaxLength Int      @default(2000) @map("system_instructions_max_length")
+  restrictionInstructions          String?  @map("restriction_instructions") @db.Text
+  restrictionInstructionsMaxLength  Int      @default(2000) @map("restriction_instructions_max_length")
   conversationVisibility      Boolean  @default(false) @map("conversation_visibility")
   defaultRoleId               String?  @map("default_role_id")
   monthlyRequestLimit         Int?     @map("monthly_request_limit")

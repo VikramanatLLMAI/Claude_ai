@@ -318,6 +318,14 @@ export const RoleInstructionsSchema = z.object({
   systemInstructions: z.string().max(Math.ceil(500 * 4 * 1.05), 'Instructions text is too long'),
 });
 
+export const OrgRestrictionsSchema = z.object({
+  restrictionInstructions: z.string().max(2000, 'Restriction instructions exceed 2000 character limit'),
+});
+
+export const RoleRestrictionsSchema = z.object({
+  restrictionInstructions: z.string().max(1000, 'Restriction instructions exceed 1000 character limit'),
+});
+
 // ============================================
 // Audit Log Filter Schema (Phase 5 Plan 07)
 // ============================================
@@ -364,6 +372,8 @@ export type CreateModelInput = z.infer<typeof CreateModelSchema>;
 export type UpdateModelInput = z.infer<typeof UpdateModelSchema>;
 export type OrgInstructionsInput = z.infer<typeof OrgInstructionsSchema>;
 export type RoleInstructionsInput = z.infer<typeof RoleInstructionsSchema>;
+export type OrgRestrictionsInput = z.infer<typeof OrgRestrictionsSchema>;
+export type RoleRestrictionsInput = z.infer<typeof RoleRestrictionsSchema>;
 
 // ============================================
 // Phase 5: API Key Schemas

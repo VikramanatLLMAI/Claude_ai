@@ -10,7 +10,7 @@
  * - /api/org/[slug]/admin/roles/[roleId]/instructions (role instructions)
  */
 
-import { estimateTokenCount, TOKEN_LIMITS, SERVER_MARGIN } from '@/lib/token-counter';
+import { estimateTokenCount, TOKEN_LIMITS, SERVER_MARGIN, CHAR_LIMITS } from '@/lib/token-counter';
 import { auditLog, type PrismaTransactionClient } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 
@@ -29,6 +29,31 @@ export interface TokenBudgetResult {
 export interface SaveResult {
   success: boolean;
   error?: string;
+}
+
+/**
+ * Result of character limit validation.
+ */
+export interface CharLimitResult {
+  valid: boolean;
+  charCount: number;
+  limit: number;
+}
+
+/**
+ * Validate that text is within a character limit.
+ *
+ * @param text - The text to validate
+ * @param maxChars - The maximum character count
+ * @returns Validation result with character count and limit
+ */
+export function validateCharacterLimit(text: string, maxChars: number): CharLimitResult {
+  const charCount = text.length;
+  return {
+    valid: charCount <= maxChars,
+    charCount,
+    limit: maxChars,
+  };
 }
 
 /**
@@ -166,6 +191,128 @@ export async function saveRoleInstructions(
     return {
       success: false,
       error: 'Failed to save instructions. Please try again.',
+    };
+  }
+}
+
+/**
+ * Save organization-level restriction instructions.
+ *
+ * Validates the character limit (2000 chars max), updates OrgSettings.restrictionInstructions,
+ * and creates an audit log entry. Instructions are stored as plain text.
+ *
+ * @param orgId - Organization ID
+ * @param restrictions - Restriction instructions text (plain text)
+ * @param actorId - User ID performing the action
+ * @param ipAddress - Client IP address for audit logging
+ * @returns Save result indicating success or failure with error message
+ */
+export async function saveOrgRestrictions(
+  orgId: string,
+  restrictions: string,
+  actorId: string,
+  ipAddress: string | null,
+): Promise<SaveResult> {
+  // Validate character limit
+  const validation = validateCharacterLimit(restrictions, CHAR_LIMITS.orgRestrictions);
+  if (!validation.valid) {
+    return {
+      success: false,
+      error: `Restriction instructions exceed character limit: ${validation.charCount} characters used, maximum is ${validation.limit} characters`,
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx: PrismaTransactionClient) => {
+      await tx.orgSettings.upsert({
+        where: { organizationId: orgId },
+        update: { restrictionInstructions: restrictions || null },
+        create: {
+          organizationId: orgId,
+          restrictionInstructions: restrictions || null,
+        },
+      });
+
+      await auditLog.record(tx, {
+        userId: actorId,
+        action: 'org.restrictions.updated',
+        targetType: 'OrgSettings',
+        targetId: orgId,
+        organizationId: orgId,
+        ipAddress,
+        metadata: {
+          charCount: validation.charCount,
+          charLimit: validation.limit,
+        },
+      });
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save org restrictions:', error);
+    return {
+      success: false,
+      error: 'Failed to save restriction instructions. Please try again.',
+    };
+  }
+}
+
+/**
+ * Save role-level restriction instructions.
+ *
+ * Validates the character limit (1000 chars max), updates Role.restrictionInstructions,
+ * and creates an audit log entry. Instructions are stored as plain text.
+ *
+ * @param roleId - Role ID
+ * @param orgId - Organization ID (for tenant scoping and audit)
+ * @param restrictions - Restriction instructions text (plain text)
+ * @param actorId - User ID performing the action
+ * @param ipAddress - Client IP address for audit logging
+ * @returns Save result indicating success or failure with error message
+ */
+export async function saveRoleRestrictions(
+  roleId: string,
+  orgId: string,
+  restrictions: string,
+  actorId: string,
+  ipAddress: string | null,
+): Promise<SaveResult> {
+  // Validate character limit
+  const validation = validateCharacterLimit(restrictions, CHAR_LIMITS.roleRestrictions);
+  if (!validation.valid) {
+    return {
+      success: false,
+      error: `Restriction instructions exceed character limit: ${validation.charCount} characters used, maximum is ${validation.limit} characters`,
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx: PrismaTransactionClient) => {
+      await tx.role.update({
+        where: { id: roleId, organizationId: orgId },
+        data: { restrictionInstructions: restrictions || null },
+      });
+
+      await auditLog.record(tx, {
+        userId: actorId,
+        action: 'role.restrictions.updated',
+        targetType: 'Role',
+        targetId: roleId,
+        organizationId: orgId,
+        ipAddress,
+        metadata: {
+          charCount: validation.charCount,
+          charLimit: validation.limit,
+        },
+      });
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save role restrictions:', error);
+    return {
+      success: false,
+      error: 'Failed to save restriction instructions. Please try again.',
     };
   }
 }
