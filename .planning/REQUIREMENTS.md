@@ -30,7 +30,7 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 - [ ] **POLISH-04**: Admin pages match Vercel-level clean, minimal design aesthetic
 - [ ] **POLISH-05**: Instructions, MCP connections, and Settings pages have improved layouts
 - [ ] **POLISH-06**: All admin data tables, forms, and modals have consistent styling
-- [ ] **POLISH-07**: User settings page has improved UI/UX design
+- [x] **POLISH-07**: User settings page has improved UI/UX design
 
 ### Prompt Stack
 
@@ -159,7 +159,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | POLISH-04 | Phase 9 | Pending |
 | POLISH-05 | Phase 9 | Pending |
 | POLISH-06 | Phase 9 | Pending |
-| POLISH-07 | Phase 9 | Pending |
+| POLISH-07 | Phase 9 | Complete |
 | SUGG-01 | Phase 10 | Pending |
 | SUGG-02 | Phase 10 | Pending |
 | SUGG-03 | Phase 10 | Pending |
