@@ -22,6 +22,8 @@ import {
   Mail,
   ScrollText,
   MessageCircle,
+  ChevronLeft,
+  ChevronUp,
 } from "lucide-react"
 import {
   Sidebar,
@@ -33,9 +35,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -129,6 +138,7 @@ interface AdminSidebarProps {
 export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { state, toggleSidebar } = useSidebar()
   const [currentUser, setCurrentUser] = React.useState<{
     name?: string
     email?: string
@@ -194,8 +204,11 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
     )
   }
 
+  // Get user initial for avatar
+  const userInitial = currentUser?.name?.charAt(0)?.toUpperCase() || (isOrgAdmin ? "A" : "S")
+
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -205,7 +218,7 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
               <Shield className="h-5 w-5 text-primary" />
             )}
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">
               {isOrgAdmin ? (orgName || "Organization") : "LLMatscale.ai"}
             </span>
@@ -213,6 +226,21 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
               {isOrgAdmin ? "Admin Console" : "Platform Admin"}
             </span>
           </div>
+          <button
+            onClick={toggleSidebar}
+            aria-label={state === "collapsed" ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "ml-auto h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors",
+              "group-data-[collapsible=icon]:ml-0"
+            )}
+          >
+            <ChevronLeft
+              className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                state === "collapsed" && "rotate-180"
+              )}
+            />
+          </button>
         </div>
       </SidebarHeader>
 
@@ -240,37 +268,53 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-4 py-3">
-        {currentUser && (
-          <div className="mb-2">
-            <p className="truncate text-sm font-medium text-sidebar-foreground">
-              {currentUser.name || (isOrgAdmin ? "Admin" : "Super Admin")}
-            </p>
-            <p className="truncate text-xs text-sidebar-foreground/60">
-              {currentUser.email || ""}
-            </p>
-          </div>
-        )}
-        {isOrgAdmin && orgSlug && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-1 w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
-            onClick={() => router.push(`/org/${orgSlug}/chat`)}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Chat
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
+      <SidebarFooter className="border-t border-sidebar-border p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton size="lg" tooltip={currentUser?.name || "Account"}>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium">
+                    {userInitial}
+                  </div>
+                  <span className="truncate font-medium group-data-[collapsible=icon]:hidden">
+                    {currentUser?.name || (isOrgAdmin ? "Admin" : "Super Admin")}
+                  </span>
+                  <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
+                <div className="px-3 py-2">
+                  {currentUser?.email && (
+                    <p className="truncate text-xs text-muted-foreground mb-2">
+                      {currentUser.email}
+                    </p>
+                  )}
+                  {isOrgAdmin && orgSlug && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start h-8 text-sm"
+                      onClick={() => router.push(`/org/${orgSlug}/chat`)}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back to Chat
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start h-8 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   )
