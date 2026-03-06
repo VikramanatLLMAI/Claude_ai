@@ -27,7 +27,7 @@
 
 **Milestone Goal:** Elevate both admin dashboards and user settings to production-grade SaaS quality with Vercel-level polish, add 6-layer prompt stack with restrictions, prompt suggestions, login customization, and harden with security, testing, and a full functionality audit.
 
-- [ ] **Phase 8: Schema & Prompt Stack** - Add restriction layers to the prompt system and schema fields for suggestions
+- [x] **Phase 8: Schema & Prompt Stack** - Add restriction layers to the prompt system and schema fields for suggestions (2/2 plans complete)
 - [ ] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages
 - [ ] **Phase 10: Prompt Suggestions, Login Polish & Chat Welcome** - Starter prompts, login customization UI, and welcome screen improvements
 - [ ] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup
@@ -50,7 +50,7 @@
 
 Plans:
 - [x] 08-01-PLAN.md — Schema fields, 6-layer prompt composition, restriction CRUD service, API endpoints, chat route wiring
-- [ ] 08-02-PLAN.md — Restriction textareas in admin UI (collapsible), Enhance button on all prompt surfaces
+- [x] 08-02-PLAN.md — Restriction textareas in admin UI (collapsible), Enhance button on all prompt surfaces
 
 ### Phase 9: Admin UI Overhaul
 **Goal**: Both admin dashboards have a collapsible sidebar, improved navigation, and Vercel-level visual polish across every page

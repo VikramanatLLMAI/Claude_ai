@@ -8,7 +8,7 @@ progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 15
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 8 of 13 (Schema & Prompt Stack) — first phase of v1.1
-Plan: 1 of 2 in current phase
+Plan: 2 of 2 in current phase (phase complete)
 Status: Executing
-Last activity: 2026-03-06 — Completed 08-01 (schema + prompt stack)
+Last activity: 2026-03-06 — Completed 08-02 (restrictions UI + enhance button)
 
-Progress: [|||||||||||.............] 63/77 plans (v1.0 complete, v1.1 in progress)
+Progress: [|||||||||||.............] 64/77 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -48,6 +48,8 @@ Recent decisions affecting current work:
 - Phase ordering: schema first, then UI, then features, then security, then tests, then audit
 - Character-based validation for restriction fields (not token-based) -- simpler for admins
 - Override-prevention preamble is hardcoded, not admin-editable
+- Enhance button uses Haiku 4.5 with maxOutputTokens (AI SDK v6 naming)
+- Restriction textareas use raw textarea with character count (not InstructionEditor with token count)
 
 ### Pending Todos
 
@@ -62,5 +64,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 08-01-PLAN.md
-Next step: Execute 08-02 (restrictions UI)
+Stopped at: Completed 08-02-PLAN.md (Phase 8 complete)
+Next step: Plan Phase 9 (UI/UX)

@@ -35,8 +35,8 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 ### Prompt Stack
 
 - [x] **PROMPT-01**: System prompt uses 6-layer XML-tagged structure (platform, org instructions, org restrictions, role instructions, role restrictions, user instructions)
-- [ ] **PROMPT-02**: Org Admin can set org-wide restriction instructions via admin UI
-- [ ] **PROMPT-03**: Org Admin can set role-specific restriction instructions per role
+- [x] **PROMPT-02**: Org Admin can set org-wide restriction instructions via admin UI
+- [x] **PROMPT-03**: Org Admin can set role-specific restriction instructions per role
 - [x] **PROMPT-04**: Restriction layers use override-prevention framing ("ABSOLUTE constraints")
 - [x] **PROMPT-05**: Existing 4-layer behavior is unchanged when restriction fields are empty
 - [x] **PROMPT-06**: Prompt sanitizer supports XML tag structure (does not strip XML tags used for layer separation)
@@ -139,8 +139,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PROMPT-01 | Phase 8 | Complete |
-| PROMPT-02 | Phase 8 | Pending |
-| PROMPT-03 | Phase 8 | Pending |
+| PROMPT-02 | Phase 8 | Complete |
+| PROMPT-03 | Phase 8 | Complete |
 | PROMPT-04 | Phase 8 | Complete |
 | PROMPT-05 | Phase 8 | Complete |
 | PROMPT-06 | Phase 8 | Complete |
