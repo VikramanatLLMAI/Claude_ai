@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: MVP
-status: complete
+milestone: v1.1
+milestone_name: Harden & Polish
+status: defining_requirements
 last_updated: "2026-03-06"
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 62
-  completed_plans: 62
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,15 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what — models, tools, settings, and conversations — while maintaining complete data isolation between organizations.
-**Current focus:** v1.0 milestone complete. Next milestone not yet defined.
+**Current focus:** v1.1 Harden & Polish — defining requirements
 
 ## Current Position
 
-Milestone: v1.0 MVP — SHIPPED 2026-03-06
-Status: All 7 phases complete, 62 plans executed, 192/192 requirements satisfied
-Last activity: 2026-03-06 — Milestone archived
-
-Progress: [####################] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-06 — Milestone v1.1 started
 
 ## Accumulated Context
 
@@ -40,10 +39,10 @@ None.
 
 ### Blockers/Concerns
 
-None — milestone shipped.
+None.
 
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: v1.0 milestone completion
-Next step: /gsd:new-milestone
+Stopped at: Milestone v1.1 initialization
+Next step: Define requirements

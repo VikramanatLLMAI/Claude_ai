@@ -50,7 +50,33 @@ Organizations can securely deploy AI chat to their teams with full control over 
 
 ### Active
 
-(No active requirements — next milestone not yet defined)
+<!-- v1.1 Harden & Polish — see REQUIREMENTS.md for full list -->
+
+**Admin UI Overhaul:**
+- Sidebar: icons-only collapsed state, collapse button inside sidebar
+- Layout consistency across Super Admin & Org Admin dashboards
+- Scrollbar fixes on all admin pages
+- Visual cleanup (remove unwanted lines/borders, Vercel-quality minimal design)
+- Relayout all admin pages as needed for better UX
+- Org Admin nav: profile expander with Logout/Settings/Admin Console links
+- Admin Console: "Back to chat" top-left, remove Sign Out
+- User settings page UI/UX improvements
+
+**Chat UI Tweaks:**
+- Move model icons from sidebar to welcome screen (above greeting)
+- Welcome screen logos side-by-side based on logoDisplayMode
+
+**New Features:**
+- 6-layer XML-tagged prompt stack (add org restrictions + role restrictions)
+- Org Admin: prompt suggestions customization for chat welcome screen
+- Org Admin: expanded login page customization (tagline, texts)
+- Login page consistency (port 3000 style as reference)
+
+**Quality Assurance:**
+- Functionality audit: verify every UI control has working backend
+- Tech debt cleanup (rate limiting, debug logs, TS casts)
+- Security hardening (input validation, CSRF, headers)
+- Testing & CI setup
 
 ### Out of Scope
 
@@ -106,6 +132,18 @@ Deployment: Self-hosted Docker with PostgreSQL.
 | organizationId placeholder in creates | tenantDb auto-injects orgId at runtime but `typeof prisma` type requires it; use `'' as string` | Good |
 | Json fields cast as `as any` | Prisma 7 `InputJsonValue` type rejects `Record<string, unknown>` and `object`; safe runtime cast | Good |
 
+## Current Milestone: v1.1 Harden & Polish
+
+**Goal:** Elevate both admin dashboards and the user settings page to production-grade SaaS quality with Vercel-level polish, add prompt stack enhancements, login customization, and harden with testing/security.
+
+**Target features:**
+- Admin UI overhaul (sidebar, layouts, navigation, visual cleanup) — Vercel quality bar
+- 6-layer XML-tagged system prompt stack (org/role restrictions layers)
+- Org Admin prompt suggestions and login page customization
+- Chat welcome screen improvements (model icons, logos)
+- Functionality audit across all UI controls
+- Tech debt, security hardening, testing & CI
+
 ## Important Patterns for Next Milestone
 
 - **Tenant-scoped creates**: When using `tenantDb.model.create()`, always include `organizationId: '' as string` in the data — the tenant extension overwrites it at runtime, but TypeScript requires it
@@ -113,4 +151,4 @@ Deployment: Self-hosted Docker with PostgreSQL.
 - **tenantPrisma() return type**: `lib/tenant.ts` casts the `$extends` result as `typeof prisma` — do NOT change this or 93+ TS errors return
 
 ---
-*Last updated: 2026-03-06 after v1.0 milestone + TypeScript fixes*
+*Last updated: 2026-03-06 after v1.1 milestone started*
