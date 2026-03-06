@@ -102,6 +102,15 @@ Deployment: Self-hosted Docker with PostgreSQL.
 | Super Admin renamed to super-admin.* | Avoid conflict with org admin paths | Good |
 | Brand colors dropped for theme + logo | Simpler, less maintenance, themes cover visual identity | Good |
 | Model Registry as single source of truth | No hardcoded model lists, UI-manageable | Good |
+| tenantPrisma() typed as `typeof prisma` | Prisma 7 `$extends` with `$allModels.$allOperations` loses model types; cast fixes 93 TS errors | Good |
+| organizationId placeholder in creates | tenantDb auto-injects orgId at runtime but `typeof prisma` type requires it; use `'' as string` | Good |
+| Json fields cast as `as any` | Prisma 7 `InputJsonValue` type rejects `Record<string, unknown>` and `object`; safe runtime cast | Good |
+
+## Important Patterns for Next Milestone
+
+- **Tenant-scoped creates**: When using `tenantDb.model.create()`, always include `organizationId: '' as string` in the data — the tenant extension overwrites it at runtime, but TypeScript requires it
+- **Json fields**: Cast `parts`, `metadata`, `availableTools` as `as any` when passing to Prisma create/update — Prisma's `InputJsonValue` type is stricter than runtime allows
+- **tenantPrisma() return type**: `lib/tenant.ts` casts the `$extends` result as `typeof prisma` — do NOT change this or 93+ TS errors return
 
 ---
-*Last updated: 2026-03-06 after v1.0 milestone*
+*Last updated: 2026-03-06 after v1.0 milestone + TypeScript fixes*

@@ -194,6 +194,14 @@ npm run db:reset     # Reset database (WARNING: deletes data)
 | `components/CLAUDE.md` | Frontend documentation |
 | `app/api/CLAUDE.md` | Backend API documentation |
 
+## Tenant DB Patterns (Important)
+
+When writing code that uses `tenantDb` (from `requireOrgAuth()`):
+
+1. **Creates require `organizationId`**: Always include `organizationId: '' as string` in `.create()` data — the tenant extension auto-injects the real value at runtime, but TypeScript requires it
+2. **Json fields need `as any`**: Cast `parts`, `metadata`, `availableTools` with `as any` when passing to Prisma — `InputJsonValue` type is stricter than runtime
+3. **Do not change `lib/tenant.ts` return type**: `tenantPrisma()` casts `$extends` result as `typeof prisma` for full model type inference
+
 ## Contributing
 
 1. Use TypeScript for all new files
