@@ -29,6 +29,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { McpConnectionCard, type McpConnectionData } from "@/components/mcp/mcp-connection-card"
 import { McpAddDialog } from "@/components/mcp/mcp-add-dialog"
@@ -732,25 +734,27 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="pointer-events-auto flex w-full max-w-[820px] h-[min(640px,88vh)] rounded-xl border border-border bg-background shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+          className="pointer-events-auto flex w-full max-w-2xl h-[min(640px,85vh)] rounded-xl border border-border bg-background shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Left sidebar */}
-          <div className="flex w-[240px] shrink-0 flex-col border-r border-border p-3">
-            <h2 className="mb-4 px-3 pt-1 text-lg font-semibold text-foreground">Settings</h2>
-            <nav className="flex flex-col gap-0.5">
+          <div className="flex w-[220px] shrink-0 flex-col border-r border-border bg-muted/30">
+            <div className="px-4 pt-4 pb-3">
+              <h2 className="text-base font-semibold text-foreground">Settings</h2>
+            </div>
+            <nav className="flex flex-col gap-0.5 px-2 pb-2">
               {SETTINGS_TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
                     activeTab === tab.id
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <tab.icon className="size-4" />
+                  <tab.icon className="size-4 shrink-0" />
                   {tab.label}
                 </button>
               ))}
@@ -759,93 +763,95 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
           {/* Right content */}
           <div className="flex flex-1 flex-col min-w-0">
-            {/* Header with close button */}
-            <div className="flex items-center justify-end p-3">
+            {/* Header with tab title and close button */}
+            <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
+              <h3 className="text-sm font-medium text-foreground">
+                {SETTINGS_TABS.find((t) => t.id === activeTab)?.label}
+              </h3>
               <button
                 onClick={onClose}
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Close settings"
               >
                 <X className="size-4" />
               </button>
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 py-6">
               {/* PROFILE TAB */}
               {activeTab === "profile" && (
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Profile
-                    </h3>
-
-                    {!orgSlug ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <UserIcon className="mb-3 size-10 text-muted-foreground/50" />
-                        <p className="text-sm font-medium text-foreground mb-1">Profile management</p>
-                        <p className="text-xs text-muted-foreground">
-                          Profile management is available in the organization context.
-                        </p>
-                      </div>
-                    ) : orgProfileLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {/* Avatar section */}
-                        <div className="flex items-start gap-5">
-                          <div className="relative shrink-0">
-                            <div className="size-[100px] rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                              {orgProfileAvatarPreview ? (
-                                <img
-                                  src={orgProfileAvatarPreview}
-                                  alt="Avatar"
-                                  className="size-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-2xl font-semibold text-muted-foreground">
-                                  {(orgProfileName || orgProfile?.name || "U").slice(0, 2).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2 pt-2">
-                            <input
-                              ref={avatarInputRef}
-                              type="file"
-                              accept="image/png,image/jpeg"
-                              className="hidden"
-                              onChange={handleAvatarFileChange}
-                            />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => avatarInputRef.current?.click()}
-                            >
-                              <Upload className="mr-1.5 size-3.5" />
-                              Upload Avatar
-                            </Button>
-                            {orgProfileAvatarPreview && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive"
-                                onClick={handleRemoveAvatar}
-                              >
-                                <Trash2 className="mr-1.5 size-3.5" />
-                                Remove Avatar
-                              </Button>
+                <div className="space-y-6">
+                  {!orgSlug ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <UserIcon className="mb-3 size-10 text-muted-foreground/40" />
+                      <p className="text-sm font-medium text-foreground mb-1">Profile management</p>
+                      <p className="text-xs text-muted-foreground max-w-[260px]">
+                        Profile management is available when you are logged into an organization.
+                      </p>
+                    </div>
+                  ) : orgProfileLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <>
+                      {/* Avatar section */}
+                      <div className="flex items-start gap-5">
+                        <div className="relative shrink-0">
+                          <div className="size-20 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+                            {orgProfileAvatarPreview ? (
+                              <img
+                                src={orgProfileAvatarPreview}
+                                alt="Avatar"
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xl font-semibold text-muted-foreground">
+                                {(orgProfileName || orgProfile?.name || "U").slice(0, 2).toUpperCase()}
+                              </span>
                             )}
-                            <p className="text-xs text-muted-foreground">
-                              PNG or JPEG, auto-cropped to square, max 200KB
-                            </p>
                           </div>
                         </div>
+                        <div className="flex flex-col gap-2 pt-1">
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            className="hidden"
+                            onChange={handleAvatarFileChange}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => avatarInputRef.current?.click()}
+                          >
+                            <Upload className="mr-1.5 size-3.5" />
+                            Upload Avatar
+                          </Button>
+                          {orgProfileAvatarPreview && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={handleRemoveAvatar}
+                            >
+                              <Trash2 className="mr-1.5 size-3.5" />
+                              Remove
+                            </Button>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            PNG or JPEG, max 200KB
+                          </p>
+                        </div>
+                      </div>
 
-                        {/* Name field */}
+                      <Separator />
+
+                      {/* Name field */}
+                      <div className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium text-foreground mb-1.5 block">Display Name</label>
+                          <Label className="mb-1.5 block">Display Name</Label>
                           <Input
                             value={orgProfileName}
                             onChange={(e) => setOrgProfileName(e.target.value)}
@@ -855,7 +861,7 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
                         {/* Email field (read-only) */}
                         <div>
-                          <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+                          <Label className="mb-1.5 block">Email</Label>
                           <div className="relative">
                             <Input
                               value={orgProfile?.email || ""}
@@ -869,20 +875,20 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
                         {/* Role field (read-only) */}
                         <div>
-                          <label className="text-sm font-medium text-foreground mb-1.5 block">Role</label>
+                          <Label className="mb-1.5 block">Role</Label>
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary">
                               <Shield className="mr-1 size-3" />
                               {orgProfile?.roleName || "Member"}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">Role is managed by your administrator</p>
+                          <p className="text-xs text-muted-foreground mt-1">Managed by your administrator</p>
                         </div>
 
                         {/* Joined date */}
                         {orgProfile?.joinedAt && (
                           <div>
-                            <label className="text-sm font-medium text-foreground mb-1.5 block">Joined</label>
+                            <Label className="mb-1.5 block">Joined</Label>
                             <p className="text-sm text-muted-foreground">
                               {new Date(orgProfile.joinedAt).toLocaleDateString(undefined, {
                                 year: "numeric",
@@ -892,46 +898,43 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                             </p>
                           </div>
                         )}
-
-                        {/* Save messages and button */}
-                        {orgProfileMessage && (
-                          <div className={cn(
-                            "flex items-center gap-2 rounded-md p-3 text-sm",
-                            orgProfileMessage.type === "success"
-                              ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                              : "bg-destructive/10 text-destructive"
-                          )}>
-                            {orgProfileMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
-                            {orgProfileMessage.text}
-                          </div>
-                        )}
-                        <Button size="sm" onClick={handleSaveOrgProfile} disabled={orgProfileSaving}>
-                          {orgProfileSaving ? "Saving..." : "Save Changes"}
-                        </Button>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Save messages and button */}
+                      {orgProfileMessage && (
+                        <div className={cn(
+                          "flex items-center gap-2 rounded-md p-3 text-sm",
+                          orgProfileMessage.type === "success"
+                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                            : "bg-destructive/10 text-destructive"
+                        )}>
+                          {orgProfileMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
+                          {orgProfileMessage.text}
+                        </div>
+                      )}
+                      <Button size="sm" onClick={handleSaveOrgProfile} disabled={orgProfileSaving}>
+                        {orgProfileSaving ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
 
               {/* GENERAL TAB */}
               {activeTab === "general" && (
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      General Settings
-                    </h3>
-
-                    {/* Default Model */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-foreground mb-2 block">Default Model</label>
+                <div className="space-y-6">
+                  {/* Preferences */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Preferences</h4>
+                    <div>
+                      <Label className="mb-1.5 block">Default Model</Label>
                       <select
                         value={defaultModel}
                         onChange={(e) => {
                           setDefaultModel(e.target.value)
                           onDefaultModelChange?.(e.target.value)
                         }}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       >
                         {CLAUDE_MODELS.map((m) => (
                           <option key={m.id} value={m.id}>{m.name}</option>
@@ -939,15 +942,14 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                       </select>
                     </div>
 
-                    {/* Default Reasoning Level */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-foreground mb-2 block">Default Reasoning Level</label>
-                      <div className="flex rounded-lg border border-border overflow-hidden">
+                    <div>
+                      <Label className="mb-1.5 block">Default Reasoning Level</Label>
+                      <div className="flex rounded-md border border-border overflow-hidden">
                         {["Low", "Medium", "High"].map((level) => (
                           <button
                             key={level}
                             className={cn(
-                              "flex-1 py-2.5 text-sm font-medium transition-colors",
+                              "flex-1 py-2 text-sm font-medium transition-colors",
                               level === "Medium"
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-background text-foreground hover:bg-muted"
@@ -959,11 +961,10 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                       </div>
                     </div>
 
-                    {/* Language */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-foreground mb-2 block">Language</label>
+                    <div>
+                      <Label className="mb-1.5 block">Language</Label>
                       <select
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         defaultValue="en-US"
                       >
                         <option value="en-US">English (US)</option>
@@ -976,158 +977,144 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                     </div>
                   </div>
 
-                  <div className="border-t border-border" />
+                  <Separator />
 
                   {/* Chat Behavior */}
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Chat Behavior
-                    </h3>
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Chat Behavior</h4>
 
-                    <div className="space-y-5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Send with Enter</p>
-                          <p className="text-xs text-muted-foreground">Use Shift+Enter for new line</p>
-                        </div>
-                        <Switch checked={sendWithEnter} onCheckedChange={setSendWithEnter} />
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-foreground">Send with Enter</p>
+                        <p className="text-xs text-muted-foreground">Use Shift+Enter for new line</p>
                       </div>
+                      <Switch checked={sendWithEnter} onCheckedChange={setSendWithEnter} />
+                    </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Show code execution results</p>
-                          <p className="text-xs text-muted-foreground">Display output of code blocks</p>
-                        </div>
-                        <Switch checked={showCodeResults} onCheckedChange={setShowCodeResults} />
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-foreground">Show code execution results</p>
+                        <p className="text-xs text-muted-foreground">Display output of code blocks</p>
                       </div>
+                      <Switch checked={showCodeResults} onCheckedChange={setShowCodeResults} />
                     </div>
                   </div>
 
-                  <div className="border-t border-border" />
+                  <Separator />
 
                   {/* Account */}
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Account
-                    </h3>
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Account</h4>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">Display Name</label>
-                        <Input
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Your name"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
-                        <Input value={email} disabled className="opacity-60" />
-                        <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
-                      </div>
-                      {profileMessage && (
-                        <div className={cn(
-                          "flex items-center gap-2 rounded-md p-3 text-sm",
-                          profileMessage.type === "success"
-                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                            : "bg-destructive/10 text-destructive"
-                        )}>
-                          {profileMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
-                          {profileMessage.text}
-                        </div>
-                      )}
-                      <Button size="sm" onClick={handleSaveProfile} disabled={profileSaving}>
-                        {profileSaving ? "Saving..." : "Save Changes"}
-                      </Button>
+                    <div>
+                      <Label className="mb-1.5 block">Display Name</Label>
+                      <Input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your name"
+                      />
                     </div>
+                    <div>
+                      <Label className="mb-1.5 block">Email</Label>
+                      <Input value={email} disabled className="opacity-60" />
+                      <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                    </div>
+                    {profileMessage && (
+                      <div className={cn(
+                        "flex items-center gap-2 rounded-md p-3 text-sm",
+                        profileMessage.type === "success"
+                          ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                          : "bg-destructive/10 text-destructive"
+                      )}>
+                        {profileMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
+                        {profileMessage.text}
+                      </div>
+                    )}
+                    <Button size="sm" onClick={handleSaveProfile} disabled={profileSaving}>
+                      {profileSaving ? "Saving..." : "Save Changes"}
+                    </Button>
                   </div>
 
-                  <div className="border-t border-border" />
+                  <Separator />
 
                   {/* Change Password */}
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Change Password
-                    </h3>
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Change Password</h4>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">Current Password</label>
-                        <div className="relative">
-                          <Input
-                            type={showCurrentPassword ? "text" : "password"}
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className="absolute right-0 top-0 flex h-full items-center px-3 text-muted-foreground hover:text-foreground"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          >
-                            {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">New Password</label>
-                        <div className="relative">
-                          <Input
-                            type={showNewPassword ? "text" : "password"}
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className="absolute right-0 top-0 flex h-full items-center px-3 text-muted-foreground hover:text-foreground"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                          >
-                            {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">Confirm New Password</label>
+                    <div>
+                      <Label className="mb-1.5 block">Current Password</Label>
+                      <div className="relative">
                         <Input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
                         />
+                        <button
+                          type="button"
+                          className="absolute right-0 top-0 flex h-full items-center px-3 text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                        >
+                          {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
                       </div>
-                      {passwordMessage && (
-                        <div className={cn(
-                          "flex items-center gap-2 rounded-md p-3 text-sm",
-                          passwordMessage.type === "success"
-                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                            : "bg-destructive/10 text-destructive"
-                        )}>
-                          {passwordMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
-                          {passwordMessage.text}
-                        </div>
-                      )}
-                      <Button
-                        size="sm"
-                        onClick={handleChangePassword}
-                        disabled={passwordChanging || !currentPassword || !newPassword || !confirmPassword}
-                      >
-                        {passwordChanging ? "Changing..." : "Change Password"}
-                      </Button>
                     </div>
+                    <div>
+                      <Label className="mb-1.5 block">New Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showNewPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-0 top-0 flex h-full items-center px-3 text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          aria-label={showNewPassword ? "Hide password" : "Show password"}
+                        >
+                          {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="mb-1.5 block">Confirm New Password</Label>
+                      <Input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                    {passwordMessage && (
+                      <div className={cn(
+                        "flex items-center gap-2 rounded-md p-3 text-sm",
+                        passwordMessage.type === "success"
+                          ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                          : "bg-destructive/10 text-destructive"
+                      )}>
+                        {passwordMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
+                        {passwordMessage.text}
+                      </div>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={handleChangePassword}
+                      disabled={passwordChanging || !currentPassword || !newPassword || !confirmPassword}
+                    >
+                      {passwordChanging ? "Changing..." : "Change Password"}
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* APPEARANCE TAB */}
               {activeTab === "appearance" && (
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Appearance
-                    </h3>
-
-                    {/* Theme */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-foreground mb-2 block">Theme</label>
-                      <div className="flex rounded-lg border border-border overflow-hidden">
+                <div className="space-y-6">
+                  {/* Theme */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="mb-1.5 block">Theme</Label>
+                      <div className="flex rounded-md border border-border overflow-hidden">
                         {([
                           { id: "light" as Theme, label: "Light", icon: Sun },
                           { id: "dark" as Theme, label: "Dark", icon: Moon },
@@ -1137,7 +1124,7 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                             key={t.id}
                             onClick={() => handleThemeChange(t.id)}
                             className={cn(
-                              "flex flex-1 items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors",
+                              "flex flex-1 items-center justify-center gap-2 py-2 text-sm font-medium transition-colors",
                               theme === t.id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-background text-foreground hover:bg-muted"
@@ -1148,11 +1135,16 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                           </button>
                         ))}
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1">Choose how the app looks on your device</p>
                     </div>
+                  </div>
 
-                    {/* Font Size */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-foreground mb-2 block">Font Size</label>
+                  <Separator />
+
+                  {/* Font Size */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="mb-1.5 block">Font Size</Label>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>Small (14px)</span>
@@ -1172,11 +1164,15 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                         </p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Code Theme */}
+                  <Separator />
+
+                  {/* Code Theme */}
+                  <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Code Theme</label>
-                      <div className="flex rounded-lg border border-border overflow-hidden">
+                      <Label className="mb-1.5 block">Code Theme</Label>
+                      <div className="flex rounded-md border border-border overflow-hidden">
                         {([
                           { id: "github-dark" as CodeTheme, label: "GitHub Dark" },
                           { id: "one-dark-pro" as CodeTheme, label: "One Dark Pro" },
@@ -1186,7 +1182,7 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                             key={ct.id}
                             onClick={() => handleCodeThemeChange(ct.id)}
                             className={cn(
-                              "flex-1 py-2.5 text-sm font-medium transition-colors",
+                              "flex-1 py-2 text-sm font-medium transition-colors",
                               codeTheme === ct.id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-background text-foreground hover:bg-muted"
@@ -1196,6 +1192,7 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                           </button>
                         ))}
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1">Syntax highlighting theme for code blocks</p>
                     </div>
                   </div>
                 </div>
@@ -1203,74 +1200,69 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
 
               {/* API KEYS TAB */}
               {activeTab === "api-keys" && (
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Anthropic API
-                    </h3>
+                <div className="space-y-6">
+                  {hasExistingApiKey && (
+                    <div className="rounded-md border border-green-200 bg-green-50 p-3.5 dark:border-green-800 dark:bg-green-900/20">
+                      <div className="flex items-center gap-2 text-green-800 dark:text-green-400">
+                        <Check className="size-4 shrink-0" />
+                        <span className="text-sm font-medium">API key configured</span>
+                      </div>
+                      <p className="mt-1 pl-6 text-xs text-green-700 dark:text-green-500">
+                        {maskedApiKey}
+                      </p>
+                    </div>
+                  )}
 
-                    {hasExistingApiKey && (
-                      <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
-                        <div className="flex items-center gap-2 text-green-800 dark:text-green-400">
-                          <Check className="size-4" />
-                          <span className="text-sm font-medium">API key configured</span>
-                        </div>
-                        <p className="mt-1 text-xs text-green-700 dark:text-green-500">
-                          Key: {maskedApiKey}
-                        </p>
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Anthropic API Key</h4>
+                    <div>
+                      <Label className="mb-1.5 block">API Key</Label>
+                      <Input
+                        type="password"
+                        placeholder={hasExistingApiKey ? "Enter new key to update..." : "sk-ant-..."}
+                        value={anthropicApiKey}
+                        onChange={(e) => setAnthropicApiKey(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Your key starts with &quot;sk-ant-&quot;.{" "}
+                        <a
+                          href="https://console.anthropic.com/settings/keys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline hover:text-foreground transition-colors"
+                        >
+                          Get your API key
+                        </a>
+                      </p>
+                    </div>
+
+                    {apiKeyTestMessage && (
+                      <div className={cn(
+                        "flex items-center gap-2 rounded-md p-3 text-sm",
+                        apiKeyTestStatus === "success"
+                          ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                          : apiKeyTestStatus === "error"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-muted"
+                      )}>
+                        {apiKeyTestStatus === "success" && <Check className="size-4" />}
+                        {apiKeyTestStatus === "error" && <AlertCircle className="size-4" />}
+                        {apiKeyTestMessage}
                       </div>
                     )}
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-1.5 block">Anthropic API Key</label>
-                        <Input
-                          type="password"
-                          placeholder={hasExistingApiKey ? "Enter new key to update..." : "sk-ant-..."}
-                          value={anthropicApiKey}
-                          onChange={(e) => setAnthropicApiKey(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Your key starts with &quot;sk-ant-&quot;.{" "}
-                          <a
-                            href="https://console.anthropic.com/settings/keys"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline hover:text-foreground"
-                          >
-                            Get your API key
-                          </a>
-                        </p>
-                      </div>
-
-                      {apiKeyTestMessage && (
-                        <div className={cn(
-                          "flex items-center gap-2 rounded-md p-3 text-sm",
-                          apiKeyTestStatus === "success"
-                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                            : apiKeyTestStatus === "error"
-                              ? "bg-destructive/10 text-destructive"
-                              : "bg-muted"
-                        )}>
-                          {apiKeyTestStatus === "success" && <Check className="size-4" />}
-                          {apiKeyTestStatus === "error" && <AlertCircle className="size-4" />}
-                          {apiKeyTestMessage}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleTestAnthropicKey}
-                          disabled={apiKeyTestStatus === "testing" || !anthropicApiKey}
-                        >
-                          {apiKeyTestStatus === "testing" ? "Testing..." : "Test Key"}
-                        </Button>
-                        <Button size="sm" onClick={handleSaveAnthropicKey} disabled={!anthropicApiKey}>
-                          Save Key
-                        </Button>
-                      </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleTestAnthropicKey}
+                        disabled={apiKeyTestStatus === "testing" || !anthropicApiKey}
+                      >
+                        {apiKeyTestStatus === "testing" ? "Testing..." : "Test Key"}
+                      </Button>
+                      <Button size="sm" onClick={handleSaveAnthropicKey} disabled={!anthropicApiKey}>
+                        Save Key
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1280,21 +1272,24 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
               {activeTab === "mcp" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      MCP Connectors
-                    </h3>
+                    <div className="space-y-0.5">
+                      <h4 className="text-sm font-medium text-foreground">MCP Connectors</h4>
+                      <p className="text-xs text-muted-foreground">Connect MCP servers to extend capabilities</p>
+                    </div>
                     <Button size="sm" onClick={() => setShowAddDialog(true)}>
                       <Plus className="mr-1.5 size-3.5" />
                       Add
                     </Button>
                   </div>
 
+                  <Separator />
+
                   {mcpLoading ? (
-                    <div className="space-y-3 py-4">
+                    <div className="space-y-3">
                       {[0, 1, 2].map((i) => (
-                        <div key={i} className="rounded-lg border p-4 space-y-3">
+                        <div key={i} className="rounded-md border border-border p-4 space-y-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 shrink-0 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                            <div className="size-9 shrink-0 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
                             <div className="flex-1 space-y-1.5">
                               <div className="h-4 w-1/3 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 50}ms` }} />
                               <div className="h-3 w-1/2 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 100}ms` }} />
@@ -1306,10 +1301,10 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                     </div>
                   ) : connections.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Plug className="mb-3 size-10 text-muted-foreground/50" />
-                      <p className="text-sm font-medium text-foreground mb-1">No connectors</p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Connect MCP servers to extend Claude&apos;s capabilities.
+                      <Plug className="mb-3 size-10 text-muted-foreground/40" />
+                      <p className="text-sm font-medium text-foreground mb-1">No connectors yet</p>
+                      <p className="text-xs text-muted-foreground mb-4 max-w-[260px]">
+                        Connect MCP servers to extend Claude&apos;s capabilities with external tools.
                       </p>
                       <Button size="sm" onClick={() => setShowAddDialog(true)}>
                         <Plus className="mr-1.5 size-3.5" />
@@ -1337,141 +1332,142 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
               {/* INSTRUCTIONS TUNING TAB */}
               {activeTab === "instructions" && (
                 <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      Custom Instructions
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-5">
-                      Personalize how the AI responds to you. These instructions are added to every conversation.
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-medium text-foreground">Custom Instructions</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Personalize how the AI responds to you. These are added to every conversation.
                     </p>
-
-                    {instructionsLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {orgSlug ? (
-                          <InstructionEditor
-                            value={customInstructions}
-                            onChange={setCustomInstructions}
-                            maxTokens={200}
-                            label="Custom Instructions"
-                            description="Personalize how the AI responds to you. These instructions are added to every conversation."
-                            disabled={!instructionsEnabled}
-                            disabledMessage="Custom instructions disabled by your admin."
-                          />
-                        ) : (
-                          <div>
-                            <label className="text-sm font-medium text-foreground mb-1.5 block">
-                              Custom Instructions
-                            </label>
-                            <textarea
-                              value={customInstructions}
-                              onChange={(e) => setCustomInstructions(e.target.value)}
-                              placeholder="e.g., Always respond in a concise manner. Use code examples when explaining technical concepts. Prefer TypeScript over JavaScript..."
-                              className="w-full min-h-[200px] rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
-                              rows={8}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1.5">
-                              These instructions will be included as context in every new conversation.
-                            </p>
-                          </div>
-                        )}
-
-                        {instructionsMessage && (
-                          <div className={cn(
-                            "flex items-center gap-2 rounded-md p-3 text-sm",
-                            instructionsMessage.type === "success"
-                              ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                              : "bg-destructive/10 text-destructive"
-                          )}>
-                            {instructionsMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
-                            {instructionsMessage.text}
-                          </div>
-                        )}
-
-                        {/* Hide save button when disabled (org context) */}
-                        {(!orgSlug || instructionsEnabled) && (
-                          <Button size="sm" onClick={handleSaveInstructions} disabled={instructionsSaving}>
-                            {instructionsSaving ? "Saving..." : "Save Instructions"}
-                          </Button>
-                        )}
-                      </div>
-                    )}
                   </div>
+
+                  {instructionsLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orgSlug ? (
+                        <InstructionEditor
+                          value={customInstructions}
+                          onChange={setCustomInstructions}
+                          maxTokens={200}
+                          label="Custom Instructions"
+                          description="Personalize how the AI responds to you. These instructions are added to every conversation."
+                          disabled={!instructionsEnabled}
+                          disabledMessage="Custom instructions disabled by your admin."
+                        />
+                      ) : (
+                        <div>
+                          <Label className="mb-1.5 block">
+                            Custom Instructions
+                          </Label>
+                          <textarea
+                            value={customInstructions}
+                            onChange={(e) => setCustomInstructions(e.target.value)}
+                            placeholder="e.g., Always respond in a concise manner. Use code examples when explaining technical concepts. Prefer TypeScript over JavaScript..."
+                            className="w-full min-h-[200px] rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                            rows={8}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            These instructions will be included as context in every new conversation.
+                          </p>
+                        </div>
+                      )}
+
+                      {instructionsMessage && (
+                        <div className={cn(
+                          "flex items-center gap-2 rounded-md p-3 text-sm",
+                          instructionsMessage.type === "success"
+                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                            : "bg-destructive/10 text-destructive"
+                        )}>
+                          {instructionsMessage.type === "success" ? <Check className="size-4" /> : <AlertCircle className="size-4" />}
+                          {instructionsMessage.text}
+                        </div>
+                      )}
+
+                      {/* Hide save button when disabled (org context) */}
+                      {(!orgSlug || instructionsEnabled) && (
+                        <Button size="sm" onClick={handleSaveInstructions} disabled={instructionsSaving}>
+                          {instructionsSaving ? "Saving..." : "Save Instructions"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* SESSIONS TAB */}
               {activeTab === "sessions" && (
                 <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      Active Sessions
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-5">
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-medium text-foreground">Active Sessions</h4>
+                    <p className="text-xs text-muted-foreground">
                       Manage your active sessions across devices.
                     </p>
+                  </div>
 
-                    {!orgSlug ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Monitor className="mb-3 size-10 text-muted-foreground/50" />
-                        <p className="text-sm font-medium text-foreground mb-1">Session management</p>
-                        <p className="text-xs text-muted-foreground">
-                          Session management is available in the organization context.
-                        </p>
-                      </div>
-                    ) : sessionsLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : sessions.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Monitor className="mb-3 size-10 text-muted-foreground/50" />
-                        <p className="text-sm font-medium text-foreground">No active sessions</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {sessions.length === 1 && sessions[0].isCurrent && (
-                          <p className="text-sm text-muted-foreground mb-3">This is your only active session.</p>
-                        )}
+                  {!orgSlug ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <Monitor className="mb-3 size-10 text-muted-foreground/40" />
+                      <p className="text-sm font-medium text-foreground mb-1">Session management</p>
+                      <p className="text-xs text-muted-foreground max-w-[260px]">
+                        Session management is available when you are logged into an organization.
+                      </p>
+                    </div>
+                  ) : sessionsLoading ? (
+                    <div className="flex items-center justify-center py-16">
+                      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <Monitor className="mb-3 size-10 text-muted-foreground/40" />
+                      <p className="text-sm font-medium text-foreground">No active sessions</p>
+                    </div>
+                  ) : (
+                    <>
+                      {sessions.length === 1 && sessions[0].isCurrent && (
+                        <p className="text-xs text-muted-foreground">This is your only active session.</p>
+                      )}
+                      <div className="space-y-2.5">
                         {sessions.map((session) => {
                           const DeviceIcon = getDeviceIcon(session.device)
                           return (
                             <div
                               key={session.id}
-                              className={`rounded-lg border p-4 ${
+                              className={cn(
+                                "rounded-md border p-3.5",
                                 session.isCurrent
                                   ? "border-green-500/30 bg-green-500/5 dark:border-green-500/20 dark:bg-green-500/5"
                                   : "border-border"
-                              }`}
+                              )}
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className={`flex size-9 items-center justify-center rounded-full ${
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={cn(
+                                    "flex size-9 shrink-0 items-center justify-center rounded-full",
                                     session.isCurrent ? "bg-green-500/10" : "bg-muted"
-                                  }`}>
-                                    <DeviceIcon className={`size-4 ${
+                                  )}>
+                                    <DeviceIcon className={cn(
+                                      "size-4",
                                       session.isCurrent ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
-                                    }`} />
+                                    )} />
                                   </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-foreground">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate">
                                       {session.browser} on {session.os}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground truncate">
                                       {session.ipAddress || "Unknown IP"} &middot; {session.isCurrent ? "Active now" : `Active ${getRelativeTime(session.lastUsedAt)}`}
                                     </p>
                                   </div>
                                 </div>
-                                <div>
+                                <div className="shrink-0">
                                   {session.isCurrent ? (
-                                    <Badge variant="outline" className="border-green-500/50 text-green-700 dark:text-green-400">
-                                      Current Session
+                                    <Badge variant="outline" className="border-green-500/50 text-green-700 dark:text-green-400 text-xs">
+                                      Current
                                     </Badge>
                                   ) : sessionConfirmId === session.id ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
                                       <Button
                                         size="sm"
                                         variant="destructive"
@@ -1508,25 +1504,20 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                           )
                         })}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
               )}
 
               {/* ADVANCED TAB */}
               {activeTab === "advanced" && (
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
-                      Advanced Settings
-                    </h3>
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Sliders className="mb-3 size-10 text-muted-foreground/50" />
-                      <p className="text-sm font-medium text-foreground mb-1">Coming soon</p>
-                      <p className="text-xs text-muted-foreground">
-                        Advanced settings for power users.
-                      </p>
-                    </div>
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Sliders className="mb-3 size-10 text-muted-foreground/40" />
+                    <p className="text-sm font-medium text-foreground mb-1">Coming soon</p>
+                    <p className="text-xs text-muted-foreground max-w-[260px]">
+                      Advanced settings for power users will be available in a future update.
+                    </p>
                   </div>
                 </div>
               )}
