@@ -105,7 +105,7 @@ Requirements for initial release. All features from the RBAC specification are v
 
 ### Super Admin — Admin Panel UI (SUI)
 
-- [ ] **SUI-01**: Super Admin panel at admin.llmatscale.ai using shadcn sidebar component as base layout
+- [x] **SUI-01**: Super Admin panel at super-admin.llmatscale.ai using shadcn sidebar component as base layout
 - [x] **SUI-02**: All Super Admin tables use TanStack Table with sorting, filtering, pagination
 - [x] **SUI-03**: All Super Admin forms, modals, dialogs, dropdowns, tabs, switches use shadcn components
 - [x] **SUI-04**: All Super Admin analytics dashboards use Recharts
@@ -120,16 +120,16 @@ Requirements for initial release. All features from the RBAC specification are v
 ### Org Admin — Logo & Branding (OBRN)
 
 - [x] **OBRN-01**: Org Admin can upload org logo (converted to Base64, stored in database)
-- [ ] **OBRN-02**: Org Admin can set primary brand color
-- [ ] **OBRN-03**: Org Admin can set accent color
-- [ ] **OBRN-04**: Branding changes apply across the entire org UI instantly
+- [~] **OBRN-02**: ~~Org Admin can set primary brand color~~ — DROPPED: org identity via theme + logo only (CONTEXT.md decision)
+- [~] **OBRN-03**: ~~Org Admin can set accent color~~ — DROPPED: org identity via theme + logo only (CONTEXT.md decision)
+- [~] **OBRN-04**: ~~Branding changes apply across the entire org UI instantly~~ — DROPPED: org identity via theme + logo only (CONTEXT.md decision)
 
 ### Org Admin — Theme Management (OTHM)
 
-- [ ] **OTHM-01**: Org Admin can choose active theme from themes assigned by Super Admin
-- [ ] **OTHM-02**: Org Admin cannot access or see themes outside of what Super Admin assigned
-- [ ] **OTHM-03**: Available themes: Claude, Vercel, Solar Dusk, Twitter, Violet Bloom
-- [ ] **OTHM-04**: Theme applies to entire org and all users within it
+- [x] **OTHM-01**: Org Admin can choose active theme from themes assigned by Super Admin
+- [x] **OTHM-02**: Org Admin cannot access or see themes outside of what Super Admin assigned
+- [x] **OTHM-03**: Available themes: Claude, Vercel, Solar Dusk, Twitter, Violet Bloom
+- [x] **OTHM-04**: Theme applies to entire org and all users within it
 - [x] **OTHM-05**: If Super Admin removes a currently active theme, system falls back to org's default theme
 - [x] **OTHM-06**: If all assigned themes are removed, org falls back to platform default styling
 - [x] **OTHM-07**: Org Admin cannot set active theme outside assigned themes — validated server-side
@@ -486,7 +486,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UPRF-02 | Phase 4 | Complete |
 | UPRF-03 | Phase 4 | Complete |
 | UPRF-04 | Phase 4 | Complete |
-| SUI-01 | Phase 5 | Pending |
+| SUI-01 | Phase 5 | Complete |
 | SUI-02 | Phase 5 | Complete |
 | SUI-03 | Phase 5 | Complete |
 | SUI-04 | Phase 5 | Complete |
@@ -511,7 +511,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SAUD-01 | Phase 5 | Complete |
 | SAUD-02 | Phase 5 | Complete |
 | SAUD-03 | Phase 5 | Complete |
-| OUI-01 | Phase 6 | Pending |
+| OUI-01 | Phase 6 | Complete |
 | OUI-02 | Phase 6 | Complete |
 | OUI-03 | Phase 6 | Complete |
 | OUI-04 | Phase 6 | Complete |
@@ -547,17 +547,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OAUD-03 | Phase 6 | Complete |
 | SORG-08 | Phase 7 | Complete |
 | SORG-09 | Phase 7 | Complete |
-| OTHM-01 | Phase 7 | Pending |
-| OTHM-02 | Phase 7 | Pending |
-| OTHM-03 | Phase 7 | Pending |
-| OTHM-04 | Phase 7 | Pending |
+| OTHM-01 | Phase 7 | Complete |
+| OTHM-02 | Phase 7 | Complete |
+| OTHM-03 | Phase 7 | Complete |
+| OTHM-04 | Phase 7 | Complete |
 | OTHM-05 | Phase 7 | Complete |
 | OTHM-06 | Phase 7 | Complete |
 | OTHM-07 | Phase 7 | Complete |
 | OBRN-01 | Phase 7 | Complete |
-| OBRN-02 | Phase 7 | Pending |
-| OBRN-03 | Phase 7 | Pending |
-| OBRN-04 | Phase 7 | Pending |
+| OBRN-02 | Phase 7 | Dropped |
+| OBRN-03 | Phase 7 | Dropped |
+| OBRN-04 | Phase 7 | Dropped |
 | UTHEM-01 | Phase 7 | Complete |
 | UTHEM-02 | Phase 7 | Complete |
 | UTHEM-03 | Phase 7 | Complete |
@@ -574,8 +574,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CRON-03 | Phase 7 | Complete |
 
 **Coverage:**
-- v1 requirements: 195 total
-- Mapped to phases: 195
+- v1 requirements: 195 total (192 active + 3 dropped)
+- Complete: 192
+- Dropped: 3 (OBRN-02, OBRN-03, OBRN-04 — org identity via theme + logo only)
 - Unmapped: 0
 
 ---
