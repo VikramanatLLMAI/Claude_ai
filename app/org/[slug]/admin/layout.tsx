@@ -4,7 +4,6 @@ import * as React from "react"
 import { useEffect, useState, useMemo } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
-import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { PageLoadingSkeleton } from "@/components/ui/skeleton-loaders"
 import { toast } from "@/components/ui/toast"
@@ -131,7 +130,6 @@ export default function OrgAdminLayout({ children }: { children: React.ReactNode
     <SidebarProvider>
       <AdminSidebar variant="org-admin" orgSlug={slug} orgName={orgName} />
       <SidebarInset>
-        <AdminBreadcrumb orgSlug={slug} />
         {children}
       </SidebarInset>
     </SidebarProvider>
