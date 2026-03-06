@@ -2,7 +2,7 @@
 
 ## What This Is
 
-LLMatscale.ai is a production SaaS AI chat platform powered by Anthropic's Claude models. It already has a fully working chat application with streaming, file upload/preview, MCP tool integration, Sandpack preview, artifact generation, themes, and settings. The goal is to layer a complete Role-Based Access Control (RBAC) system on top — transforming the single-user app into a multi-tenant platform where organizations have isolated data, controlled access, and granular admin features.
+LLMatscale.ai is a production SaaS AI chat platform powered by Anthropic's Claude models with a complete Role-Based Access Control (RBAC) multi-tenant system. Organizations have isolated data, controlled access to AI models and tools, granular admin features, and visual branding — all built on top of a fully working chat application with streaming, file upload/preview, MCP tool integration, Sandpack preview, and artifact generation.
 
 ## Core Value
 
@@ -12,122 +12,45 @@ Organizations can securely deploy AI chat to their teams with full control over 
 
 ### Validated
 
-- ✓ AI chat with streaming via Anthropic API (7 Claude models) — existing
-- ✓ File upload and preview (PDF, DOCX, XLSX, PPTX, images, text) — existing
-- ✓ MCP tool integration with encrypted credentials — existing
-- ✓ Sandpack live React preview — existing
-- ✓ Artifact generation (HTML/code) — existing
-- ✓ 5 platform themes (Claude, Vercel, Solar Dusk, Twitter, Violet Bloom) — existing
-- ✓ Settings modal with model selection, web search, reasoning toggles — existing
-- ✓ Conversation management (create, list, pin, share, delete) — existing
-- ✓ Session-based authentication with scrypt password hashing — existing
-- ✓ AES-256-GCM encryption for API keys and credentials — existing
-- ✓ Markdown rendering with syntax highlighting, mermaid, KaTeX — existing
-- ✓ Container skills for document generation (PPTX, DOCX, PDF, XLSX) — existing
+- AI chat with streaming via Anthropic API (7 Claude models) — existing
+- File upload and preview (PDF, DOCX, XLSX, PPTX, images, text) — existing
+- MCP tool integration with encrypted credentials — existing
+- Sandpack live React preview — existing
+- Artifact generation (HTML/code) — existing
+- 5 platform themes (Claude, Vercel, Solar Dusk, Twitter, Violet Bloom) — existing
+- Settings modal with model selection, web search, reasoning toggles — existing
+- Conversation management (create, list, pin, share, delete) — existing
+- Session-based authentication with scrypt password hashing — existing
+- AES-256-GCM encryption for API keys and credentials — existing
+- Markdown rendering with syntax highlighting, mermaid, KaTeX — existing
+- Container skills for document generation (PPTX, DOCX, PDF, XLSX) — existing
+- Multi-tenant database schema (17 models) with automatic tenant scoping — v1.0
+- Organization CRUD with suspension, soft delete, 30-day grace period — v1.0
+- Subdomain-based routing (super-admin.*, {org-slug}.*) — v1.0
+- Enriched auth context with org membership and role — v1.0
+- Email-based invitation flow with Resend — v1.0
+- System role templates (Technical, Business, Basic) — v1.0
+- Custom role creation with granular permissions — v1.0
+- 4-layer system prompt stack (platform + org + role + user) — v1.0
+- Role-filtered model access from Platform Model Registry — v1.0
+- MCP server assignment (org-wide + role-specific) — v1.0
+- Per-request usage tracking with daily/monthly limit enforcement — v1.0
+- Usage alerts at 80% warning and 100% hard block — v1.0
+- Per-org password policy with graceful enforcement — v1.0
+- Session management (view, revoke, force-logout) — v1.0
+- Super Admin dashboard with org/user/key management, analytics, audit logs — v1.0
+- Org Admin dashboard with members, invitations, analytics, audit logs — v1.0
+- Theme assignment (Super Admin) and selection (Org Admin) — v1.0
+- Org logo upload with login page branding — v1.0
+- User light/dark/system mode independent from org theme — v1.0
+- Conversation visibility with compliance export — v1.0
+- User impersonation for support (read-only, audit-logged) — v1.0
+- Scheduled cleanup tasks (org purge, expired invitations, expired sessions) — v1.0
+- Onboarding wizard with conversation visibility notice — v1.0
 
 ### Active
 
-#### Multi-Tenancy & Organization Management
-- [ ] Organization CRUD (create, edit, suspend, activate, delete with 30-day grace)
-- [ ] Org logo upload (Base64 stored in database)
-- [ ] Theme assignment per org (Super Admin assigns subset of 5 platform themes)
-- [ ] Default theme per org
-- [ ] Org branding (primary color, accent color)
-- [ ] Data isolation — all data strictly filtered by org
-
-#### Role Hierarchy (Super Admin → Org Admin → User)
-- [ ] Super Admin role — platform-wide management, no chat access
-- [ ] Org Admin role — org-scoped management with full org control
-- [ ] Regular User role — chat access within org constraints
-- [ ] Seed script for initial Super Admin creation
-- [ ] Self-protection rules (cannot demote/suspend/delete self)
-- [ ] Organization protection (at least 1 Org Admin per org)
-- [ ] Platform protection (at least 1 Super Admin always)
-
-#### Invitation-Based User Management
-- [ ] Invite users via email (Resend API)
-- [ ] Accept invitation flow with registration
-- [ ] Default role for new users per org
-- [ ] Resend or revoke pending invitations
-- [ ] No open self-registration — invite only
-
-#### Role Management & Permissions
-- [ ] System roles (Technical, Business, Basic) with templates
-- [ ] Custom role creation by Org Admin
-- [ ] Per-role model access control (which Claude models available)
-- [ ] Per-role MCP server assignment (role-specific + org-wide)
-- [ ] Per-role system instructions (stacks on platform + org prompt)
-- [ ] Per-role usage limits (daily requests, daily tokens)
-- [ ] Per-role custom instructions toggle and character limit
-
-#### System Prompt Stack (4 Layers)
-- [ ] Platform prompt (hardcoded, no one can edit)
-- [ ] Org system instructions (2000 char limit)
-- [ ] Role system instructions (2000 char limit)
-- [ ] User layer (name + role name + custom instructions auto-injected)
-- [ ] Combined token budget enforcement (2000 tokens max)
-
-#### Password Policy
-- [ ] Per-org password policy (length, complexity requirements)
-- [ ] Password expiry period
-- [ ] Force password reset (individual or all users)
-- [ ] Graceful enforcement — existing passwords enforced on next login only
-
-#### Conversation Visibility
-- [ ] Org-level toggle (default off — all conversations private)
-- [ ] When enabled, Org Admin gets read-only access to all org conversations
-- [ ] User notice in chat UI when visibility is enabled
-- [ ] Filter and export conversations for compliance
-
-#### Usage Limits & Alerts
-- [ ] Role-level daily limits (requests and tokens)
-- [ ] Org-level monthly limits
-- [ ] Warning banner at 80% of limit
-- [ ] Hard block at 100% with clear message
-- [ ] Dashboard alerts for Org Admin
-
-#### Platform API Key Management
-- [ ] Super Admin adds/removes API keys per provider (v1: Anthropic)
-- [ ] API key validity testing
-- [ ] Assign API keys to specific organizations
-
-#### Platform Analytics (Super Admin)
-- [ ] Org statistics (active, suspended, deleted, growth over time)
-- [ ] User statistics across all orgs
-- [ ] Total conversations, messages, token consumption by org/provider/model
-- [ ] Usage trend charts (daily/weekly/monthly) via Recharts
-- [ ] Top orgs by usage, peak hours, error rates
-- [ ] MCP server and tool usage trends
-- [ ] Feature adoption trends
-
-#### Org Analytics (Org Admin)
-- [ ] User statistics (active, suspended, pending invite)
-- [ ] Conversations, messages, token usage by user/role/model
-- [ ] Model usage distribution, top users
-- [ ] Per-role usage breakdown
-- [ ] Usage trend charts via Recharts
-- [ ] MCP usage, response times, error rates
-- [ ] Invitation status overview
-- [ ] Users approaching/exceeding limits, inactive users report
-
-#### Audit Logs
-- [ ] Platform audit logs (all admin actions across all orgs)
-- [ ] Org audit logs (all admin actions within org)
-- [ ] Filter by date, org, action type, user
-- [ ] Export as CSV or JSON
-- [ ] Immutable — cannot be edited or deleted
-- [ ] User impersonation for support (read-only, logged)
-
-#### Theme Management
-- [ ] Org Admin picks active theme from Super Admin-assigned themes
-- [ ] User toggles light/dark/system mode (independent from org theme)
-- [ ] Theme fallback when assigned theme removed
-- [ ] Org branding colors apply across entire org UI
-
-#### Session Management
-- [ ] Users view all active sessions (device, last active)
-- [ ] Users can revoke specific sessions
-- [ ] Org Admin can force-logout a user from all sessions
+(No active requirements — next milestone not yet defined)
 
 ### Out of Scope
 
@@ -138,51 +61,47 @@ Organizations can securely deploy AI chat to their teams with full control over 
 - Real-time chat between users — AI chat only
 - Billing/payment integration — manual org management
 - Public API for external integrations
+- Brand colors per org — org identity via theme + logo only (v1.0 decision)
 
 ## Context
 
-**Existing Codebase:** Fully working Next.js 16.1.4 + React 19.2.3 chat application with PostgreSQL + Prisma 7.3.0. All chat features, file viewers, MCP integration, themes, and settings work correctly. The codebase follows a layered architecture: Presentation → API Routes → Business Logic → Data Access → Infrastructure.
+**Shipped v1.0** with 112,116 LOC TypeScript across 354 files.
+Tech stack: Next.js 16.1.4, React 19.2.3, Prisma 7.3.0, PostgreSQL, TailwindCSS v4, Radix UI, Recharts, TanStack Table.
+Scale: Medium — designed for 5-20 organizations, hundreds of users.
+Deployment: Self-hosted Docker with PostgreSQL.
 
-**Approach:** Fresh database start. No data migration from existing single-user schema. The existing Prisma schema (User, Session, Conversation, Message, Artifact, McpConnection) will be redesigned to support multi-tenancy with Organization, OrgMember, Role, and related models.
-
-**Email Provider:** Resend API for transactional email (invitations, password resets, forced resets).
-
-**Deployment:** Self-hosted (Docker on own infrastructure with PostgreSQL).
-
-**Scale:** Medium — 5-20 organizations, hundreds of users. Schema and queries designed for this tier.
-
-**Charting:** Recharts for all analytics dashboards.
-
-**Key Architecture Decisions:**
-- Super Admin has no org context — cannot use chat
-- Custom instructions stored on OrgMember (org-specific, not portable)
-- MCP servers assigned at org-wide or role level — users cannot configure
-- Token tracking extracted from Anthropic API responses (input_tokens + output_tokens)
-- Org deletion: soft delete + 30-day auto-purge with Super Admin restore option
-- Themes exist at CSS level — RBAC controls which themes each org can use
+**Known tech debt:**
+- Rate limiting TODO on find-org route
+- TypeScript `as any` casts on tenantDb aggregates
+- 12 human verification browser tests pending (Phases 5 and 7)
 
 ## Constraints
 
-- **Tech Stack**: Next.js 16 + React 19 + TypeScript 5 + Prisma 7 + PostgreSQL + TailwindCSS v4 — must use existing stack
-- **AI Provider**: Anthropic API only (v1) — no OpenAI, no Gemini
-- **Auth**: Email/password only (v1) — no OAuth/SSO
+- **Tech Stack**: Next.js 16 + React 19 + TypeScript 5 + Prisma 7 + PostgreSQL + TailwindCSS v4
+- **AI Provider**: Anthropic API only (v1)
+- **Auth**: Email/password only (v1)
 - **Email**: Resend API for all transactional email
-- **Deployment**: Self-hosted Docker — no Vercel-specific features
-- **DB Fresh Start**: Complete schema redesign, no migration from existing data
-- **Existing Features**: All current chat features (file viewers, Sandpack, artifacts, MCP, streaming) must be preserved exactly as-is
+- **Deployment**: Self-hosted Docker
+- **Existing Features**: All chat features preserved as-is
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Fresh database start | RBAC schema is fundamentally different from single-user schema; migration complexity not worth it | — Pending |
-| Invite-only registration | SaaS multi-tenant model requires controlled onboarding per org | — Pending |
-| Seed script for Super Admin | No UI registration path for Super Admin since they have no org context | — Pending |
-| Resend for email | Modern email API, good DX, reliable delivery | — Pending |
-| Recharts for analytics | React-native charting library, good Next.js integration | — Pending |
-| 4-layer prompt stack with token budget | Prevents prompt bloat while allowing personalization at every level | — Pending |
-| Soft delete + auto-purge for orgs | Balance between data recovery and cleanup; Super Admin can restore within 30 days | — Pending |
-| Custom instructions on OrgMember | Org-specific behavior; user in multiple orgs gets different instructions per org | — Pending |
+| Fresh database start | RBAC schema fundamentally different; migration not worth it | Good |
+| Invite-only registration | SaaS multi-tenant requires controlled onboarding | Good |
+| Seed script for Super Admin | No UI registration for Super Admin (no org context) | Good |
+| Resend for email | Modern API, good DX, reliable delivery | Good |
+| Recharts for analytics | React-native, good Next.js integration | Good |
+| 4-layer prompt stack with token budget | Prevents prompt bloat while allowing per-level personalization | Good |
+| Soft delete + auto-purge for orgs | Balance between recovery and cleanup | Good |
+| Custom instructions on OrgMember | Org-specific; user in multiple orgs gets different instructions | Good |
+| Auth at route handler level (not middleware) | CVE-2025-29927 defense-in-depth | Good |
+| Tenant scoping via Prisma Extensions | Single enforcement point, auto-inject orgId | Good |
+| Existing chat UI untouched | RBAC through admin panels + surgical integration points | Good |
+| Super Admin renamed to super-admin.* | Avoid conflict with org admin paths | Good |
+| Brand colors dropped for theme + logo | Simpler, less maintenance, themes cover visual identity | Good |
+| Model Registry as single source of truth | No hardcoded model lists, UI-manageable | Good |
 
 ---
-*Last updated: 2026-02-26 after initialization*
+*Last updated: 2026-03-06 after v1.0 milestone*

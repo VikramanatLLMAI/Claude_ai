@@ -77,7 +77,7 @@ Each task was committed atomically:
 1. **Task 1: Install sonner + @radix-ui/react-alert-dialog and create shared UI components** - `afcca47` (feat)
 2. **Task 2: Create org-scoped admin models endpoint and fix role model assignment component** - `1051238` (fix)
 
-**Plan metadata:** pending (docs: complete plan)
+**Plan metadata:** `012f061` (docs: complete plan)
 
 ## Files Created/Modified
 - `components/ui/toast.tsx` - Sonner wrapper with Toaster component and toast re-export
