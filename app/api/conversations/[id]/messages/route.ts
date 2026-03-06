@@ -86,11 +86,12 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     const message = await tenantDb.message.create({
       data: {
+        organizationId: '' as string,
         conversationId: id,
         role,
         content,
-        parts: (parts as object) ?? null,
-        metadata: {},
+        parts: (parts as object) ?? null as any,
+        metadata: {} as any,
       },
     });
 

@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
 
     const artifact = await tenantDb.artifact.create({
       data: {
+        organizationId: '' as string,
         conversationId,
         messageId,
         userId: user.id,

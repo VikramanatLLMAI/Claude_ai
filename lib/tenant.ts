@@ -93,10 +93,15 @@ const WRITE_OPS = new Set([
  * @returns An extended Prisma client with automatic tenant scoping.
  */
 export function tenantPrisma(orgId: string) {
+  // Cast to typeof prisma so callers get full model type inference.
+  // The $extends return type loses model accessors in Prisma 7.x $allModels.$allOperations.
   return prisma.$extends({
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const a = args as any;
+
           // Non-tenant-scoped models pass through unmodified
           if (!model || !TENANT_SCOPED_MODELS.has(model)) {
             return query(args);
@@ -104,51 +109,51 @@ export function tenantPrisma(orgId: string) {
 
           // Inject organizationId into WHERE for read operations
           if (READ_OPS.has(operation)) {
-            args.where = {
-              ...args.where,
+            a.where = {
+              ...a.where,
               organizationId: orgId,
             };
           }
 
           // Inject organizationId into DATA for single create
           if (operation === 'create') {
-            args.data = {
-              ...args.data,
+            a.data = {
+              ...a.data,
               organizationId: orgId,
             };
           }
 
           // Inject organizationId into each item for batch create
           if (operation === 'createMany') {
-            if (Array.isArray(args.data)) {
-              args.data = args.data.map((d: Record<string, unknown>) => ({
+            if (Array.isArray(a.data)) {
+              a.data = a.data.map((d: Record<string, unknown>) => ({
                 ...d,
                 organizationId: orgId,
               }));
             } else {
-              args.data = { ...args.data, organizationId: orgId };
+              a.data = { ...a.data, organizationId: orgId };
             }
           }
 
           // Inject organizationId into WHERE for update/delete operations
           if (['update', 'updateMany', 'delete', 'deleteMany'].includes(operation)) {
-            args.where = {
-              ...args.where,
+            a.where = {
+              ...a.where,
               organizationId: orgId,
             };
           }
 
           // Inject organizationId into both WHERE and CREATE for upsert
           if (operation === 'upsert') {
-            args.where = { ...args.where, organizationId: orgId };
-            args.create = { ...args.create, organizationId: orgId };
+            a.where = { ...a.where, organizationId: orgId };
+            a.create = { ...a.create, organizationId: orgId };
           }
 
           return query(args);
         },
       },
     },
-  });
+  }) as unknown as typeof prisma;
 }
 
 /**

@@ -52,7 +52,7 @@ export const auditLog = {
         targetId: entry.targetId ?? null,
         organizationId: entry.organizationId ?? null,
         ipAddress: entry.ipAddress ?? null,
-        metadata: entry.metadata ?? {},
+        metadata: (entry.metadata ?? {}) as any,
       },
     });
   },

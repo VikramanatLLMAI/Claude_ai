@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       if (userContent) {
         await tenantDb.message.create({
           data: {
+            organizationId: '' as string, // auto-injected by tenant extension at runtime
             conversationId,
             role: 'user',
             content: userContent,
@@ -492,15 +493,18 @@ export async function POST(req: NextRequest) {
 
           await tenantDb.message.create({
             data: {
+              organizationId: '' as string, // auto-injected by tenant extension at runtime
               conversationId,
               role: 'assistant',
               content: text || '',
-              parts: dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }],
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              parts: dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }] as any,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               metadata: {
                 reasoning: reasoning || null,
                 stepsCount: steps?.length || 0,
                 model: modelId,
-              },
+              } as any,
             },
           });
           // Update conversation's lastMessageAt (non-blocking)
@@ -521,6 +525,7 @@ export async function POST(req: NextRequest) {
 
           await tenantDb.usageRecord.create({
             data: {
+              organizationId: '' as string, // auto-injected by tenant extension at runtime
               userId: user.id,
               orgMemberId: orgMember.id,
               conversationId: conversationId || null,

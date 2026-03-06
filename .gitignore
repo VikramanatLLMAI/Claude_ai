@@ -35,11 +35,17 @@ yarn-error.log*
 
 # sensitive config files
 iam/
-.claude/settings.local.json
+credentials.txt
+
+# Claude Code / GSD tooling (local only)
+.claude/
+.mcp.json
+
+# UAT screenshots and reports
+uat-screenshots/
 
 # non-essential / generated
 .agents/
-.claude/skills/
 docs/
 scripts/
 app-logs.json

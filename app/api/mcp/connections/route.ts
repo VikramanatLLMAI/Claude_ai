@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
     // Create connection (tenant-scoped auto-injects organizationId)
     const connection = await tenantDb.mcpConnection.create({
       data: {
+        organizationId: '' as string,
         userId: user.id,
         name,
         serverUrl,

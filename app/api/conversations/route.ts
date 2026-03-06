@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
 
     const conversation = await tenantDb.conversation.create({
       data: {
+        organizationId: '' as string,
         userId: user.id,
         title: title || 'New Chat',
         model: model || 'claude-sonnet-4-5-20250929',

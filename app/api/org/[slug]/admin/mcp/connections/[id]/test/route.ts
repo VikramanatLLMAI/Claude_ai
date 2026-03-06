@@ -201,7 +201,7 @@ export async function POST(
 
             await auth.tenantDb.mcpConnection.update({
               where: { id },
-              data: { availableTools: discoveredTools },
+              data: { availableTools: discoveredTools as any },
             });
           }
         }

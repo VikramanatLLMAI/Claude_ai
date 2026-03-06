@@ -241,7 +241,7 @@ export async function POST(
             // Store discovered tools
             await tenantDb.mcpConnection.update({
               where: { id },
-              data: { availableTools: discoveredTools },
+              data: { availableTools: discoveredTools as any },
             });
             console.log('[MCP Test] Stored tools in database');
           } else {

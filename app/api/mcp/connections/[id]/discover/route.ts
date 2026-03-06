@@ -143,7 +143,7 @@ export async function POST(
 
       await tenantDb.mcpConnection.update({
         where: { id },
-        data: { availableTools: toolsWithSchema },
+        data: { availableTools: toolsWithSchema as any },
       });
 
       return NextResponse.json({

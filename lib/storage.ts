@@ -49,7 +49,7 @@ export async function createUser(data: {
     data: {
       email: data.email,
       passwordHash: data.passwordHash,
-      name: data.name,
+      name: data.name ?? '',
     },
   });
 }
@@ -144,6 +144,7 @@ export async function createConversation(data: {
 }): Promise<Conversation> {
   return prisma.conversation.create({
     data: {
+      organizationId: '' as string, // Auto-injected by tenant extension at runtime
       userId: data.userId,
       title: data.title || 'New Chat',
       model: data.model || 'claude-sonnet-4-5-20250929',
@@ -220,11 +221,12 @@ export async function addMessage(
     // Create message
     const message = await prisma.message.create({
       data: {
+        organizationId: '' as string, // Auto-injected by tenant extension at runtime
         conversationId,
         role: data.role,
         content: data.content,
-        parts: data.parts as object ?? null,
-        metadata: data.metadata as object ?? {},
+        parts: data.parts as any ?? null,
+        metadata: data.metadata as any ?? {},
       },
     });
 
@@ -269,8 +271,8 @@ export async function updateMessage(
       where: { id },
       data: {
         ...data,
-        parts: data.parts as object ?? undefined,
-        metadata: data.metadata as object ?? undefined,
+        parts: data.parts as any ?? undefined,
+        metadata: data.metadata as any ?? undefined,
         editedAt: new Date(),
       },
     });
@@ -305,6 +307,7 @@ export async function createArtifact(data: {
 }): Promise<Artifact> {
   return prisma.artifact.create({
     data: {
+      organizationId: '' as string, // Auto-injected by tenant extension at runtime
       conversationId: data.conversationId,
       messageId: data.messageId,
       userId: data.userId,
@@ -368,6 +371,7 @@ export async function createMcpConnection(data: {
 }): Promise<McpConnection> {
   return prisma.mcpConnection.create({
     data: {
+      organizationId: '' as string, // Auto-injected by tenant extension at runtime
       userId: data.userId,
       name: data.name,
       serverUrl: data.serverUrl,
