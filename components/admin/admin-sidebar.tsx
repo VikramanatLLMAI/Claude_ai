@@ -22,7 +22,6 @@ import {
   Mail,
   ScrollText,
   MessageCircle,
-  ChevronLeft,
   ChevronUp,
 } from "lucide-react"
 import {
@@ -44,7 +43,6 @@ import {
 } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 
 const AUTH_SESSION_KEY = "llmatscale_auth_session"
 const AUTH_TOKEN_KEY = "llmatscale_auth_token"
@@ -209,38 +207,27 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            {isOrgAdmin ? (
-              <Building2 className="h-5 w-5 text-primary" />
-            ) : (
-              <Shield className="h-5 w-5 text-primary" />
-            )}
-          </div>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold text-sidebar-foreground">
-              {isOrgAdmin ? (orgName || "Organization") : "LLMatscale.ai"}
-            </span>
-            <span className="text-xs text-sidebar-foreground/60">
-              {isOrgAdmin ? "Admin Console" : "Platform Admin"}
-            </span>
-          </div>
+      <SidebarHeader className="border-b border-sidebar-border px-2 py-3 group-data-[collapsible=icon]:px-2">
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <button
             onClick={toggleSidebar}
             aria-label={state === "collapsed" ? "Expand sidebar" : "Collapse sidebar"}
-            className={cn(
-              "ml-auto h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-md hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors",
-              "group-data-[collapsible=icon]:ml-0"
-            )}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
           >
-            <ChevronLeft
-              className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                state === "collapsed" && "rotate-180"
-              )}
-            />
+            {isOrgAdmin ? (
+              <Building2 className="h-4 w-4 text-primary" />
+            ) : (
+              <Shield className="h-4 w-4 text-primary" />
+            )}
           </button>
+          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="text-sm font-semibold text-sidebar-foreground truncate">
+              {isOrgAdmin ? (orgName || "Organization") : "LLMatscale.ai"}
+            </span>
+            <span className="text-xs text-sidebar-foreground/60 truncate">
+              {isOrgAdmin ? "Admin Console" : "Platform Admin"}
+            </span>
+          </div>
         </div>
       </SidebarHeader>
 
