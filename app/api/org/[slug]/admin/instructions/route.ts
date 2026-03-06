@@ -10,8 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
-import { saveOrgInstructions } from '@/lib/services/instruction-service';
-import { OrgInstructionsSchema, formatValidationErrors } from '@/lib/validation';
+import { saveOrgInstructions, saveOrgRestrictions } from '@/lib/services/instruction-service';
+import { OrgInstructionsSchema, OrgRestrictionsSchema, formatValidationErrors } from '@/lib/validation';
 
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAdmin(req);
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       systemInstructions: orgSettings?.systemInstructions || '',
+      restrictionInstructions: orgSettings?.restrictionInstructions || '',
       orgName: auth.organization.name,
     });
   } catch (error) {
@@ -41,33 +42,61 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
+    const ipAddress = getIpAddress(req);
 
-    // Validate request body
-    const parsed = OrgInstructionsSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: formatValidationErrors(parsed.error.issues) },
-        { status: 400 }
+    // Handle systemInstructions if present
+    if ('systemInstructions' in body) {
+      const parsed = OrgInstructionsSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: formatValidationErrors(parsed.error.issues) },
+          { status: 400 }
+        );
+      }
+
+      const result = await saveOrgInstructions(
+        auth.organization.id,
+        parsed.data.systemInstructions,
+        auth.user.id,
+        ipAddress,
       );
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error },
+          { status: 400 }
+        );
+      }
     }
 
-    const ipAddress = getIpAddress(req);
-    const result = await saveOrgInstructions(
-      auth.organization.id,
-      parsed.data.systemInstructions,
-      auth.user.id,
-      ipAddress,
-    );
+    // Handle restrictionInstructions if present
+    if ('restrictionInstructions' in body) {
+      const parsed = OrgRestrictionsSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: formatValidationErrors(parsed.error.issues) },
+          { status: 400 }
+        );
+      }
 
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
+      const result = await saveOrgRestrictions(
+        auth.organization.id,
+        parsed.data.restrictionInstructions,
+        auth.user.id,
+        ipAddress,
       );
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error },
+          { status: 400 }
+        );
+      }
     }
 
     return NextResponse.json({
-      systemInstructions: parsed.data.systemInstructions,
+      systemInstructions: body.systemInstructions ?? undefined,
+      restrictionInstructions: body.restrictionInstructions ?? undefined,
       orgName: auth.organization.name,
     });
   } catch (error) {

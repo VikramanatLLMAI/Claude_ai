@@ -189,8 +189,8 @@ export async function POST(req: NextRequest) {
     const hasTools = toolNames.length > 0;
     console.log(`[Chat] Available tools (${toolNames.length}):`, toolNames);
 
-    // D. 4-layer system prompt composition (PRMT-01 through PRMT-06)
-    // Fetch org settings for org-level instructions
+    // D. 6-layer system prompt composition (PRMT-01 through PRMT-06, PROMPT-04, PROMPT-05)
+    // Fetch org settings for org-level instructions and restrictions
     const orgSettings = await tenantDb.orgSettings.findUnique({
       where: { organizationId: organization.id },
     });
@@ -200,14 +200,16 @@ export async function POST(req: NextRequest) {
       mcpToolDescriptions,
       {
         orgInstructions: orgSettings?.systemInstructions || null,
+        orgRestrictions: orgSettings?.restrictionInstructions || null,
         roleInstructions: role.systemInstructions || null,
+        roleRestrictions: role.restrictionInstructions || null,
         userName: user.name,
         roleName: role.name,
         userCustomInstructions: orgMember.customInstructions || null,
         customInstructionsEnabled: role.customInstructionsEnabled,
       }
     );
-    console.log(`[Chat] System prompt composed with 4-layer stack, ${mcpToolDescriptions.length} MCP tool descriptions`);
+    console.log(`[Chat] System prompt composed with 6-layer stack, ${mcpToolDescriptions.length} MCP tool descriptions`);
 
     // Fit messages within the context window (trim tool results + drop old groups)
     const fittedMessages = fitMessagesToContextWindow(messages, systemPrompt);

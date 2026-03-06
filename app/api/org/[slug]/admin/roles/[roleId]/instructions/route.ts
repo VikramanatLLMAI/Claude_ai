@@ -11,8 +11,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
-import { saveRoleInstructions } from '@/lib/services/instruction-service';
-import { RoleInstructionsSchema, formatValidationErrors } from '@/lib/validation';
+import { saveRoleInstructions, saveRoleRestrictions } from '@/lib/services/instruction-service';
+import { RoleInstructionsSchema, RoleRestrictionsSchema, formatValidationErrors } from '@/lib/validation';
 
 interface RouteParams {
   params: Promise<{ slug: string; roleId: string }>;
@@ -32,6 +32,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         id: true,
         name: true,
         systemInstructions: true,
+        restrictionInstructions: true,
       },
     });
 
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       systemInstructions: role.systemInstructions || '',
+      restrictionInstructions: role.restrictionInstructions || '',
       roleName: role.name,
     });
   } catch (error) {
@@ -76,34 +78,63 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json();
+    const ipAddress = getIpAddress(req);
 
-    // Validate request body
-    const parsed = RoleInstructionsSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: formatValidationErrors(parsed.error.issues) },
-        { status: 400 }
+    // Handle systemInstructions if present
+    if ('systemInstructions' in body) {
+      const parsed = RoleInstructionsSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: formatValidationErrors(parsed.error.issues) },
+          { status: 400 }
+        );
+      }
+
+      const result = await saveRoleInstructions(
+        roleId,
+        auth.organization.id,
+        parsed.data.systemInstructions,
+        auth.user.id,
+        ipAddress,
       );
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error },
+          { status: 400 }
+        );
+      }
     }
 
-    const ipAddress = getIpAddress(req);
-    const result = await saveRoleInstructions(
-      roleId,
-      auth.organization.id,
-      parsed.data.systemInstructions,
-      auth.user.id,
-      ipAddress,
-    );
+    // Handle restrictionInstructions if present
+    if ('restrictionInstructions' in body) {
+      const parsed = RoleRestrictionsSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: formatValidationErrors(parsed.error.issues) },
+          { status: 400 }
+        );
+      }
 
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
+      const result = await saveRoleRestrictions(
+        roleId,
+        auth.organization.id,
+        parsed.data.restrictionInstructions,
+        auth.user.id,
+        ipAddress,
       );
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error },
+          { status: 400 }
+        );
+      }
     }
 
     return NextResponse.json({
-      systemInstructions: parsed.data.systemInstructions,
+      systemInstructions: body.systemInstructions ?? undefined,
+      restrictionInstructions: body.restrictionInstructions ?? undefined,
       roleName: role.name,
     });
   } catch (error) {
