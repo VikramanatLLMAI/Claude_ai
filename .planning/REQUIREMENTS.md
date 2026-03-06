@@ -136,17 +136,70 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| PROMPT-01 | Phase 8 | Pending |
+| PROMPT-02 | Phase 8 | Pending |
+| PROMPT-03 | Phase 8 | Pending |
+| PROMPT-04 | Phase 8 | Pending |
+| PROMPT-05 | Phase 8 | Pending |
+| PROMPT-06 | Phase 8 | Pending |
+| SIDE-01 | Phase 9 | Pending |
+| SIDE-02 | Phase 9 | Pending |
+| SIDE-03 | Phase 9 | Pending |
+| SIDE-04 | Phase 9 | Pending |
+| SIDE-05 | Phase 9 | Pending |
+| NAV-01 | Phase 9 | Pending |
+| NAV-02 | Phase 9 | Pending |
+| NAV-03 | Phase 9 | Pending |
+| NAV-04 | Phase 9 | Pending |
+| POLISH-01 | Phase 9 | Pending |
+| POLISH-02 | Phase 9 | Pending |
+| POLISH-03 | Phase 9 | Pending |
+| POLISH-04 | Phase 9 | Pending |
+| POLISH-05 | Phase 9 | Pending |
+| POLISH-06 | Phase 9 | Pending |
+| POLISH-07 | Phase 9 | Pending |
+| SUGG-01 | Phase 10 | Pending |
+| SUGG-02 | Phase 10 | Pending |
+| SUGG-03 | Phase 10 | Pending |
+| SUGG-04 | Phase 10 | Pending |
+| WELCOME-01 | Phase 10 | Pending |
+| WELCOME-02 | Phase 10 | Pending |
+| WELCOME-03 | Phase 10 | Pending |
+| LOGIN-01 | Phase 10 | Pending |
+| LOGIN-02 | Phase 10 | Pending |
+| LOGIN-03 | Phase 10 | Pending |
+| LOGIN-04 | Phase 10 | Pending |
+| SEC-01 | Phase 11 | Pending |
+| SEC-02 | Phase 11 | Pending |
+| SEC-03 | Phase 11 | Pending |
+| SEC-04 | Phase 11 | Pending |
+| SEC-05 | Phase 11 | Pending |
+| SEC-06 | Phase 11 | Pending |
+| DEBT-01 | Phase 11 | Pending |
+| DEBT-02 | Phase 11 | Pending |
+| DEBT-03 | Phase 11 | Pending |
+| DEBT-04 | Phase 11 | Pending |
+| TEST-01 | Phase 12 | Pending |
+| TEST-02 | Phase 12 | Pending |
+| TEST-03 | Phase 12 | Pending |
+| TEST-04 | Phase 12 | Pending |
+| TEST-05 | Phase 12 | Pending |
+| TEST-06 | Phase 12 | Pending |
+| TEST-07 | Phase 12 | Pending |
+| TEST-08 | Phase 12 | Pending |
+| TEST-09 | Phase 12 | Pending |
+| AUDIT-01 | Phase 13 | Pending |
+| AUDIT-02 | Phase 13 | Pending |
+| AUDIT-03 | Phase 13 | Pending |
+| AUDIT-04 | Phase 13 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 47 total
-- Mapped to phases: 0
-- Unmapped: 47
+- v1.1 requirements: 56 total
+- Mapped to phases: 56
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-06*
-*Last updated: 2026-03-06 after initial definition*
+*Last updated: 2026-03-06 after roadmap creation*
