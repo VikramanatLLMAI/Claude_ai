@@ -57,6 +57,7 @@ import {
   Plug,
   Plus,
   Settings,
+  Shield,
   Share2,
   ThumbsDown,
   ThumbsUp,
@@ -607,18 +608,6 @@ function ChatSidebar({
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {isOrgAdmin && orgSlug && (
-            <SidebarMenuItem className="pl-0.5">
-              <SidebarMenuButton
-                tooltip="Admin Console"
-                onClick={() => router.push(`/org/${orgSlug}/admin`)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Settings className="!size-4 shrink-0" />
-                <span>Admin Console</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -646,6 +635,15 @@ function ChatSidebar({
                   <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
                 </div>
                 <DropdownMenuSeparator />
+                {isOrgAdmin && orgSlug && (
+                  <>
+                    <DropdownMenuItem onClick={() => router.push(`/org/${orgSlug}/admin`)} className="gap-2.5 px-3 py-2">
+                      <Shield className="size-4 text-muted-foreground" />
+                      <span>Admin Console</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem onClick={onOpenSettings} className="gap-2.5 px-3 py-2">
                   <Settings className="size-4 text-muted-foreground" />
                   <span>Settings</span>
