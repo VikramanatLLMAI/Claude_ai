@@ -31,16 +31,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 8 - Schema & Prompt Stack
+**Current focus:** Phase 9 - Admin UI Overhaul
 
 ## Current Position
 
-Phase: 8 of 13 (Schema & Prompt Stack) — first phase of v1.1
-Plan: 2 of 2 in current phase (phase complete)
+Phase: 9 of 13 (Admin UI Overhaul)
+Plan: 1 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-06 — Completed 08-02 (restrictions UI + enhance button)
+Last activity: 2026-03-06 — Completed 09-01 (sidebar collapse, profile expander, AdminPageHeader)
 
-Progress: [|||||||||||.............] 64/77 plans (v1.0 complete, v1.1 in progress)
+Progress: [||||||||||||............] 65/77 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -63,6 +63,9 @@ Recent decisions affecting current work:
 - Override-prevention preamble is hardcoded, not admin-editable
 - Enhance button uses Haiku 4.5 with maxOutputTokens (AI SDK v6 naming)
 - Restriction textareas use raw textarea with character count (not InstructionEditor with token count)
+- ChevronLeft icon for sidebar collapse trigger (not PanelLeft from SidebarTrigger)
+- Profile expander uses Radix Collapsible inside SidebarMenu for consistent styling
+- AdminBreadcrumb removed -- replaced by AdminPageHeader per page
 
 ### Pending Todos
 
@@ -77,5 +80,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 08-02-PLAN.md (Phase 8 complete)
-Next step: Plan Phase 9 (UI/UX)
+Stopped at: Completed 09-01-PLAN.md (sidebar & header foundation)
+Next step: Execute 09-02-PLAN.md (visual polish across admin pages)

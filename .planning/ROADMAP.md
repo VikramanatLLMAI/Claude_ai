@@ -65,7 +65,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Sidebar collapse with icon mode, profile expanders, AdminPageHeader component, layout cleanup
+- [x] 09-01-PLAN.md — Sidebar collapse with icon mode, profile expanders, AdminPageHeader component, layout cleanup
 - [ ] 09-02-PLAN.md — Visual polish across all 20 admin pages (headers, layouts, scroll), Admin Console link in chat dropdown
 - [ ] 09-03-PLAN.md — Settings modal UI/UX polish across all 8 tabs
 
@@ -145,7 +145,7 @@ Plans:
 | 6. Org Admin Dashboard | v1.0 | 8/8 | Complete | 2026-03-05 |
 | 7. Theming, Branding, and Compliance | v1.0 | 7/7 | Complete | 2026-03-05 |
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
-| 9. Admin UI Overhaul | v1.1 | 0/3 | Not started | - |
+| 9. Admin UI Overhaul | v1.1 | 1/3 | In progress | - |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 0/3 | Not started | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |

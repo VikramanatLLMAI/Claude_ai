@@ -9,17 +9,17 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 ### Admin Sidebar
 
-- [ ] **SIDE-01**: Admin sidebar collapses to icons-only mode with smooth animation
-- [ ] **SIDE-02**: Collapse trigger button is inside the sidebar (right side, near branding)
-- [ ] **SIDE-03**: Sidebar collapse state persists across page navigations (cookie-based)
-- [ ] **SIDE-04**: Collapsed sidebar shows tooltips on hover for each icon
-- [ ] **SIDE-05**: Sidebar collapse works consistently in both Super Admin and Org Admin dashboards
+- [x] **SIDE-01**: Admin sidebar collapses to icons-only mode with smooth animation
+- [x] **SIDE-02**: Collapse trigger button is inside the sidebar (right side, near branding)
+- [x] **SIDE-03**: Sidebar collapse state persists across page navigations (cookie-based)
+- [x] **SIDE-04**: Collapsed sidebar shows tooltips on hover for each icon
+- [x] **SIDE-05**: Sidebar collapse works consistently in both Super Admin and Org Admin dashboards
 
 ### Admin Navigation
 
-- [ ] **NAV-01**: Org Admin sidebar has profile expander section with Logout, Settings, Admin Console links
-- [ ] **NAV-02**: Admin Console has "Back to Chat" button in top-left header area
-- [ ] **NAV-03**: Sign Out is removed from Org Admin console (available via chat interface profile)
+- [x] **NAV-01**: Org Admin sidebar has profile expander section with Logout, Settings, Admin Console links
+- [x] **NAV-02**: Admin Console has "Back to Chat" button in top-left header area
+- [x] **NAV-03**: Sign Out is removed from Org Admin console (available via chat interface profile)
 - [ ] **NAV-04**: Chat interface profile expander includes "Admin Console" link for org admins
 
 ### Admin Visual Polish
@@ -144,14 +144,14 @@ Explicitly excluded. Documented to prevent scope creep.
 | PROMPT-04 | Phase 8 | Complete |
 | PROMPT-05 | Phase 8 | Complete |
 | PROMPT-06 | Phase 8 | Complete |
-| SIDE-01 | Phase 9 | Pending |
-| SIDE-02 | Phase 9 | Pending |
-| SIDE-03 | Phase 9 | Pending |
-| SIDE-04 | Phase 9 | Pending |
-| SIDE-05 | Phase 9 | Pending |
-| NAV-01 | Phase 9 | Pending |
-| NAV-02 | Phase 9 | Pending |
-| NAV-03 | Phase 9 | Pending |
+| SIDE-01 | Phase 9 | Complete |
+| SIDE-02 | Phase 9 | Complete |
+| SIDE-03 | Phase 9 | Complete |
+| SIDE-04 | Phase 9 | Complete |
+| SIDE-05 | Phase 9 | Complete |
+| NAV-01 | Phase 9 | Complete |
+| NAV-02 | Phase 9 | Complete |
+| NAV-03 | Phase 9 | Complete |
 | NAV-04 | Phase 9 | Pending |
 | POLISH-01 | Phase 9 | Pending |
 | POLISH-02 | Phase 9 | Pending |
