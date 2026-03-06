@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MessageSquare, Save, RefreshCw, RotateCcw } from "lucide-react"
+import { MessageSquare, Save, RefreshCw, RotateCcw, Sparkles } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -36,11 +36,13 @@ function getAuthHeaders(): HeadersInit {
  *
  * Route: /super-admin/system-prompt
  *
- * Allows editing the platform-level layer of the 4-layer system prompt stack.
+ * Allows editing the platform-level layer of the 6-layer system prompt stack.
  * Changes are persisted to PlatformSettings.platformPrompt in the database.
  * Falls back to the hardcoded default when no custom prompt is saved.
  *
- * Reset to Default: Clears the custom prompt, reverting to hardcoded default.
+ * Features:
+ * - AI-powered Enhance button (calls Haiku 4.5 to improve prompt)
+ * - Reset to Default: Clears the custom prompt, reverting to hardcoded default
  */
 export default function PlatformSystemPromptPage() {
   const [loading, setLoading] = React.useState(true)
@@ -55,6 +57,10 @@ export default function PlatformSystemPromptPage() {
 
   // Whether a custom prompt is stored (vs. using hardcoded default)
   const [isCustom, setIsCustom] = React.useState(false)
+
+  // Enhance state
+  const [enhancing, setEnhancing] = React.useState(false)
+  const [originalBeforeEnhance, setOriginalBeforeEnhance] = React.useState<string | null>(null)
 
   // Dirty state
   const isDirty = value !== savedValue
@@ -159,6 +165,41 @@ export default function PlatformSystemPromptPage() {
     }
   }
 
+  const handleEnhance = async () => {
+    if (!value.trim()) return
+    setEnhancing(true)
+    setOriginalBeforeEnhance(value)
+
+    try {
+      const res = await fetch("/api/enhance-prompt", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ text: value, type: "platform" }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setValue(data.enhanced)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || "Failed to enhance prompt")
+        setOriginalBeforeEnhance(null)
+      }
+    } catch {
+      toast.error("Network error. Please try again.")
+      setOriginalBeforeEnhance(null)
+    } finally {
+      setEnhancing(false)
+    }
+  }
+
+  const handleRevertEnhance = () => {
+    if (originalBeforeEnhance !== null) {
+      setValue(originalBeforeEnhance)
+      setOriginalBeforeEnhance(null)
+    }
+  }
+
   const characterCount = value.length
   // Rough token estimate (~4 chars per token)
   const tokenEstimate = Math.ceil(characterCount / 4)
@@ -242,7 +283,7 @@ export default function PlatformSystemPromptPage() {
           {/* Info section */}
           <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
             <p className="text-sm text-muted-foreground">
-              This prompt is injected at the <strong>platform layer</strong> of the 4-layer system
+              This prompt is injected at the <strong>platform layer</strong> of the 6-layer system
               prompt stack. It applies to all organizations and cannot be overridden by org admins or
               users. No token limit is enforced — the platform layer is uncapped.
             </p>
@@ -267,19 +308,52 @@ export default function PlatformSystemPromptPage() {
                 <label className="text-sm font-medium text-foreground">
                   Prompt Content
                 </label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  ~{tokenEstimate.toLocaleString()} tokens ({characterCount.toLocaleString()} chars)
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!value.trim() || enhancing || saving}
+                      onClick={handleEnhance}
+                      className="h-7 text-xs"
+                    >
+                      <Sparkles className="mr-1 h-3 w-3" />
+                      {enhancing ? "Enhancing..." : "Enhance"}
+                    </Button>
+                    {originalBeforeEnhance !== null && !enhancing && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRevertEnhance}
+                        className="h-7 text-xs"
+                      >
+                        <RotateCcw className="mr-1 h-3 w-3" />
+                        Revert
+                      </Button>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    ~{tokenEstimate.toLocaleString()} tokens ({characterCount.toLocaleString()} chars)
+                  </span>
+                </div>
               </div>
 
-              <textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="Enter the platform system prompt..."
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-mono overflow-y-auto resize-none"
-                style={{ minHeight: "200px", maxHeight: "600px" }}
-              />
+              <div className="relative">
+                {enhancing && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-[1px]">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                )}
+                <textarea
+                  ref={textareaRef}
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  disabled={enhancing}
+                  placeholder="Enter the platform system prompt..."
+                  className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-mono overflow-y-auto resize-none ${enhancing ? "opacity-50" : ""}`}
+                  style={{ minHeight: "200px", maxHeight: "600px" }}
+                />
+              </div>
 
               {/* Token progress bar (informational only, no limit) */}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
