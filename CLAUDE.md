@@ -282,32 +282,32 @@ llmatscale_ai/
 
 ```env
 # Anthropic API (fallback if no platform API key assigned)
-ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_API_KEY=<your-anthropic-api-key>
 
 # PostgreSQL
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/llmatscale_ai"
+DATABASE_URL=<your-postgresql-connection-string>
 
 # Encryption (64 hex chars = 32 bytes for AES-256)
-KEY_ENCRYPTION_SECRET="your_64_hex_character_key"
+KEY_ENCRYPTION_SECRET=<64-hex-character-key>
 
 # Email (Resend)
-RESEND_API_KEY=re_...             # Optional; emails log to console in dev if unset
-RESEND_FROM_EMAIL=...             # Optional; defaults to "LLMatscale.ai <onboarding@resend.dev>"
+RESEND_API_KEY=<your-resend-api-key>       # Optional; emails log to console in dev if unset
+RESEND_FROM_EMAIL=<sender-email>           # Optional; defaults to "LLMatscale.ai <onboarding@resend.dev>"
 
 # Organization routing
-ROOT_DOMAIN=llmatscale.ai         # Used for subdomain routing in production
+ROOT_DOMAIN=<your-domain>                  # Used for subdomain routing in production
 
 # MCP Tools
-ENABLE_MCP=true                   # Set to "false" to disable MCP tools
-MCP_TIMEOUT_MS=10000              # MCP client creation timeout
+ENABLE_MCP=true                            # Set to "false" to disable MCP tools
+MCP_TIMEOUT_MS=10000                       # MCP client creation timeout
 
 # Cron
-CRON_SECRET=...                   # Secret for cron endpoint authentication
+CRON_SECRET=<your-cron-secret>             # Secret for cron endpoint authentication
 
 # Seeding
-SUPER_ADMIN_EMAIL=...             # For automated seeding (optional; prompts if unset)
-SUPER_ADMIN_PASSWORD=...
-SUPER_ADMIN_NAME=...
+SUPER_ADMIN_EMAIL=<email>                  # For automated seeding (optional; prompts if unset)
+SUPER_ADMIN_PASSWORD=<password>
+SUPER_ADMIN_NAME=<name>
 ```
 
 ## Getting Started
