@@ -10,22 +10,26 @@
 | **Authentication** | Bearer token + Session table |
 | **Encryption** | AES-256-GCM (credentials), scrypt (passwords) |
 | **Validation** | Zod schemas |
+| **Multi-Tenancy** | Organization-scoped via `requireOrgAuth()` / `tenantDb` |
 
 ## Directory Structure
 
 ```
 app/api/
 ├── auth/                          # Authentication
-│   ├── register/route.ts         # POST - Create account
-│   ├── login/route.ts            # POST - Get session token
+│   ├── register/route.ts         # POST - Disabled (invite-only)
+│   ├── login/route.ts            # POST - Authenticate user
 │   ├── logout/route.ts           # POST - Invalidate session
 │   ├── me/route.ts               # GET - Current user info
 │   ├── change-password/route.ts  # POST - Change password
+│   ├── find-org/route.ts         # POST - Email-first org finder
+│   ├── validate-invitation/route.ts # GET - Validate invitation token
+│   ├── accept-invitation/route.ts   # POST - Accept invitation & register
 │   └── password-reset/
 │       ├── route.ts              # POST - Request reset
 │       └── confirm/route.ts      # POST - Confirm reset
 ├── chat/                          # AI Chat
-│   └── route.ts                  # Chat endpoint
+│   └── route.ts                  # POST - Stream AI response
 ├── files/                         # Anthropic Files API
 │   └── [fileId]/
 │       ├── route.ts              # GET - File metadata
@@ -34,10 +38,10 @@ app/api/
 │   ├── route.ts                  # GET list, POST create
 │   └── [id]/
 │       ├── route.ts              # GET, PATCH, DELETE single
-│       ├── title/route.ts        # PATCH title only
+│       ├── title/route.ts        # POST - Auto-generate title
 │       └── messages/
 │           └── route.ts          # GET, POST, DELETE messages
-├── mcp/                           # MCP Connections
+├── mcp/                           # Personal MCP Connections
 │   └── connections/
 │       ├── route.ts              # GET list, POST create
 │       └── [id]/
@@ -45,108 +49,177 @@ app/api/
 │           ├── discover/route.ts # POST - Discover tools
 │           └── test/route.ts     # POST - Test connection
 ├── user/                          # User Settings
-│   ├── settings/route.ts         # GET, PATCH preferences
+│   ├── settings/route.ts         # GET, PATCH user settings
+│   ├── preferences/route.ts      # GET, PATCH user preferences (theme)
 │   └── anthropic/
-│       ├── route.ts              # GET, POST API key
+│       ├── route.ts              # GET, POST API key (org-scoped)
 │       └── test/route.ts         # POST - Test API key
 ├── artifacts/                     # Artifacts
-│   ├── route.ts                  # POST create
+│   ├── route.ts                  # GET list, POST create
 │   └── [id]/route.ts             # GET, PATCH, DELETE
-└── messages/
-    └── feedback/route.ts         # POST - Message feedback
-
-lib/
-├── db.ts                         # Prisma client singleton
-├── storage.ts                    # Database CRUD operations
-├── auth-middleware.ts            # Authentication utilities
-├── validation.ts                 # Zod schemas
-├── encryption.ts                 # AES-256-GCM + scrypt
-├── anthropic.ts                  # Anthropic API client
-├── system-prompts.ts             # System prompts
-├── artifacts.ts                  # Artifact parsing
-├── mcp-client.ts                 # MCP tool execution
-├── anthropic-files.ts            # Anthropic Files API client
-├── file-classifier.ts            # File type classification for rendering
-├── file-utils.ts                 # Shared file utility functions
-└── api-utils.ts                  # HTTP, retry, errors
+├── messages/
+│   └── feedback/route.ts         # POST - Message feedback
+├── org/[slug]/                    # Organization-Scoped Routes
+│   ├── models/route.ts           # GET - Permitted models for user
+│   ├── theme/route.ts            # GET - Active org theme
+│   ├── profile/route.ts          # GET, PATCH - User profile
+│   ├── sessions/                 # User session management
+│   │   ├── route.ts              # GET - List user sessions
+│   │   └── [sessionId]/route.ts  # DELETE - Revoke session
+│   ├── password-policy/route.ts  # GET - Read password policy
+│   ├── usage-status/route.ts     # GET - User usage status
+│   ├── onboarding/route.ts       # GET, POST - User onboarding
+│   ├── user/
+│   │   └── custom-instructions/route.ts # GET, PATCH - Custom instructions
+│   ├── invitations/              # Org Admin: Invitations
+│   │   ├── route.ts              # GET list, POST create
+│   │   └── [id]/
+│   │       ├── revoke/route.ts   # POST - Revoke invitation
+│   │       └── resend/route.ts   # POST - Resend invitation
+│   ├── settings/
+│   │   └── default-role/route.ts # GET, PATCH - Default role
+│   └── admin/                    # Org Admin Routes
+│       ├── users/                # User management
+│       │   ├── route.ts          # GET - List org members
+│       │   └── [userId]/
+│       │       ├── route.ts      # PATCH, DELETE - Manage user
+│       │       ├── force-reset/route.ts  # POST - Force password reset
+│       │       └── force-logout/route.ts # POST - Force logout
+│       ├── roles/                # Role management
+│       │   ├── route.ts          # GET list, POST create
+│       │   └── [roleId]/
+│       │       ├── route.ts      # PUT, DELETE - Manage role
+│       │       ├── models/route.ts      # GET, PATCH - Role models
+│       │       ├── settings/route.ts    # GET, PATCH - Role settings
+│       │       └── instructions/route.ts # GET, PATCH - Role instructions
+│       ├── instructions/route.ts # GET, PATCH - Org instructions
+│       ├── models/route.ts       # GET - Active models (registry)
+│       ├── analytics/route.ts    # GET - Org analytics
+│       ├── audit-logs/
+│       │   ├── route.ts          # GET - Paginated audit logs
+│       │   └── export/route.ts   # GET - Export audit logs
+│       ├── usage/
+│       │   ├── route.ts          # GET - Org-wide usage
+│       │   └── users/route.ts    # GET - Per-user usage
+│       ├── mcp/connections/      # Org-managed MCP connections
+│       │   ├── route.ts          # GET list, POST create
+│       │   └── [id]/
+│       │       ├── route.ts      # GET, PATCH, DELETE
+│       │       ├── discover/route.ts # POST - Discover tools
+│       │       └── test/route.ts     # POST - Test connection
+│       ├── themes/route.ts       # GET, PUT - Org theme selection
+│       ├── conversations/        # Conversation visibility
+│       │   ├── route.ts          # GET - List conversations
+│       │   ├── [id]/route.ts     # GET - Conversation detail
+│       │   └── export/route.ts   # POST - Export conversations
+│       ├── security/
+│       │   ├── password-policy/route.ts # GET, PATCH - Password policy
+│       │   └── force-reset/route.ts     # POST - Bulk force reset
+│       ├── settings/
+│       │   ├── api-keys/
+│       │   │   ├── route.ts      # GET - View assigned API keys
+│       │   │   └── [id]/test/route.ts # POST - Test API key
+│       │   ├── visibility/route.ts    # GET, PATCH - Conversation visibility toggle
+│       │   └── login-page/route.ts    # GET, PUT - Login page customization
+│       ├── onboarding/route.ts   # GET, PUT - Onboarding config
+│       └── logo/route.ts         # POST, DELETE - Org logo
+├── super-admin/                   # Super Admin Routes
+│   ├── organizations/
+│   │   ├── route.ts              # GET list, POST create
+│   │   └── [id]/
+│   │       ├── route.ts          # GET, PATCH, DELETE
+│   │       ├── suspend/route.ts  # POST - Suspend org
+│   │       ├── activate/route.ts # POST - Activate org
+│   │       ├── restore/route.ts  # POST - Restore deleted org
+│   │       ├── logo/route.ts     # PATCH - Update org logo
+│   │       └── themes/route.ts   # GET, PUT - Assign themes
+│   ├── settings/route.ts         # GET, PATCH - Platform settings
+│   ├── super-admins/
+│   │   ├── route.ts              # GET list, POST create
+│   │   └── [id]/route.ts         # GET, PATCH, DELETE
+│   ├── models/
+│   │   ├── route.ts              # GET list, POST create
+│   │   └── [id]/route.ts         # GET, PATCH, DELETE
+│   ├── role-templates/
+│   │   ├── route.ts              # GET list
+│   │   └── [id]/route.ts         # GET, PATCH, POST (reset)
+│   ├── system-prompt/route.ts    # GET, PATCH - Platform prompt
+│   ├── api-keys/
+│   │   ├── route.ts              # GET list, POST create
+│   │   └── [id]/
+│   │       ├── route.ts          # GET, PATCH, DELETE
+│   │       ├── reveal/route.ts   # GET - Reveal full key
+│   │       └── test/route.ts     # POST - Test key validity
+│   ├── audit-logs/
+│   │   ├── route.ts              # GET - Paginated audit logs
+│   │   └── export/route.ts       # GET - Export audit logs
+│   ├── analytics/route.ts        # GET - Platform analytics
+│   ├── users/
+│   │   ├── route.ts              # GET - Search users cross-org
+│   │   └── [id]/impersonate/route.ts # POST - Start impersonation
+│   └── impersonation/route.ts    # GET status, DELETE end
+└── cron/
+    └── cleanup/route.ts          # GET - Scheduled cleanup tasks
 ```
 
 ## Authentication
 
+### Auth Levels
+
+| Level | Middleware | Description |
+|-------|-----------|-------------|
+| **Public** | None | No authentication required (find-org, validate-invitation, accept-invitation) |
+| **Basic Auth** | `requireAuth()` | Session token required, no org context (me, preferences, change-password) |
+| **Org Auth** | `requireOrgAuth()` | Session + org membership required, returns `tenantDb` for scoped queries |
+| **Org Admin** | `requireOrgAdmin()` | Org auth + `org_admin` permission in role |
+| **Super Admin** | `requireSuperAdmin()` | Session + `user.isSuperAdmin === true` |
+| **Cron** | `CRON_SECRET` | Bearer token matching `CRON_SECRET` env var |
+
 ### How It Works
 
-1. User registers/logs in → Session created (30-day expiry)
-2. Token stored in `Session` table with userId
+1. User logs in with org context -> Session created with `organizationId` (30-day expiry)
+2. Token stored in `Session` table with userId, organizationId, userAgent, ipAddress
 3. Frontend stores token in localStorage
 4. All requests include `Authorization: Bearer <token>`
-5. Backend validates token via `requireAuth()` middleware
+5. Backend validates token via appropriate middleware
 
-### Auth Middleware (`lib/auth-middleware.ts`)
+### Multi-Tenant Data Scoping
 
-```typescript
-// Validate session and get user
-const { user, error } = await validateSession(request)
-if (error) return unauthorizedResponse(error)
-
-// Or use helper
-const authResult = await requireAuth(request)
-if (authResult instanceof Response) return authResult
-const { user } = authResult
-
-// Higher-order function wrapper
-export const withAuth = (handler) => async (req) => {
-  const auth = await requireAuth(req)
-  if (auth instanceof Response) return auth
-  return handler(req, auth)
-}
-```
-
-### Password Hashing (`lib/encryption.ts`)
+Routes using `requireOrgAuth()` receive a `tenantDb` Prisma client that automatically filters all queries by the user's organization. This prevents cross-org data access at the database layer.
 
 ```typescript
-// Hash password with scrypt
-const hash = await hashPassword(plaintext)  // Returns "salt:derivedKey" (hex)
-
-// Verify password (timing-safe)
-const isValid = await verifyPassword(plaintext, hash)
-```
-
-### Credential Encryption (`lib/encryption.ts`)
-
-```typescript
-// Encrypt sensitive data (API keys, MCP credentials)
-const encrypted = encrypt(plaintext)  // Returns "iv:authTag:encrypted" (hex)
-
-// Decrypt
-const decrypted = decrypt(encrypted)
+const auth = await requireOrgAuth(req);
+if (auth instanceof NextResponse) return auth;
+const { user, orgMember, organization, role, permissions, tenantDb } = auth;
 ```
 
 ## API Endpoints
 
-### Authentication
+### Authentication (Public + Basic Auth)
 
 #### POST /api/auth/register
-Create new user account.
+**Disabled.** Returns 403. Registration is invite-only.
 ```typescript
-// Request
-{ email: string, password: string, name?: string }
-
-// Response 201
-{ user: { id, email, name }, token: string }
-
-// Errors: 400 (validation), 409 (email exists)
+// Response 403
+{ error: "Registration is invite-only. Please use your invitation link." }
 ```
 
 #### POST /api/auth/login
-Authenticate and get session token.
+Authenticate user with org context. Resolves org from URL slug or body.slug.
 ```typescript
 // Request
-{ email: string, password: string }
+{ email: string, password: string, slug?: string }
 
-// Response 200
-{ user: { id, email, name }, token: string }
+// Response 200 (org user)
+{ user: { id, email, name, avatarBase64, preferences }, token: string, expiresAt: string, organization?: { id, name, slug, logoBase64, logoDisplayMode } }
 
-// Errors: 400 (validation), 401 (invalid credentials)
+// Response 200 (force password change)
+{ user: {...}, token, expiresAt, forcePasswordChange: true, reason: string }
+
+// Response 200 (super admin)
+{ user: {...}, token, expiresAt, isSuperAdmin: true }
+
+// Errors: 400, 401 (invalid credentials), 403 (not org member)
 ```
 
 #### POST /api/auth/logout
@@ -157,99 +230,105 @@ Invalidate session token. Requires Bearer token.
 ```
 
 #### GET /api/auth/me
-Get current user info. Requires Bearer token.
+Get current user info with optional org context. Requires Bearer token.
 ```typescript
 // Response 200
-{ user: { id, email, name, avatarUrl, preferences } }
+{ user: { id, email, name, avatarBase64, preferences, isSuperAdmin, createdAt }, organization?: { id, name, slug }, role?: { id, name, permissions } }
 ```
 
 #### POST /api/auth/change-password
-Change password for authenticated user.
+Change password for authenticated user. Validates against org password policy. Clears forcePasswordChange flag.
 ```typescript
 // Request
 { currentPassword: string, newPassword: string }
 
 // Response 200
-{ success: true }
+{ message: "Password changed successfully" }
 
-// Errors: 401 (wrong password)
+// Errors: 400 (validation, same password, policy violation)
 ```
 
-#### POST /api/auth/password-reset
-Request password reset email.
+#### POST /api/auth/find-org
+**Public.** Email-first org finder. Constant-time response to prevent timing attacks.
 ```typescript
 // Request
 { email: string }
 
 // Response 200
-{ success: true }  // Always returns success (security)
+{ type: "org", slug: "acme" }      // User found in active org
+{ type: "super_admin" }             // User is Super Admin
+{ type: "not_found" }               // Unknown email or inactive org
+```
+
+#### GET /api/auth/validate-invitation?token=xxx
+**Public.** Validate an invitation token before showing registration form.
+```typescript
+// Response 200
+{ valid: boolean, email?, orgName?, roleName?, error? }
+```
+
+#### POST /api/auth/accept-invitation
+**Public.** Accept invitation and register new user account.
+```typescript
+// Request
+{ token: string, name: string, password: string }
+
+// Response 201
+{ user: { id, email, name }, token: string, expiresAt: string, organization: { id, name, slug } }
+
+// Errors: 400 (invalid/expired token, policy violation), 409 (email exists)
+```
+
+#### POST /api/auth/password-reset
+Request password reset. Always returns success to prevent email enumeration.
+```typescript
+// Request
+{ email: string }
+
+// Response 200
+{ message: "If an account exists..." }
 ```
 
 #### POST /api/auth/password-reset/confirm
-Confirm password reset with token.
+Confirm password reset with token. Invalidates all existing sessions.
 ```typescript
 // Request
 { token: string, newPassword: string }
 
 // Response 200
-{ success: true }
+{ message: "Password has been reset successfully..." }
 
 // Errors: 400 (invalid/expired token)
 ```
 
-### Chat
-
-All chat endpoints require Bearer token authentication.
+### Chat (Org Auth)
 
 #### POST /api/chat
-Stream AI response. Supports 7 Claude models including 4.6 Opus, 4.6 Sonnet, 4 Opus, 4.5 Sonnet, 4.5 Haiku, 4.5 Opus, and 4 Sonnet. Supports adaptive thinking (4.6 models) and manual thinking (4.5 models). Integrated with Anthropic Files API for file downloads and container skills for document generation (PPTX, DOCX, PDF, XLSX). Uses `maxTokens: 65536` and `maxDuration: 300` (5 minutes).
+Stream AI response. Uses `requireOrgAuth`. Validates model access against role's `allowedModels`. Checks usage limits before processing. Supports adaptive thinking (4.6 models) and extended thinking (4.5 models). Uses `maxTokens: 65536` and `maxDuration: 300`.
 ```typescript
 // Request
 {
-  messages: Array<{ role: 'user' | 'assistant', content: string }>,
-  model: string,           // Claude model ID
-  conversationId?: string, // Existing conversation
-  webSearch?: boolean,     // Enable web search tool
-  enableReasoning?: boolean, // Enable extended thinking
-  activeMcpIds?: string[]  // Active MCP connection IDs
+  messages: Array<{ role: 'user' | 'assistant', content: string | object[] }>,
+  model: string,
+  conversationId?: string,
+  webSearch?: boolean,
+  enableReasoning?: boolean,
+  activeMcpIds?: string[]
 }
 
 // Response: Server-Sent Events (streaming)
 // Content-Type: text/event-stream
-
-// Events:
-// data: {"type": "text", "text": "..."}
-// data: {"type": "reasoning", "reasoning": "..."}
-// data: {"type": "tool_call", "tool": "...", "result": "..."}
-// data: {"type": "data-fileDownload", ...}  // File download chunks
-// data: {"type": "done"}
 ```
 
-#### GET /api/chat
-List available Claude models.
-```typescript
-// Response 200
-{
-  models: [
-    { id: string, name: string, description: string }
-  ]
-}
-```
+### Conversations (Org Auth)
 
-### Conversations
-
-All endpoints require Bearer token authentication.
+All endpoints use `requireOrgAuth` with `tenantDb` for org-scoped queries.
 
 #### GET /api/conversations
-List all conversations for user.
+List all conversations for user in current org. Ordered by pinned first, then updatedAt desc.
 ```typescript
 // Response 200
-{
-  conversations: [
-    { id, title, isPinned, isShared, model, createdAt, updatedAt }
-  ]
-}
-// Ordered: pinned first, then by updatedAt desc
+[{ id, title, isPinned, isShared, model, createdAt, updatedAt, lastMessage }]
 ```
 
 #### POST /api/conversations
@@ -263,540 +342,435 @@ Create new conversation.
 ```
 
 #### GET /api/conversations/[id]
-Get single conversation with messages.
+Get single conversation with messages. Verifies ownership.
 ```typescript
 // Response 200
-{
-  id, title, isPinned, isShared, model, createdAt, updatedAt,
-  messages: [{ id, role, content, parts, metadata, createdAt }]
-}
+{ id, title, isPinned, isShared, model, createdAt, updatedAt, messages: [...] }
 ```
 
 #### PATCH /api/conversations/[id]
-Update conversation metadata.
+Update conversation metadata. Ownership-only (Org Admins cannot edit others').
 ```typescript
 // Request (all optional)
-{ title?: string, isPinned?: boolean, isShared?: boolean, model?: string }
-
-// Response 200
-{ id, title, isPinned, isShared, model, createdAt, updatedAt }
+{ title?, isPinned?, isShared?, model? }
 ```
 
 #### DELETE /api/conversations/[id]
-Delete conversation (cascades to messages and artifacts).
+Delete conversation. Cascades to messages and artifacts. Ownership-only.
+
+#### POST /api/conversations/[id]/title
+Auto-generate title using Claude Haiku based on first user/assistant messages.
 ```typescript
 // Response 200
-{ success: true }
+{ title: string, conversationId: string }
 ```
-
-#### PATCH /api/conversations/[id]/title
-Update conversation title only.
-```typescript
-// Request
-{ title: string }
-
-// Response 200
-{ id, title, ... }
-```
-
-### Messages
 
 #### GET /api/conversations/[id]/messages
-List messages in conversation.
-```typescript
-// Response 200
-{
-  messages: [{ id, role, content, parts, metadata, createdAt }]
-}
-// Ordered by createdAt asc
-```
+List messages in conversation. Ordered by createdAt asc. Verifies ownership.
 
 #### POST /api/conversations/[id]/messages
-Add message to conversation.
+Add message to conversation. Verifies ownership.
 ```typescript
 // Request
-{ role: 'user' | 'assistant' | 'tool', content: string, parts?: any[], metadata?: any }
-
-// Response 201
-{ id, role, content, parts, metadata, createdAt }
+{ role: 'user' | 'assistant' | 'tool', content: string, parts?: any[] }
 ```
 
 #### DELETE /api/conversations/[id]/messages
-Clear all messages in conversation.
-```typescript
-// Response 200
-{ success: true }
-```
+Clear all messages in conversation. Verifies ownership.
 
-### MCP Connections
+### MCP Connections (Org Auth - Personal)
+
+Personal MCP connections owned by individual users.
 
 #### GET /api/mcp/connections
-List all MCP connections for user.
-```typescript
-// Response 200
-{
-  connections: [
-    { id, name, serverUrl, authType, isActive, status, availableTools, lastConnectedAt }
-  ]
-}
-```
+List all personal MCP connections for user.
 
 #### POST /api/mcp/connections
-Create new MCP connection.
+Create new personal MCP connection.
 ```typescript
 // Request
-{
-  name: string,
-  serverUrl: string,
-  authType: 'none' | 'api_key' | 'oauth',
-  authCredentials?: string  // Will be encrypted
-}
+{ name: string, serverUrl: string, authType: 'none' | 'api_key' | 'oauth', apiKey?: string, oauthClientId?: string, oauthClientSecret?: string }
 
 // Response 201
-{ id, name, serverUrl, authType, isActive, status, availableTools }
+{ id, name, serverUrl, authType, status, isActive }
 ```
 
 #### GET /api/mcp/connections/[id]
-Get single connection.
+Get single connection. Verifies ownership.
 
 #### PATCH /api/mcp/connections/[id]
-Update connection.
-```typescript
-// Request (all optional)
-{ name?, serverUrl?, authType?, authCredentials?, isActive?, status? }
-```
+Update connection. Allowed fields: name, serverUrl, status, isActive, lastError, availableTools, lastConnectedAt.
 
 #### DELETE /api/mcp/connections/[id]
-Delete connection.
+Delete connection. Verifies ownership.
 
 #### POST /api/mcp/connections/[id]/discover
-Discover available tools on MCP server.
-```typescript
-// Response 200
-{ tools: [{ name: string, description: string, inputSchema: object }] }
-```
+Discover available tools on MCP server via JSON-RPC `tools/list`.
 
 #### POST /api/mcp/connections/[id]/test
-Test connection to MCP server.
-```typescript
-// Response 200
-{ success: true, message: "Connection successful" }
-
-// Response 400
-{ success: false, error: "Connection failed: ..." }
-```
+Test connection via JSON-RPC `initialize`. Auto-discovers tools on success. Stores session ID.
 
 ### User Settings
 
-#### GET /api/user/settings
-Get user preferences.
-```typescript
-// Response 200
-{
-  theme: 'light' | 'dark' | 'system',
-  fontSize: number,
-  codeTheme: string,
-  messageDensity: 'compact' | 'comfortable' | 'spacious',
-  // ... other preferences
-}
-```
+#### GET /api/user/settings (Org Auth)
+Get user name, avatar, and preferences.
 
-#### PATCH /api/user/settings
-Update user preferences.
-```typescript
-// Request (all optional)
-{ theme?, fontSize?, codeTheme?, messageDensity?, ... }
+#### PATCH /api/user/settings (Org Auth)
+Update user name, avatar (Base64), and preferences.
 
-// Response 200
-{ ...updated preferences }
-```
+#### GET /api/user/preferences (Basic Auth)
+Get user preferences (theme mode). Works without org context.
 
-#### GET /api/user/anthropic
-Get user Anthropic API key status.
+#### PATCH /api/user/preferences (Basic Auth)
+Update user preferences (themeMode: 'light' | 'dark' | 'system').
+
+#### GET /api/user/anthropic (Org Auth)
+Get org's Anthropic API key status (masked).
 ```typescript
 // Response 200
 { hasApiKey: boolean, maskedKey: string }
-
-// Response 404 if not configured
 ```
 
-#### POST /api/user/anthropic
-Store Anthropic API key (encrypted).
-```typescript
-// Request
-{ apiKey: string }  // Must have sk-ant- prefix
+#### POST /api/user/anthropic (Org Auth)
+Save org's Anthropic API key (encrypted). Must start with "sk-ant-".
 
-// Response 200
-{ success: true }
-```
+#### POST /api/user/anthropic/test (Org Auth)
+Test Anthropic API key with lightweight Claude Haiku call.
 
-#### POST /api/user/anthropic/test
-Test Anthropic API key with a lightweight call.
-```typescript
-// Request
-{ apiKey: string }  // Must have sk-ant- prefix
-
-// Response 200
-{ success: true, message: "Anthropic API key is valid" }
-
-// Response 400
-{ success: false, error: "Invalid API key" }
-```
-
-### Files
+### Files (Org Auth)
 
 #### GET /api/files/[fileId]
 Get file metadata from Anthropic Files API.
 ```typescript
 // Response 200
-{ id, filename, mime_type, size, created_at }
+{ id, filename, mime_type, size_bytes }
 ```
 
 #### GET /api/files/[fileId]/download
-Download file content from Anthropic Files API.
-```typescript
-// Response 200 - Binary file content with appropriate Content-Type header
-```
+Download file content from Anthropic Files API. Returns binary with appropriate Content-Type.
 
-### Artifacts
+### Artifacts (Org Auth)
+
+#### GET /api/artifacts?conversationId=xxx
+List artifacts for a conversation. Returns metadata without full content.
 
 #### POST /api/artifacts
 Create new artifact.
 ```typescript
 // Request
-{
-  conversationId: string,
-  messageId: string,
-  type: 'html' | 'code',
-  title: string,
-  content: string
-}
+{ conversationId: string, messageId: string, type?: 'html' | 'code', title: string, content: string }
 
 // Response 201
-{ id, type, title, content, createdAt }
+{ id, conversationId, messageId, type, title, createdAt, updatedAt }
 ```
 
 #### GET /api/artifacts/[id]
-Get single artifact.
+Get single artifact with full content. Verifies ownership.
 
 #### PATCH /api/artifacts/[id]
-Update artifact.
-```typescript
-// Request (all optional)
-{ title?, content? }
-```
+Update artifact title and/or content.
 
 #### DELETE /api/artifacts/[id]
-Delete artifact.
+Delete artifact. Verifies ownership.
 
-### Message Feedback
+### Message Feedback (Org Auth)
 
 #### POST /api/messages/feedback
-Record user feedback on message.
+Record user feedback on a message. Stores in message metadata.
 ```typescript
 // Request
-{
-  messageId: string,
-  feedback: 'positive' | 'negative',
-  comment?: string
-}
+{ messageId: string, feedback: 'positive' | 'negative', comment?: string }
 
 // Response 200
-{ success: true }
+{ success: true, messageId, feedback }
 ```
 
-## Database Operations (`lib/storage.ts`)
+### Organization User Routes (Org Auth)
 
-### User Operations
+#### GET /api/org/[slug]/models
+Get models permitted for current user's role, from the Model Registry.
 ```typescript
-createUser(email, passwordHash, name?)
-getUserByEmail(email)
-getUserById(id)
-updateUser(id, data)
-deleteUser(id)
+// Response 200
+{ models: [{ id, name, generationGroup, supportsThinking, thinkingType, ... }], defaultModel: string | null, isOrgAdmin: boolean }
 ```
 
-### Session Operations
+#### GET /api/org/[slug]/theme
+Get active theme for the organization. Returns `null` for platform default.
+
+#### GET /api/org/[slug]/profile
+Get current user's profile with org context (name, email, avatar, role, joinedAt).
+
+#### PATCH /api/org/[slug]/profile
+Update display name and/or avatar. Email and role are read-only. Avatar max 200KB Base64.
+
+#### GET /api/org/[slug]/sessions
+List all active sessions for current user with parsed user agent info.
+
+#### DELETE /api/org/[slug]/sessions/[sessionId]
+Revoke a specific session. Cannot revoke the current session.
+
+#### GET /api/org/[slug]/password-policy
+Read the org's password policy (accessible by any org member).
+
+#### GET /api/org/[slug]/usage-status
+Get current user's rolling 24h usage status with warning/blocked flags. Lightweight for polling.
 ```typescript
-createSession(userId, token, expiresAt)
-getSessionByToken(token)
-deleteSession(token)
-deleteUserSessions(userId)
-cleanupExpiredSessions()
+// Response 200
+{ requestStatus: { current, limit, percentage } | null, tokenStatus: { ... } | null, resetAt, warning: boolean, blocked: boolean }
 ```
 
-### Conversation Operations
+#### GET /api/org/[slug]/onboarding
+Check if onboarding is required for current user. Returns text and version.
+
+#### POST /api/org/[slug]/onboarding
+Record onboarding acceptance.
+
+#### GET /api/org/[slug]/user/custom-instructions
+Get user's custom instructions with enabled status and max token limit.
+
+#### PATCH /api/org/[slug]/user/custom-instructions
+Update user's custom instructions. Respects role-level `customInstructionsEnabled` flag and token budget.
+
+### Organization Admin Routes (Org Admin)
+
+All routes under `/api/org/[slug]/admin/` and `/api/org/[slug]/invitations/` require Org Admin authentication via `requireOrgAdmin`.
+
+#### Invitations
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/org/[slug]/invitations` | List all invitations for org |
+| POST | `/api/org/[slug]/invitations` | Create new invitation (email, roleId) |
+| POST | `/api/org/[slug]/invitations/[id]/revoke` | Revoke pending invitation |
+| POST | `/api/org/[slug]/invitations/[id]/resend` | Resend invitation with new token |
+
+#### User Management
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/users` | List org members with search, role, status filters |
+| PATCH | `.../admin/users/[userId]` | Update user (action: suspend, activate, changeRole, promote, updateName) |
+| DELETE | `.../admin/users/[userId]` | Remove user from organization |
+| POST | `.../admin/users/[userId]/force-reset` | Force user to change password on next login |
+| POST | `.../admin/users/[userId]/force-logout` | Force logout user from all org sessions |
+
+#### Role Management
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/roles` | List all roles with member counts |
+| POST | `.../admin/roles` | Create custom role |
+| PUT | `.../admin/roles/[roleId]` | Update role (name, models, limits, etc.) |
+| DELETE | `.../admin/roles/[roleId]` | Delete custom role (blocked if has members) |
+| GET | `.../admin/roles/[roleId]/models` | Get role's allowed models |
+| PATCH | `.../admin/roles/[roleId]/models` | Update role's allowed models (min 1) |
+| GET | `.../admin/roles/[roleId]/settings` | Get role settings (custom instructions, MCP) |
+| PATCH | `.../admin/roles/[roleId]/settings` | Update role settings |
+| GET | `.../admin/roles/[roleId]/instructions` | Get role system instructions |
+| PATCH | `.../admin/roles/[roleId]/instructions` | Update role system instructions |
+
+#### Instructions & Models
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/instructions` | Get org-wide system instructions |
+| PATCH | `.../admin/instructions` | Update org-wide system instructions |
+| GET | `.../admin/models` | List all active models from Model Registry |
+
+#### Org-Managed MCP Connections
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/mcp/connections` | List org-managed connections (userId=null) |
+| POST | `.../admin/mcp/connections` | Create org-managed connection (org-wide or role-specific) |
+| GET | `.../admin/mcp/connections/[id]` | Get connection details |
+| PATCH | `.../admin/mcp/connections/[id]` | Update connection |
+| DELETE | `.../admin/mcp/connections/[id]` | Delete connection (204) |
+| POST | `.../admin/mcp/connections/[id]/discover` | Discover tools |
+| POST | `.../admin/mcp/connections/[id]/test` | Test connection |
+
+#### Analytics & Audit
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/analytics?section=...` | Org analytics (kpi, trends, users, models, roles, usage, mcp, errors, peak, invitations, apiKeys, all). Supports CSV export. |
+| GET | `.../admin/audit-logs` | Paginated audit logs. `?meta=true` for filter options. |
+| GET | `.../admin/audit-logs/export?format=csv\|json` | Export audit logs (max 10,000 rows) |
+
+#### Usage Monitoring
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/usage` | Org-wide usage (24h/7d/30d totals, per-model, daily trend) |
+| GET | `.../admin/usage/users` | Per-user usage with status (normal/warning/blocked/inactive) |
+
+#### Security
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/security/password-policy` | Get current password policy |
+| PATCH | `.../admin/security/password-policy` | Update password policy (minLength, requireUppercase, etc.) |
+| POST | `.../admin/security/force-reset` | Bulk force all users (except self) to change password |
+
+#### Settings
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../settings/default-role` | Get default role for new invitations |
+| PATCH | `.../settings/default-role` | Set or clear default role |
+| GET | `.../admin/settings/api-keys` | View assigned API keys (read-only, masked) |
+| POST | `.../admin/settings/api-keys/[id]/test` | Test assigned API key |
+| GET | `.../admin/settings/visibility` | Get conversation visibility toggle |
+| PATCH | `.../admin/settings/visibility` | Toggle conversation visibility on/off |
+| GET | `.../admin/settings/login-page` | Get login page tagline & welcome message |
+| PUT | `.../admin/settings/login-page` | Update login page customization |
+
+#### Conversations (Compliance Viewing)
+
+Requires `conversationVisibility` to be enabled in OrgSettings.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/conversations` | List conversations (paginated, filtered). `?meta=true` for filter options. |
+| GET | `.../admin/conversations/[id]` | Get conversation detail with messages (read-only) |
+| POST | `.../admin/conversations/export` | Export conversations as JSON/ZIP |
+
+#### Theming & Branding
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/themes` | Get assigned themes + current active theme |
+| PUT | `.../admin/themes` | Set active theme (must be in assigned set) |
+| POST | `.../admin/logo` | Upload org logo (multipart, max 500KB, PNG/SVG/JPEG) |
+| DELETE | `.../admin/logo` | Remove org logo |
+
+#### Onboarding
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `.../admin/onboarding` | Get onboarding config (text + version) |
+| PUT | `.../admin/onboarding` | Update onboarding text (bumps version) |
+
+### Super Admin Routes
+
+All routes under `/api/super-admin/` require Super Admin authentication via `requireSuperAdmin`.
+
+#### Organizations
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/organizations` | List all organizations with stats |
+| POST | `/api/super-admin/organizations` | Create new organization |
+| GET | `/api/super-admin/organizations/[id]` | Get organization details |
+| PATCH | `/api/super-admin/organizations/[id]` | Update organization |
+| DELETE | `/api/super-admin/organizations/[id]` | Soft-delete organization |
+| POST | `.../[id]/suspend` | Suspend organization (invalidates all sessions) |
+| POST | `.../[id]/activate` | Activate suspended organization |
+| POST | `.../[id]/restore` | Restore soft-deleted org (within 30-day grace) |
+| PATCH | `.../[id]/logo` | Update organization logo (Base64) |
+| GET | `.../[id]/themes` | Get assigned themes for org |
+| PUT | `.../[id]/themes` | Set assigned themes and default for org |
+
+#### Super Admins
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/super-admins` | List all Super Admin users |
+| POST | `/api/super-admin/super-admins` | Create new Super Admin |
+| GET | `/api/super-admin/super-admins/[id]` | Get Super Admin details |
+| PATCH | `/api/super-admin/super-admins/[id]` | Update Super Admin |
+| DELETE | `/api/super-admin/super-admins/[id]` | Delete Super Admin |
+
+#### Platform Settings
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/settings` | Get platform settings |
+| PATCH | `/api/super-admin/settings` | Update platform settings |
+
+#### Model Registry
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/models` | List all models (optional ?status filter) |
+| POST | `/api/super-admin/models` | Create new model |
+| GET | `/api/super-admin/models/[id]` | Get model by UUID |
+| PATCH | `/api/super-admin/models/[id]` | Update model (deprecation, pricing) |
+| DELETE | `/api/super-admin/models/[id]` | Delete model (fails if referenced) |
+
+#### Role Templates
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/role-templates` | List all system role templates |
+| GET | `/api/super-admin/role-templates/[id]` | Get template by name |
+| PATCH | `/api/super-admin/role-templates/[id]` | Update template (store override) |
+| POST | `/api/super-admin/role-templates/[id]` | Reset template to defaults |
+
+#### System Prompt
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/system-prompt` | Get platform system prompt (Layer 1) |
+| PATCH | `/api/super-admin/system-prompt` | Update platform system prompt |
+
+#### API Keys
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/api-keys` | List all platform API keys (masked) |
+| POST | `/api/super-admin/api-keys` | Create new API key |
+| GET | `/api/super-admin/api-keys/[id]` | Get key with assignments |
+| PATCH | `/api/super-admin/api-keys/[id]` | Update org assignments |
+| DELETE | `/api/super-admin/api-keys/[id]` | Delete key and all assignments |
+| GET | `/api/super-admin/api-keys/[id]/reveal` | Reveal full decrypted key (audit-logged) |
+| POST | `/api/super-admin/api-keys/[id]/test` | Test key validity |
+
+#### Audit Logs
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/audit-logs` | Paginated audit logs. `?meta=true` for filter options. |
+| GET | `/api/super-admin/audit-logs/export?format=csv\|json` | Export audit logs (max 10,000 rows) |
+
+#### Analytics
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/analytics?section=...` | Platform analytics (kpi, trends, topOrgs, errors, peakHours, apiKeys, mcp, registrations, adoption, all) |
+
+#### User Management & Impersonation
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/super-admin/users?search=...` | Search users across all orgs |
+| POST | `/api/super-admin/users/[id]/impersonate` | Start impersonation (duration: 15/30/60 min, reason required) |
+| GET | `/api/super-admin/impersonation` | Check impersonation status |
+| DELETE | `/api/super-admin/impersonation` | End impersonation session |
+
+### Cron Routes
+
+#### GET /api/cron/cleanup
+Run scheduled cleanup tasks (purge soft-deleted orgs, expired invitations, expired sessions). Authenticated via `CRON_SECRET` Bearer token, not session-based.
 ```typescript
-createConversation(userId, { title, model })
-getConversation(id)
-getAllConversations(userId)
-updateConversation(id, data)
-deleteConversation(id)
+// Response 200
+{ purgedOrgs: { count }, expiredInvitations: { count }, expiredSessions: { count } }
 ```
-
-### Message Operations
-```typescript
-addMessage(conversationId, { role, content, parts, metadata })
-getMessages(conversationId)
-clearMessages(conversationId)
-updateMessage(id, data)
-deleteMessage(id)
-```
-
-### Artifact Operations
-```typescript
-createArtifact({ conversationId, messageId, userId, type, title, content })
-getArtifact(id)
-getConversationArtifacts(conversationId)
-updateArtifact(id, data)
-deleteArtifact(id)
-```
-
-### MCP Operations
-```typescript
-createMcpConnection(userId, { name, serverUrl, authType, authCredentials })
-getMcpConnection(id)
-getUserMcpConnections(userId)
-updateMcpConnection(id, data)
-deleteMcpConnection(id)
-```
-
-### Helper Functions
-```typescript
-toUIMessage(message)           // Convert DB message to frontend format
-toConversationResponse(conv)   // Format conversation for API response
-```
-
-## Validation Schemas (`lib/validation.ts`)
-
-### Authentication
-```typescript
-RegisterSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().optional()
-})
-
-LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string()
-})
-
-ChangePasswordSchema = z.object({
-  currentPassword: z.string(),
-  newPassword: z.string().min(8)
-})
-```
-
-### Chat
-```typescript
-ChatRequestSchema = z.object({
-  messages: z.array(MessageSchema),
-  model: z.string(),
-  conversationId: z.string().uuid().optional(),
-  webSearch: z.boolean().optional(),
-  enableReasoning: z.boolean().optional(),
-  activeMcpIds: z.array(z.string()).optional()
-})
-```
-
-### Conversations
-```typescript
-CreateConversationSchema = z.object({
-  title: z.string().optional(),
-  model: z.string().optional()
-})
-
-UpdateConversationSchema = z.object({
-  title: z.string().optional(),
-  isPinned: z.boolean().optional(),
-  isShared: z.boolean().optional(),
-  model: z.string().optional()
-})
-```
-
-### Usage
-```typescript
-import { validate, RegisterSchema } from '@/lib/validation'
-
-const { data, error } = validate(RegisterSchema, requestBody)
-if (error) {
-  return NextResponse.json({ error: formatValidationErrors(error) }, { status: 400 })
-}
-```
-
-## System Prompts (`lib/system-prompts.ts`)
-
-### Building System Prompt
-```typescript
-import { buildSystemPromptWithTools } from '@/lib/system-prompts'
-
-// Build system prompt with tool descriptions
-const systemPrompt = buildSystemPromptWithTools(availableTools)
-```
-
-### Prompt Structure
-Each system prompt includes:
-1. Base assistant capabilities
-2. Communication style guidelines
-3. Artifact creation instructions
-4. Tool usage guidance (if MCP tools available)
-
-## Anthropic API Integration (`lib/anthropic.ts`)
-
-Uses both `@ai-sdk/anthropic` (Vercel AI SDK provider) and `@anthropic-ai/sdk` (direct Anthropic SDK) for different capabilities. Forwards container IDs for document generation features.
-
-```typescript
-import { createAnthropic } from '@ai-sdk/anthropic';
-import Anthropic from '@anthropic-ai/sdk';
-
-// Vercel AI SDK provider
-export const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// Direct Anthropic SDK client (for Files API, containers, etc.)
-export const anthropicClient = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// Usage in chat route
-import { anthropic } from '@/lib/anthropic';
-import { streamText } from 'ai';
-
-const result = await streamText({
-  model: anthropic(modelId),
-  system: systemPrompt,
-  messages,
-  tools,
-  maxTokens: 65536,
-});
-```
-
-## MCP Tool Execution (`lib/mcp-client.ts`)
-
-```typescript
-import { executeMcpTool } from '@/lib/mcp-client'
-
-// Execute tool on MCP server
-const result = await executeMcpTool({
-  serverUrl: 'https://mcp-server.example.com',
-  toolName: 'search_documents',
-  arguments: { query: 'test' },
-  authType: 'api_key',
-  authCredentialsEncrypted: '...'  // Will be decrypted
-})
-// Returns: { content: [...] } or throws error
-```
-
-### Protocol
-- JSON-RPC 2.0 over HTTP
-- 30-second timeout
-- Supports api_key and oauth auth types
-- Auth credentials decrypted at execution time
-
-## Artifact Handling (`lib/artifacts.ts`)
-
-```typescript
-import { extractArtifacts, hasArtifacts, parseArtifacts } from '@/lib/artifacts'
-
-// Check if content has artifacts
-if (hasArtifacts(content)) {
-  const artifacts = extractArtifacts(content)
-  // artifacts: [{ type, title, content }]
-}
-
-// Parse artifact blocks from content
-const { cleanContent, artifacts } = parseArtifacts(content)
-```
-
-### Artifact Format
-```xml
-<artifact type="html" title="Dashboard">
-  <html>...</html>
-</artifact>
-```
-
-## Error Handling (`lib/api-utils.ts`)
-
-```typescript
-import { ApiRequestError, withRetry, fetchWithTimeout } from '@/lib/api-utils'
-
-// Custom error class
-throw new ApiRequestError('Not found', 404)
-
-// Fetch with timeout
-const response = await fetchWithTimeout(url, options, 10000)
-
-// Retry with exponential backoff
-const result = await withRetry(
-  async () => await fetchData(),
-  {
-    maxRetries: 3,
-    initialDelay: 1000,
-    backoffMultiplier: 2,
-    shouldRetry: (error) => error.status >= 500
-  }
-)
-```
-
-## Creating New Endpoints
-
-### Basic Pattern
-```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth-middleware'
-import { validate, MySchema } from '@/lib/validation'
-
-export async function POST(request: NextRequest) {
-  // 1. Authenticate
-  const authResult = await requireAuth(request)
-  if (authResult instanceof Response) return authResult
-  const { user } = authResult
-
-  // 2. Parse and validate body
-  const body = await request.json()
-  const { data, error } = validate(MySchema, body)
-  if (error) {
-    return NextResponse.json({ error }, { status: 400 })
-  }
-
-  // 3. Business logic
-  try {
-    const result = await doSomething(user.id, data)
-    return NextResponse.json(result, { status: 201 })
-  } catch (e) {
-    console.error('Error:', e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-```
-
-## Performance Considerations
-
-### Database
-- Use indexes on frequently queried fields
-- Batch operations when possible
-- Use `select` to limit returned fields
-
-### Streaming
-- Chat responses use Server-Sent Events
-- `maxDuration: 300` (5 minutes) for long-running streams
-- Stream chunks sent as they arrive
-
-### Caching
-- Consider caching user preferences
-- Cache MCP tool schemas (refresh on discover)
 
 ## Security Checklist
 
-- [x] All routes require Bearer token authentication
-- [x] Passwords hashed with scrypt (not plain text)
+- [x] All routes require appropriate authentication level
+- [x] Multi-tenant data isolation via `tenantDb` (org-scoped Prisma client)
+- [x] Passwords hashed with scrypt (timing-safe comparison)
 - [x] API keys/MCP credentials encrypted with AES-256-GCM
 - [x] Session tokens are cryptographically random
 - [x] Input validation with Zod schemas
 - [x] Cascade deletes for referential integrity
-- [x] Timing-safe password comparison
+- [x] Ownership verification on CRUD operations
+- [x] Audit logging for admin actions
+- [x] Constant-time response for email enumeration prevention
+- [x] Conversation visibility requires explicit opt-in
+- [x] Impersonation requires reason and has time limits
 - [ ] Rate limiting (TODO)
 - [ ] CORS configuration (TODO)
 - [ ] CSP headers (TODO)
