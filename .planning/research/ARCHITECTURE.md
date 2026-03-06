@@ -1,835 +1,716 @@
-# Architecture Research
+# Architecture Patterns: v1.1 Harden & Polish
 
-**Domain:** RBAC Multi-Tenant AI Chat SaaS Platform
-**Researched:** 2026-02-26
-**Confidence:** HIGH
+**Domain:** Admin UI overhaul, prompt stack enhancement, login customization, testing & security hardening
+**Researched:** 2026-03-06
+**Overall Confidence:** HIGH (all recommendations based on direct codebase analysis of existing patterns)
 
-## System Overview
+---
 
-```
-+=====================================================================+
-|                      PRESENTATION LAYER                             |
-+---------------------------------------------------------------------+
-|  +-------------+  +-------------+  +-------------+  +------------+ |
-|  | Super Admin |  | Org Admin   |  | User Chat   |  | Login /    | |
-|  | Dashboard   |  | Dashboard   |  | Interface   |  | Invitation | |
-|  | (new)       |  | (new)       |  | (existing+) |  | (modified) | |
-|  +------+------+  +------+------+  +------+------+  +-----+------+ |
-|         |                |                |                |        |
-+=========|================|================|================|========+
-|                      AUTHORIZATION LAYER (new)                      |
-+---------------------------------------------------------------------+
-|  +------------------+  +------------------+  +-------------------+  |
-|  | Auth Middleware   |  | Permission       |  | Tenant Context    |  |
-|  | (enhanced)       |  | Checker          |  | Resolver          |  |
-|  | requireAuth()    |  | requireRole()    |  | withTenantScope() |  |
-|  +--------+---------+  +--------+---------+  +---------+---------+  |
-|           |                     |                      |            |
-+===========|=====================|======================|============+
-|                       API ROUTE LAYER                               |
-+---------------------------------------------------------------------+
-|  +-----------+  +-----------+  +----------+  +-----------+          |
-|  | /api/     |  | /api/     |  | /api/    |  | /api/     |          |
-|  | admin/    |  | org/      |  | chat     |  | auth/     |          |
-|  | (new)     |  | (new)     |  | (mod)    |  | (mod)     |          |
-|  +-----+-----+  +-----+-----+  +----+-----+  +-----+-----+        |
-|        |              |              |               |              |
-+========|==============|==============|===============|==============+
-|                   BUSINESS LOGIC LAYER                              |
-+---------------------------------------------------------------------+
-|  +-------------+  +-------------+  +-----------+  +--------------+  |
-|  | Org Manager |  | Role/Perm   |  | Prompt    |  | Usage        |  |
-|  | (new)       |  | Manager     |  | Stack     |  | Tracker      |  |
-|  |             |  | (new)       |  | (new)     |  | (new)        |  |
-|  +------+------+  +------+------+  +-----+-----+  +------+-------+  |
-|         |                |               |                |         |
-|  +-------------+  +-------------+  +-----------+  +--------------+  |
-|  | Audit       |  | Invitation  |  | Analytics |  | Anthropic    |  |
-|  | Logger      |  | Service     |  | Engine    |  | (existing)   |  |
-|  | (new)       |  | (new)       |  | (new)     |  |              |  |
-|  +------+------+  +------+------+  +-----+-----+  +------+-------+  |
-|         |                |               |                |         |
-+=========|================|===============|================|=========+
-|                    DATA ACCESS LAYER                                |
-+---------------------------------------------------------------------+
-|  +----------------------------------------------------------+      |
-|  |              Tenant-Scoped Prisma Client                  |      |
-|  |     (Prisma Client Extension with orgId filtering)        |      |
-|  +-----+--------+--------+---------+--------+-------+-------+      |
-|        |        |        |         |        |       |               |
-|  +-----+--+ +---+---+ +-+----+ +--+---+ +--+--+ +--+---+          |
-|  | Org    | | User  | | Role | | Conv | | Msg | | Audit|          |
-|  | Store  | | Store | | Store| | Store| | Store| | Store|          |
-|  | (new)  | | (mod) | | (new)| | (mod)| | (mod)| | (new)|          |
-|  +--------+ +-------+ +------+ +------+ +-----+ +------+          |
-|                                                                     |
-+====================+================================================+
-|                    |   DATABASE LAYER                                |
-|                    v                                                 |
-|  +----------------------------------------------------------+      |
-|  |                PostgreSQL + Prisma 7.3                     |     |
-|  |  +------+  +--------+  +------+  +--------+  +--------+  |     |
-|  |  | Org  |  | OrgMem |  | Role |  | Invite |  | Audit  |  |     |
-|  |  +------+  +--------+  +------+  +--------+  +--------+  |     |
-|  |  +------+  +--------+  +------+  +--------+  +--------+  |     |
-|  |  | User |  | Session|  | Conv |  | Message|  | Usage  |  |     |
-|  |  +------+  +--------+  +------+  +--------+  +--------+  |     |
-|  +----------------------------------------------------------+      |
-+=====================================================================+
-|                    EXTERNAL SERVICES                                |
-|  +---------------+  +-------------+  +------------------+          |
-|  | Anthropic API |  | Resend API  |  | MCP Servers      |          |
-|  | (existing)    |  | (new)       |  | (existing)       |          |
-|  +---------------+  +-------------+  +------------------+          |
-+=====================================================================+
-```
+## 1. Sidebar Component Refactor (Icons-Only Collapse)
 
-## Component Responsibilities
+### Current State
 
-| Component | Responsibility | Communicates With |
-|-----------|----------------|-------------------|
-| **Auth Middleware (enhanced)** | Validates session, resolves user + org membership + role in a single query; returns enriched auth context | Session store, OrgMember store |
-| **Permission Checker (new)** | Evaluates whether authenticated user has required role/permission for the requested action | Auth Middleware, Role store |
-| **Tenant Context Resolver (new)** | Resolves orgId from authenticated user and injects it into all downstream queries | Auth Middleware, Prisma Client Extension |
-| **Tenant-Scoped Prisma Client (new)** | Wraps standard Prisma client with `$extends` to auto-filter all queries by orgId | Prisma Client, all data stores |
-| **Org Manager (new)** | CRUD for organizations, soft delete with 30-day grace, org branding/theme assignment | Organization store, Audit Logger |
-| **Role/Permission Manager (new)** | System role templates, custom role creation, model access, MCP assignment, usage limits per role | Role store, Audit Logger |
-| **Prompt Stack Builder (new)** | Assembles 4-layer system prompt (platform + org + role + user) with token budget enforcement | Org store, Role store, OrgMember store |
-| **Usage Tracker (new)** | Records per-request token consumption from Anthropic API responses, enforces daily/monthly limits | Usage store, Anthropic response metadata |
-| **Audit Logger (new)** | Append-only log of all admin actions with actor, target, action type, timestamp, org context | AuditLog store |
-| **Invitation Service (new)** | Generates invitation tokens, sends emails via Resend, handles acceptance flow | Invitation store, Resend API, User store |
-| **Analytics Engine (new)** | Aggregates usage data for dashboards (Super Admin: cross-org, Org Admin: org-scoped) | Usage store, Message store, Conversation store |
-| **Super Admin Dashboard (new)** | Platform-wide management UI: orgs, API keys, platform analytics, audit logs | All admin API routes |
-| **Org Admin Dashboard (new)** | Org-scoped management UI: users, roles, invitations, org analytics, org audit logs | Org-scoped admin API routes |
-| **User Chat Interface (existing, modified)** | Existing chat UI enhanced with org branding, role-constrained model selection, usage limit banners | Chat API, Conversation API |
-| **Login / Invitation (modified)** | Login page enhanced for multi-tenant; new invitation acceptance flow | Auth API, Invitation API |
+- `components/admin/admin-sidebar.tsx` (9KB) renders both Super Admin and Org Admin variants via a `variant` prop
+- Uses `components/ui/sidebar.tsx` (24KB) which already has full collapse infrastructure:
+  - `SidebarContext` with `state: "expanded" | "collapsed"`, `open`, `toggleSidebar()`
+  - `SIDEBAR_WIDTH_ICON = "3rem"` constant for collapsed state
+  - `SidebarMenuButton` already accepts `tooltip` prop (shows tooltip when collapsed)
+  - Cookie-based persistence (`sidebar_state`)
+  - Keyboard shortcut support (`Ctrl+B`)
+- Both layouts (`app/super-admin/layout.tsx`, `app/org/[slug]/admin/layout.tsx`) use `<SidebarProvider>` + `<AdminSidebar>` + `<SidebarInset>`
 
-## Recommended Project Structure
+### Recommended Architecture
+
+**Do NOT create separate sidebar components.** The existing `AdminSidebar` already handles both variants. Refactor in-place.
+
+#### Changes to `components/admin/admin-sidebar.tsx`:
+
+1. **Add `SidebarTrigger` inside the sidebar** -- the UI component already exports this. Place it in the `SidebarHeader` as a collapse/expand button.
+
+2. **Ensure icon-only mode works** -- the `SidebarMenuButton` already passes `tooltip={item.label}` which shows on collapsed state. The existing `<Icon>` + `<span>` pattern inside `SidebarMenuButton` auto-hides the span when collapsed (CSS-driven via `group-data-[collapsible=icon]`).
+
+3. **Header collapse** -- in collapsed state, replace org name / "LLMatscale.ai" text with just the icon. Use `useSidebar()` hook to read `state`.
+
+4. **Footer collapse** -- hide user name/email text, show avatar/icon only. The "Back to Chat" and "Sign Out" buttons become icon-only with tooltips.
 
 ```
-app/
-├── page.tsx                          # Login page (modified: no registration link)
-├── layout.tsx                        # Root layout (modified: org branding context)
-├── globals.css                       # Theme variables (existing + org branding injection)
-├── invite/
-│   └── [token]/
-│       └── page.tsx                  # Invitation acceptance + registration
-├── chat/
-│   └── page.tsx                      # Chat page (modified: org/role context)
-├── admin/                            # Super Admin pages
-│   ├── layout.tsx                    # Admin shell layout with nav
-│   ├── page.tsx                      # Dashboard overview
-│   ├── organizations/
-│   │   └── page.tsx                  # Org management
-│   ├── api-keys/
-│   │   └── page.tsx                  # Platform API key management
-│   ├── analytics/
-│   │   └── page.tsx                  # Platform analytics
-│   └── audit-logs/
-│       └── page.tsx                  # Platform audit logs
-├── org/                              # Org Admin pages
-│   ├── layout.tsx                    # Org admin shell layout
-│   ├── page.tsx                      # Org dashboard overview
-│   ├── members/
-│   │   └── page.tsx                  # User/member management
-│   ├── roles/
-│   │   └── page.tsx                  # Role management
-│   ├── invitations/
-│   │   └── page.tsx                  # Invitation management
-│   ├── settings/
-│   │   └── page.tsx                  # Org settings (branding, themes, password policy)
-│   ├── analytics/
-│   │   └── page.tsx                  # Org analytics
-│   └── audit-logs/
-│       └── page.tsx                  # Org audit logs
-├── api/
-│   ├── auth/                         # (existing, modified)
-│   │   ├── login/route.ts            # Modified: resolve org context
-│   │   ├── register/route.ts         # Modified: disabled for public, used by invite flow
-│   │   └── ...                       # Existing auth routes
-│   ├── chat/route.ts                 # Modified: org-scoped, role-filtered models
-│   ├── conversations/                # Modified: org-scoped queries
-│   ├── admin/                        # Super Admin API (new)
-│   │   ├── organizations/route.ts
-│   │   ├── api-keys/route.ts
-│   │   ├── analytics/route.ts
-│   │   └── audit-logs/route.ts
-│   ├── org/                          # Org Admin API (new)
-│   │   ├── members/route.ts
-│   │   ├── roles/route.ts
-│   │   ├── invitations/route.ts
-│   │   ├── settings/route.ts
-│   │   ├── analytics/route.ts
-│   │   └── audit-logs/route.ts
-│   ├── invite/                       # Invitation API (new)
-│   │   └── accept/route.ts
-│   ├── mcp/                          # Modified: org-scoped
-│   └── user/                         # Modified: org-scoped settings
-│
-lib/
-├── db.ts                             # Existing Prisma singleton
-├── storage.ts                        # Modified: all operations become org-aware
-├── auth-middleware.ts                 # Enhanced: returns AuthContext with orgId, role
-├── tenant.ts                         # NEW: Tenant-scoped Prisma client extension
-├── permissions.ts                    # NEW: Permission checker, role hierarchy
-├── prompt-stack.ts                   # NEW: 4-layer prompt assembly with token budget
-├── usage-tracker.ts                  # NEW: Token/request tracking and limit enforcement
-├── audit.ts                          # NEW: Immutable audit log operations
-├── invitation.ts                     # NEW: Invitation token generation and email
-├── email.ts                          # NEW: Resend API client wrapper
-├── analytics.ts                      # NEW: Analytics aggregation queries
-├── org-manager.ts                    # NEW: Organization lifecycle management
-├── role-manager.ts                   # NEW: Role CRUD and template management
-├── validation.ts                     # Modified: new schemas for RBAC entities
-├── encryption.ts                     # Existing (unchanged)
-├── anthropic.ts                      # Existing (unchanged)
-├── system-prompts.ts                 # Modified: wraps prompt-stack.ts
-├── mcp-client.ts                     # Existing (unchanged at lib level)
-├── artifacts.ts                      # Existing (unchanged)
-├── api-utils.ts                      # Existing (unchanged)
-└── ...                               # Other existing lib files unchanged
-
-components/
-├── full-chat-app.tsx                 # Modified: org branding, role-filtered models, usage banners
-├── login-page.tsx                    # Modified: no registration, org-aware login
-├── settings-modal.tsx                # Modified: remove API key management, add org/role info
-├── admin/                            # NEW: Super Admin components
-│   ├── admin-layout.tsx
-│   ├── org-table.tsx
-│   ├── api-key-manager.tsx
-│   ├── platform-analytics.tsx
-│   └── audit-log-viewer.tsx
-├── org/                              # NEW: Org Admin components
-│   ├── org-layout.tsx
-│   ├── member-table.tsx
-│   ├── role-editor.tsx
-│   ├── invitation-manager.tsx
-│   ├── org-settings.tsx
-│   ├── org-analytics.tsx
-│   └── audit-log-viewer.tsx
-├── shared/                           # NEW: Shared admin components
-│   ├── data-table.tsx
-│   ├── stats-card.tsx
-│   ├── chart-wrapper.tsx             # Recharts wrapper
-│   └── usage-banner.tsx              # 80%/100% limit warning
-├── invite/                           # NEW: Invitation flow
-│   └── accept-invite.tsx
-└── ...                               # Existing components (prompt-kit, viewers, ui)
-
-prisma/
-├── schema.prisma                     # Complete redesign with RBAC models
-├── seed.ts                           # NEW: Super Admin seed script
-└── migrations/                       # Fresh migrations (clean start)
+Component hierarchy (unchanged):
+  SidebarProvider (layout)
+    AdminSidebar (existing, refactored)
+      Sidebar
+        SidebarHeader  <- Add SidebarTrigger here
+        SidebarContent <- Already works with collapse (CSS)
+        SidebarFooter  <- Conditional text visibility
+    SidebarInset
+      AdminBreadcrumb (Org Admin only)
+      {children}
 ```
 
-### Structure Rationale
+#### No layout changes needed:
+- `app/super-admin/layout.tsx` -- no changes
+- `app/org/[slug]/admin/layout.tsx` -- no changes
+- Both already use `SidebarProvider` which manages collapse state
 
-- **`app/admin/` and `app/org/`:** Separate page trees for each admin role. Super Admin and Org Admin have fundamentally different scopes and should not share UI shells. This prevents accidental permission leaks at the routing level.
-- **`lib/tenant.ts`:** Single source of truth for tenant scoping. Every org-aware query flows through this module, making it impossible to forget the orgId filter.
-- **`lib/permissions.ts`:** Centralized permission logic prevents inconsistent role checks scattered across API routes.
-- **`lib/audit.ts`:** Isolated audit module ensures audit operations are never mixed with business logic and remain append-only.
-- **`components/admin/` and `components/org/`:** Admin components separate from chat components because they follow different UI patterns (data tables, forms vs. chat interface).
-- **`components/shared/`:** Reusable admin primitives (data tables, stat cards, chart wrappers) shared between Super Admin and Org Admin dashboards.
+#### Org Admin Navigation Updates (from PROJECT.md):
+- **Add**: Profile expander in footer (Logout / Settings / Admin Console links)
+- **Move**: "Back to Chat" to top-left of sidebar header
+- **Remove**: Sign Out button from footer (moved into profile expander)
+- **Admin Console view**: Remove "Sign Out", keep "Back to Chat" top-left
 
-## Architectural Patterns
+### Files Modified
 
-### Pattern 1: Enriched Auth Context
+| File | Change |
+|------|--------|
+| `components/admin/admin-sidebar.tsx` | Add SidebarTrigger, conditional text for collapsed state, profile expander |
 
-**What:** Enhance `requireAuth()` to return full RBAC context (user + org membership + role + permissions) in a single database query, replacing the current pattern that only returns a User.
+### Files NOT Modified
 
-**When to use:** Every protected API route. This is the foundation of the entire RBAC system.
+| File | Why |
+|------|-----|
+| `components/ui/sidebar.tsx` | Already has full collapse infrastructure |
+| `app/super-admin/layout.tsx` | Already uses SidebarProvider |
+| `app/org/[slug]/admin/layout.tsx` | Already uses SidebarProvider |
 
-**Trade-offs:** Slightly heavier auth query (1 query with joins instead of 1 simple query), but eliminates N+1 auth lookups later in the request lifecycle. The extra cost is negligible compared to the Anthropic API call latency.
+---
 
-**Example:**
+## 2. Schema Changes: Org/Role Restrictions & Prompt Suggestions
+
+### 2A. Org Restrictions (New Field on OrgSettings)
+
+The 6-layer prompt stack adds two new layers between existing layers:
+
+```
+Current 4-layer:                    New 6-layer:
+1. Platform instructions            1. Platform instructions
+2. Org instructions                  2. Org instructions
+                                     3. Org restrictions (NEW)
+3. Role instructions                 4. Role instructions
+                                     5. Role restrictions (NEW)
+4. User context                      6. User context
+```
+
+**Where restrictions live in schema:**
+
+Add to `OrgSettings` model:
+```prisma
+orgRestrictions        String?  @map("org_restrictions") @db.Text
+orgRestrictionsMaxLength Int    @default(2000) @map("org_restrictions_max_length")
+```
+
+**Rationale:** `OrgSettings` already holds `systemInstructions` (org instructions layer). Restrictions are a separate semantic concept ("what NOT to do") vs instructions ("what TO do"), so a separate field is appropriate. Same model, different field.
+
+### 2B. Role Restrictions (New Field on Role)
+
+Add to `Role` model:
+```prisma
+restrictions           String?  @map("restrictions") @db.Text
+restrictionsMaxLength  Int      @default(1000) @map("restrictions_max_length")
+```
+
+**Rationale:** `Role` already holds `systemInstructions` (role instructions layer). Same pattern -- separate field for restrictions.
+
+### 2C. Prompt Suggestions (New Field on OrgSettings)
+
+Prompt suggestions are org-level configuration displayed on the chat welcome screen. They do NOT need a separate model.
+
+Add to `OrgSettings` model:
+```prisma
+promptSuggestions      Json     @default("[]") @map("prompt_suggestions")
+```
+
+**Rationale against a separate model:**
+- Prompt suggestions are a simple list of strings (or objects with `title` + `prompt`)
+- They are org-level, not role-scoped or user-scoped
+- A separate `PromptSuggestion` model would add a join, migration complexity, and CRUD overhead for what is fundamentally a JSON array
+- Pattern matches `activeMcpIds` on Conversation (Json array) and `permissions` on Role (Json array)
+
+**Data shape:**
+```typescript
+interface PromptSuggestion {
+  title: string;     // Short display text (e.g., "Summarize a document")
+  prompt: string;    // Full prompt text sent to chat
+}
+// Stored as Json: [{ title: "...", prompt: "..." }, ...]
+```
+
+### 2D. Login Page Customization (Existing Fields Sufficient)
+
+`OrgSettings` already has:
+- `loginTagline` (String?, max 100 chars)
+- `loginWelcomeMessage` (String?, max 500 chars, @db.Text)
+
+The existing login page customization API (`/api/org/[slug]/admin/settings/login-page`) already handles GET and PUT for these fields.
+
+**No new schema fields needed for login customization.** The v1.1 work is purely UI/UX -- making the existing data render with more polish and consistency.
+
+### Complete Schema Diff
+
+```prisma
+// OrgSettings additions:
+model OrgSettings {
+  // ... existing fields ...
++ orgRestrictions          String?  @map("org_restrictions") @db.Text
++ orgRestrictionsMaxLength Int      @default(2000) @map("org_restrictions_max_length")
++ promptSuggestions        Json     @default("[]") @map("prompt_suggestions")
+}
+
+// Role additions:
+model Role {
+  // ... existing fields ...
++ restrictions             String?  @map("restrictions") @db.Text
++ restrictionsMaxLength    Int      @default(1000) @map("restrictions_max_length")
+}
+```
+
+**Migration approach:** `db:push` (consistent with v1.0 pattern, all new fields are nullable or have defaults -- no data loss).
+
+---
+
+## 3. XML Prompt Assembly Changes
+
+### Current State
+
+`lib/services/system-prompt-service.ts` has `composeSystemPrompt()` that builds a 4-layer XML-tagged string:
+
+```xml
+<platform-instructions>...</platform-instructions>
+<org-instructions>...</org-instructions>
+<role-instructions>...</role-instructions>
+<user-context>...</user-context>
+```
+
+### Recommended Changes
+
+#### Update `PromptLayers` interface:
 
 ```typescript
-// lib/auth-middleware.ts (enhanced)
-
-export interface AuthContext {
-  user: User;
-  orgMember: OrgMember | null;   // null for Super Admin
-  org: Organization | null;       // null for Super Admin
-  role: Role | null;              // null for Super Admin
-  isSuperAdmin: boolean;
-  permissions: {
-    allowedModels: string[];
-    maxDailyRequests: number | null;
-    maxDailyTokens: number | null;
-    canViewConversations: boolean;
-    customInstructionsEnabled: boolean;
-    customInstructionsMaxChars: number;
-  } | null;
-}
-
-export async function requireAuth(
-  req: NextRequest
-): Promise<{ auth: AuthContext } | NextResponse> {
-  // 1. Validate bearer token (existing logic)
-  // 2. Load session with user
-  // 3. If user.role === 'SUPER_ADMIN', return SuperAdmin context
-  // 4. Otherwise, load OrgMember + Role with org in single query
-  // 5. Return enriched AuthContext
-}
-
-export function requireRole(
-  auth: AuthContext,
-  role: 'SUPER_ADMIN' | 'ORG_ADMIN' | 'USER'
-): NextResponse | null {
-  // Returns 403 Response if role insufficient, null if authorized
+export interface PromptLayers {
+  orgInstructions: string | null;
+  orgRestrictions: string | null;        // NEW
+  roleInstructions: string | null;
+  roleRestrictions: string | null;       // NEW
+  userName: string;
+  roleName: string;
+  userCustomInstructions: string | null;
+  customInstructionsEnabled: boolean;
 }
 ```
 
-### Pattern 2: Tenant-Scoped Prisma Extension
+#### Update `composeSystemPrompt()`:
 
-**What:** Use Prisma Client Extensions to create a tenant-scoped client that automatically filters all queries by `orgId`. Prevents accidental cross-tenant data leakage at the database query level.
+Insert two new XML blocks between existing layers. Each uses `sanitizePromptLayer()` (already exists):
 
-**When to use:** All org-scoped data operations (conversations, messages, artifacts, MCP connections, audit logs). NOT used for Super Admin cross-org operations or user-level operations that span orgs.
+```xml
+<platform-instructions>...</platform-instructions>
+<org-instructions>...</org-instructions>
+<org-restrictions>...</org-restrictions>       <!-- NEW Layer 3 -->
+<role-instructions>...</role-instructions>
+<role-restrictions>...</role-restrictions>     <!-- NEW Layer 5 -->
+<user-context>...</user-context>
+```
 
-**Trade-offs:** Adds a thin abstraction layer over Prisma. Extensions are lightweight (they share the underlying client connection), so no performance penalty. Requires discipline: Super Admin operations must bypass the extension explicitly.
+#### Update chat route (`app/api/chat/route.ts`):
 
-**Example:**
+The chat route already fetches `orgSettings` and `role`. Add the two new fields to the `composeSystemPrompt()` call:
 
 ```typescript
-// lib/tenant.ts
+// Line ~198 - already fetches orgSettings
+const systemPrompt = composeSystemPrompt(
+  toolNames,
+  mcpToolDescriptions,
+  {
+    orgInstructions: orgSettings?.systemInstructions || null,
+    orgRestrictions: orgSettings?.orgRestrictions || null,    // NEW
+    roleInstructions: role.systemInstructions || null,
+    roleRestrictions: role.restrictions || null,               // NEW
+    userName: user.name,
+    roleName: role.name,
+    userCustomInstructions: orgMember.customInstructions || null,
+    customInstructionsEnabled: role.customInstructionsEnabled,
+  }
+);
+```
 
-import prisma from './db';
+#### Admin UI for editing restrictions:
 
-export function tenantPrisma(orgId: string) {
-  return prisma.$extends({
-    query: {
-      conversation: {
-        async findMany({ args, query }) {
-          args.where = { ...args.where, orgId };
-          return query(args);
-        },
-        async findFirst({ args, query }) {
-          args.where = { ...args.where, orgId };
-          return query(args);
-        },
-        async create({ args, query }) {
-          args.data = { ...args.data, orgId };
-          return query(args);
-        },
-        // ... similar for update, delete
-      },
-      message: {
-        // Filter via conversation's orgId relationship
-      },
-      mcpConnection: {
-        // Filter by orgId
-      },
-      // ... all tenant-scoped models
-    },
-  });
-}
+Reuse `instruction-editor.tsx` component -- it is a generic textarea with token counter. The restrictions editor is semantically different (label, placeholder text) but functionally identical.
 
-// Usage in API routes:
-const auth = await requireAuth(req);
-const db = tenantPrisma(auth.orgMember!.orgId);
-const conversations = await db.conversation.findMany({
-  where: { userId: auth.user.id },
-  // orgId filter automatically injected
+| Where | What to add |
+|-------|-------------|
+| `app/org/[slug]/admin/instructions/page.tsx` | Org Restrictions textarea below Org Instructions |
+| `components/admin/role-form-modal.tsx` | Role Restrictions tab/section alongside existing Role Instructions |
+| `app/api/org/[slug]/admin/instructions/route.ts` | Accept `orgRestrictions` in PATCH |
+| `app/api/org/[slug]/admin/roles/[roleId]/instructions/route.ts` | Accept `restrictions` in PATCH |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `lib/services/system-prompt-service.ts` | Add layers 3 and 5 to `composeSystemPrompt()`, update `PromptLayers` |
+| `app/api/chat/route.ts` | Pass restriction layers, add rate limiting |
+| `app/api/org/[slug]/admin/instructions/route.ts` | Accept/return `orgRestrictions` |
+| `app/api/org/[slug]/admin/roles/[roleId]/instructions/route.ts` | Accept/return `restrictions` |
+| `app/org/[slug]/admin/instructions/page.tsx` | Add Org Restrictions editor |
+| `components/admin/role-form-modal.tsx` | Add Role Restrictions input |
+
+---
+
+## 4. Prompt Suggestions Data Flow
+
+### Architecture
+
+```
+Org Admin UI
+  |
+  | PUT /api/org/[slug]/admin/settings/prompt-suggestions
+  |   (saves JSON array to OrgSettings.promptSuggestions)
+  |
+  v
+OrgSettings.promptSuggestions (Json)
+  |
+  | GET /api/org/[slug]/models (existing endpoint, add field)
+  |
+  v
+Chat Welcome Screen (full-chat-app.tsx)
+  |
+  | User clicks suggestion -> injects into chat input
+  v
+```
+
+### Recommended Approach: Bundle with Models API
+
+Instead of a separate API endpoint for reading, add `promptSuggestions` to the existing `GET /api/org/[slug]/models` response. This endpoint is already called on chat page load and returns org-scoped data. One fewer network request.
+
+```typescript
+// In GET /api/org/[slug]/models/route.ts
+const orgSettings = await prisma.orgSettings.findUnique({
+  where: { organizationId: auth.organization.id },
+  select: { /* existing fields */ promptSuggestions: true },
+});
+
+return NextResponse.json({
+  models: [...],
+  defaultModel: ...,
+  isOrgAdmin: ...,
+  promptSuggestions: orgSettings?.promptSuggestions ?? [],  // NEW
 });
 ```
 
-### Pattern 3: 4-Layer Prompt Stack with Token Budget
+### Admin UI
 
-**What:** Build the system prompt by concatenating 4 layers (platform, org, role, user), each with size constraints, enforcing a combined token budget. This is specific to the AI chat domain and prevents prompt bloat while allowing customization at every organizational level.
+New section in `app/org/[slug]/admin/settings/page.tsx` -- the Org Settings page already handles logo, login page, theme, onboarding, and API keys. Add a "Chat Welcome Screen" or "Prompt Suggestions" section.
 
-**When to use:** Every chat request in `/api/chat`.
+### New API Route for Admin CRUD
 
-**Trade-offs:** Adds complexity to prompt assembly, but the alternative (single-layer prompt) cannot support per-org/per-role customization. The 2000-token budget is conservative but prevents the system prompt from consuming meaningful context window space.
+```
+GET  /api/org/[slug]/admin/settings/prompt-suggestions  -> return current suggestions
+PUT  /api/org/[slug]/admin/settings/prompt-suggestions  -> update suggestions array
+```
 
-**Example:**
+Uses `requireOrgAdmin`. Validates JSON array structure with Zod. Audit-logs changes.
+
+### Files Modified/Created
+
+| File | Change |
+|------|--------|
+| `app/api/org/[slug]/models/route.ts` | Include `promptSuggestions` in response |
+| `app/api/org/[slug]/admin/settings/prompt-suggestions/route.ts` | **NEW** -- CRUD for suggestions |
+| `app/org/[slug]/admin/settings/page.tsx` | Add Prompt Suggestions editor section |
+| `components/full-chat-app.tsx` | Render suggestions on welcome screen |
+
+---
+
+## 5. Login Page Customization Data Model
+
+### Current State (Already Sufficient)
+
+Schema fields exist:
+- `OrgSettings.loginTagline` (String?, max 100)
+- `OrgSettings.loginWelcomeMessage` (String?, max 500)
+
+API exists:
+- `GET/PUT /api/org/[slug]/admin/settings/login-page`
+
+Server component exists:
+- `app/org/[slug]/login/page.tsx` fetches tagline and welcomeMessage from DB
+
+Client component exists:
+- `components/org-login-page.tsx` receives and renders org branding
+
+### What v1.1 Needs (UI Only)
+
+No schema or API changes. The work is:
+
+1. **Login page visual consistency** -- port the port 3000 style (the bare-domain login) as reference design
+2. **Org Admin settings UI** -- the Settings page (`app/org/[slug]/admin/settings/page.tsx`) already has a login page customization section; enhance its UX
+3. **OrgLoginPage component** -- improve layout, typography, spacing for the tagline and welcome message display
+
+### Potential Future Fields (NOT for v1.1)
+
+If more login customization is needed later:
+- `loginBackgroundColor` (brand color) -- currently deferred per PROJECT.md ("Brand colors dropped for theme + logo")
+- `loginCustomCss` -- avoid; security risk
+- `loginFooterText` -- could be added to OrgSettings if needed
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `components/org-login-page.tsx` | Visual polish, layout consistency |
+| `app/org/[slug]/admin/settings/page.tsx` | Enhanced login preview/editor UI |
+
+---
+
+## 6. Testing Architecture
+
+### Test File Organization
+
+```
+__tests__/                           # Top-level test directory
+  unit/                              # Unit tests (no DB, no network)
+    lib/
+      prompt-sanitizer.test.ts       # Pure function tests
+      system-prompt-service.test.ts  # composeSystemPrompt() composition
+      encryption.test.ts             # encrypt/decrypt roundtrip
+      validation.test.ts             # Zod schema tests
+      context-window.test.ts         # Context fitting logic
+      token-counter.test.ts          # Token counting
+    services/
+      usage-service.test.ts          # Limit calculation logic
+      password-validation.test.ts    # Password policy checks
+  integration/                       # Integration tests (DB required)
+    api/
+      auth/
+        login.test.ts                # Login flow
+        register.test.ts             # Invitation acceptance
+      chat/
+        route.test.ts                # Chat endpoint (mocked Anthropic)
+      org/
+        models.test.ts               # Model access filtering
+        admin/
+          users.test.ts              # User management
+          roles.test.ts              # Role CRUD
+    middleware/
+      auth-middleware.test.ts        # requireAuth, requireOrgAuth, requireSuperAdmin
+      tenant-isolation.test.ts       # Cross-org data isolation
+  e2e/                               # End-to-end (browser, full stack)
+    login.spec.ts                    # Login flow
+    chat.spec.ts                     # Send message, receive response
+    admin.spec.ts                    # Admin navigation, user management
+```
+
+### Test Boundaries
+
+| Layer | Tests | Mocks | Runner |
+|-------|-------|-------|--------|
+| **Unit** | Pure functions, transformations, calculations | Everything external | Vitest |
+| **Integration** | API routes, middleware, DB operations | Anthropic API only | Vitest + test DB |
+| **E2E** | Full user flows through browser | Nothing (real stack) | Playwright |
+
+### Recommended Test Framework
+
+**Vitest** for unit + integration because:
+- Native ESM support (Next.js 16 is ESM)
+- Same config format as Vite (team familiarity)
+- Built-in mocking, coverage, watch mode
+- Compatible with Next.js App Router via `@vitejs/plugin-react`
+
+**Playwright** for E2E because:
+- Multi-browser support
+- Built-in auto-waiting
+- Supports streaming responses (important for chat testing)
+- Good CI integration
+
+### Integration Test Database Strategy
+
+Use a separate PostgreSQL database (`llmatscale_test`) with:
+1. `prisma db push` before test suite
+2. Transaction rollback per test (fast cleanup)
+3. Seed minimal fixtures per test file
+
+### CI Pipeline
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  lint:
+    - npm run lint
+  unit-test:
+    - npx vitest run --coverage __tests__/unit/
+  integration-test:
+    services:
+      postgres: { image: postgres:16 }
+    - DATABASE_URL=... npx vitest run __tests__/integration/
+  e2e-test:
+    services:
+      postgres: { image: postgres:16 }
+    - npm run build && npm start &
+    - npx playwright test
+```
+
+### Config Files Created
+
+| File | Purpose |
+|------|---------|
+| `vitest.config.ts` | **NEW** -- Vitest configuration with path aliases |
+| `playwright.config.ts` | **NEW** -- Playwright configuration |
+| `.github/workflows/ci.yml` | **NEW** -- CI pipeline |
+
+### Priority Order for Tests
+
+1. **Auth middleware** (security-critical, highest ROI)
+2. **Tenant isolation** (data leak prevention)
+3. **Prompt sanitizer** (injection prevention)
+4. **Usage limit enforcement** (business logic)
+5. **Chat route** (core feature, integration test with mocked Anthropic)
+
+---
+
+## 7. Security Middleware Placement
+
+### Current State
+
+Auth is enforced at the **route handler level** (not Next.js middleware). This is intentional per CVE-2025-29927 defense-in-depth (noted in PROJECT.md decisions).
+
+```
+Request -> Next.js Route Handler -> requireAuth/requireOrgAuth/requireSuperAdmin -> Business Logic
+```
+
+### What Needs Hardening (NOT Restructuring)
+
+The auth placement is correct. v1.1 security hardening adds layers **around** it, not replacing it.
+
+#### A. Rate Limiting
+
+**Where:** New utility in `lib/rate-limiter.ts`, called at the top of rate-limited route handlers.
+
+**Implementation:** In-memory sliding window (Map-based) for self-hosted deployment. No Redis dependency needed at current scale (5-20 orgs).
 
 ```typescript
-// lib/prompt-stack.ts
+// lib/rate-limiter.ts
+export function rateLimit(key: string, limit: number, windowMs: number): { allowed: boolean; remaining: number; retryAfter?: number }
+```
 
-interface PromptLayer {
-  source: string;  // 'platform' | 'org' | 'role' | 'user'
-  content: string;
-  maxChars: number;
-}
+**Applied to routes:**
+| Route | Limit | Window | Key |
+|-------|-------|--------|-----|
+| `POST /api/auth/login` | 10 | 15 min | IP |
+| `POST /api/auth/find-org` | 20 | 15 min | IP |
+| `POST /api/auth/password-reset` | 5 | 15 min | IP |
+| `POST /api/chat` | 60 | 1 min | userId |
 
-export function buildPromptStack(config: {
-  orgInstructions: string | null;      // from Organization.systemInstructions
-  roleInstructions: string | null;     // from Role.systemInstructions
-  userName: string;
-  roleName: string;
-  customInstructions: string | null;   // from OrgMember.customInstructions
-}): string {
-  const layers: PromptLayer[] = [
-    { source: 'platform', content: PLATFORM_PROMPT, maxChars: Infinity },
-    { source: 'org', content: config.orgInstructions || '', maxChars: 2000 },
-    { source: 'role', content: config.roleInstructions || '', maxChars: 2000 },
-    {
-      source: 'user',
-      content: buildUserLayer(config.userName, config.roleName, config.customInstructions),
-      maxChars: 2000,
-    },
-  ];
-
-  // Truncate each layer to its maxChars
-  // Estimate combined token count (chars / 4 heuristic)
-  // If over 2000 token budget, trim org and role layers proportionally
-  // Platform layer is never trimmed
-  return assembleLayers(layers);
+**Pattern:**
+```typescript
+export async function POST(req: NextRequest) {
+  const ip = getIpAddress(req);
+  const limit = rateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+    );
+  }
+  // ... existing handler
 }
 ```
 
-### Pattern 4: Append-Only Audit Log
+#### B. Security Headers
 
-**What:** Record every admin action (org CRUD, role changes, user management, config changes) in an immutable, append-only audit log table. No update or delete operations are exposed through the application.
-
-**When to use:** All admin actions performed by Super Admin or Org Admin. NOT used for regular chat operations (those are tracked via usage records).
-
-**Trade-offs:** Table grows unbounded. For the target scale (5-20 orgs, hundreds of users), this is manageable. At much larger scale, partitioning by date or org would be needed. Simplicity wins here.
-
-**Example:**
+**Where:** `next.config.ts` (or `next.config.js`) via `headers()` config. NOT middleware.
 
 ```typescript
-// lib/audit.ts
-
-export interface AuditEntry {
-  actorId: string;      // who performed the action
-  actorRole: string;    // SUPER_ADMIN or ORG_ADMIN
-  orgId: string | null; // null for platform-level actions
-  action: string;       // e.g., 'org.create', 'member.suspend', 'role.update'
-  targetType: string;   // e.g., 'organization', 'user', 'role'
-  targetId: string;     // ID of the affected entity
-  details: object;      // JSON with before/after or additional context
-}
-
-export async function logAuditEvent(entry: AuditEntry): Promise<void> {
-  await prisma.auditLog.create({
-    data: {
-      ...entry,
-      details: entry.details as object,
-      // timestamp auto-set by database
-    },
-  });
-  // NO try/catch here - audit failures should propagate
-  // If we can't log, the admin action should fail
-}
+// next.config.ts
+headers: async () => [{
+  source: '/(.*)',
+  headers: [
+    { key: 'X-Frame-Options', value: 'DENY' },
+    { key: 'X-Content-Type-Options', value: 'nosniff' },
+    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+    { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+    { key: 'Content-Security-Policy', value: "default-src 'self'; ..." },
+  ],
+}],
 ```
 
-### Pattern 5: Usage Tracking from API Response Metadata
-
-**What:** Extract `input_tokens` and `output_tokens` from every Anthropic API response and record them with orgId, userId, roleId, and model context. Enforce daily per-role limits and monthly per-org limits.
-
-**When to use:** In the chat route's `onFinish` callback, after the stream completes.
-
-**Trade-offs:** Relies on Anthropic API response metadata accuracy. Token counts are available in the streaming response's usage object. Recording per-request is slightly more storage than daily aggregates, but enables fine-grained analytics without data loss.
-
-**Example:**
-
-```typescript
-// lib/usage-tracker.ts
-
-export async function recordUsage(data: {
-  orgId: string;
-  userId: string;
-  roleId: string;
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  conversationId: string;
-}): Promise<void> {
-  await prisma.usageRecord.create({ data });
-}
-
-export async function checkLimits(
-  orgId: string,
-  userId: string,
-  roleId: string
-): Promise<{
-  allowed: boolean;
-  reason?: string;
-  percentUsed?: number;
-}> {
-  // 1. Get role's daily limits
-  // 2. Sum today's usage for this user+role
-  // 3. Get org's monthly limits
-  // 4. Sum this month's usage for this org
-  // 5. Return allowed/denied with percentage
-}
-```
-
-## Data Flow
-
-### Enhanced Authentication Flow (Modified)
-
-```
-User submits login
-    |
-    v
-POST /api/auth/login { email, password }
-    |
-    v
-Backend:
-    1. getUserByEmail(email)
-    2. verifyPassword(password, user.passwordHash)
-    3. Lookup OrgMember for user (get orgId, roleId)
-    4. Check org status (not suspended/deleted)
-    5. Check user status in org (not suspended)
-    6. Enforce password policy (check expiry)
-    7. createSession(userId, token, expiresAt)
-    8. Return { user, org, role, token }
-    |
-    v
-Frontend:
-    1. Store token in localStorage
-    2. Store user context (orgId, role, permissions)
-    3. Route based on role:
-       - SUPER_ADMIN -> /admin
-       - ORG_ADMIN -> /org (or /chat with admin nav)
-       - USER -> /chat
-```
-
-### Chat Request Flow (Modified)
-
-```
-User submits message
-    |
-    v
-POST /api/chat { messages, model, conversationId, ... }
-    |
-    v
-1. requireAuth(req) -> AuthContext { user, org, orgMember, role, permissions }
-    |
-    v
-2. PERMISSION CHECK:
-   - Is model in role.allowedModels? (403 if not)
-   - Is user at daily request limit? (429 if yes)
-   - Is org at monthly limit? (429 if yes)
-    |
-    v
-3. BUILD PROMPT STACK:
-   - Platform prompt (hardcoded)
-   - + Org system instructions (from Organization)
-   - + Role system instructions (from Role)
-   - + User context (name, role name, custom instructions from OrgMember)
-   - Enforce 2000-token combined budget
-    |
-    v
-4. RESOLVE MCP TOOLS:
-   - Get role's assigned MCP servers (role-level + org-wide)
-   - Load tool descriptions from assigned connections
-   - (Users cannot add/modify MCP connections)
-    |
-    v
-5. BUILD API KEY:
-   - Use org's assigned platform API key (from PlatformApiKey table)
-   - NOT user's personal key (removed in RBAC version)
-    |
-    v
-6. STREAM from Anthropic API (existing logic)
-    |
-    v
-7. ON FINISH:
-   - Save message to DB (with orgId on conversation)
-   - Extract artifacts (existing)
-   - Record usage: { orgId, userId, roleId, model, inputTokens, outputTokens }
-   - Update conversation.updatedAt
-    |
-    v
-8. Response streamed to client (existing)
-```
-
-### Invitation Flow (New)
-
-```
-Org Admin creates invitation
-    |
-    v
-POST /api/org/invitations { email, roleId }
-    |
-    v
-1. requireAuth -> requireRole(ORG_ADMIN)
-2. Validate email not already in org
-3. Create Invitation record { email, orgId, roleId, token, expiresAt }
-4. Send email via Resend API with invitation link
-5. Log audit event
-    |
-    v
-Invitee clicks link -> /invite/[token]
-    |
-    v
-1. Validate token (not expired, not used)
-2. Display registration form (name, password)
-3. POST /api/invite/accept { token, name, password }
-    |
-    v
-Backend:
-    1. Validate invitation token
-    2. Create User (if email doesn't exist as user)
-    3. Create OrgMember { userId, orgId, roleId }
-    4. Mark invitation as accepted
-    5. Create session
-    6. Return { user, org, token }
-    |
-    v
-Frontend redirects to /chat with org context
-```
-
-### Admin Action Flow (New, applies to all admin operations)
-
-```
-Admin performs action (e.g., suspend user)
-    |
-    v
-PATCH /api/org/members/[id] { status: 'suspended' }
-    |
-    v
-1. requireAuth -> requireRole(ORG_ADMIN)
-2. Validate target user is in same org
-3. Self-protection: cannot suspend self
-4. Org protection: cannot suspend last Org Admin
-5. Execute action: update OrgMember status
-6. Side effects: revoke all sessions for suspended user
-7. Log audit event { action: 'member.suspend', targetId, actorId, orgId }
-8. Return success
-```
-
-### State Management (Enhanced)
-
-```
-Client State (enhanced):
-  - localStorage: token, userId, orgId, role name
-  - React context: AuthContext { user, org, role, permissions }
-  - useChat hook: messages, streaming state (existing)
-  - Usage state: { percentUsed, limitWarning }
-
-Server State:
-  - PostgreSQL via Prisma: all entities, org-scoped
-  - Session table: token validation (existing, unchanged)
-
-Derived State:
-  - Allowed models: filtered from full model list by role.allowedModels
-  - Available MCP: filtered by role-level + org-wide assignments
-  - System prompt: assembled from 4-layer stack per request
-  - Usage percentage: computed from usage records vs limits
-```
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 5-20 orgs, hundreds of users (target) | Current architecture is sufficient. Single PostgreSQL instance handles all tenants. Audit logs and usage records are small. No caching needed beyond Prisma's query optimization. |
-| 50-100 orgs, thousands of users | Add database indexes on (orgId, createdAt) for usage and audit tables. Consider read replicas for analytics queries to avoid impacting chat latency. Cache role permissions in memory (TTL: 5 minutes). |
-| 500+ orgs, tens of thousands of users | Partition usage_records and audit_logs by month. Consider Redis for session validation and permission caching. Move analytics aggregation to background jobs. Consider connection pooling (PgBouncer). |
-
-### Scaling Priorities
-
-1. **First bottleneck: Analytics queries.** Aggregating usage data across large time ranges will be the first thing to slow down. Mitigation: Pre-aggregate daily/weekly/monthly totals in a summary table via a scheduled job, rather than computing on-the-fly from raw usage records.
-2. **Second bottleneck: Audit log table size.** At hundreds of admin actions per day across 100+ orgs, the audit log grows fast. Mitigation: Partition by month, add composite index on (orgId, createdAt).
-3. **Third bottleneck: Auth query latency.** If the enriched auth query (user + orgMember + role + org) becomes slow due to table sizes, add a session-local cache or Redis cache for the auth context with short TTL (1-2 minutes).
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Scattering orgId Filters Across API Routes
-
-**What people do:** Manually add `where: { orgId }` to every Prisma query in every API route handler.
-
-**Why it's wrong:** A single missed filter leaks data across tenants. As the codebase grows, the probability of missing a filter approaches 1. Code reviews cannot reliably catch all instances.
-
-**Do this instead:** Use the Tenant-Scoped Prisma Extension (Pattern 2) so that orgId filtering is automatic and centralized. API routes should never reference orgId in their query filters directly -- it should be injected by the extension.
-
-### Anti-Pattern 2: Checking Roles with String Comparisons in Routes
-
-**What people do:** Write `if (user.role === 'ORG_ADMIN')` checks directly in API route handlers.
-
-**Why it's wrong:** Role names change, new roles are added, and string comparisons are fragile. Also, this conflates authentication (who are you?) with authorization (what can you do?).
-
-**Do this instead:** Use `requireRole(auth, 'ORG_ADMIN')` from the centralized permissions module. The role hierarchy (SUPER_ADMIN > ORG_ADMIN > USER) should be defined once and enforced consistently.
-
-### Anti-Pattern 3: Storing Role Permissions in Application Code
-
-**What people do:** Hardcode which models each role can access, what limits they have, etc., in the API route handlers or config files.
-
-**Why it's wrong:** Org Admins need to create custom roles and modify permissions without code changes. Hardcoded permissions require redeployment for any change.
-
-**Do this instead:** Store all permission data in the database (Role model with allowedModels, maxDailyRequests, etc.). The application reads permissions from the database via the auth context.
-
-### Anti-Pattern 4: Making Audit Logs Optional or Best-Effort
-
-**What people do:** Wrap audit log writes in try/catch and swallow errors, or make them fire-and-forget with `.catch(() => {})`.
-
-**Why it's wrong:** Audit logs exist for compliance and security. If an admin action succeeds but the audit log fails, you have an untracked privileged operation. This defeats the purpose.
-
-**Do this instead:** Make audit log writes part of the same database transaction as the admin action. If the audit log fails, the admin action should roll back. Use `prisma.$transaction()` to guarantee atomicity.
-
-### Anti-Pattern 5: Using Next.js Middleware for Authorization
-
-**What people do:** Implement role-based route protection in Next.js `middleware.ts` (or `proxy.ts` in v16) by checking JWT/session and redirecting based on roles.
-
-**Why it's wrong:** CVE-2025-29927 demonstrated that Next.js middleware can be bypassed. Middleware runs at the edge and is designed for routing optimizations, not security enforcement. It is an optimization layer, not a security boundary.
-
-**Do this instead:** Use middleware only for routing hints (redirecting unauthenticated users to login). All actual authorization must happen in API route handlers via `requireAuth()` and `requireRole()`. Defense in depth: validate at the data access layer, not the routing layer.
-
-## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| **Anthropic API** | Direct SDK via `@ai-sdk/anthropic` + `@anthropic-ai/sdk` (existing) | API key changes from per-user to per-org platform keys managed by Super Admin. The `anthropic()` provider call must use the org's assigned API key. |
-| **Resend API** | New `lib/email.ts` module wrapping Resend SDK | Used for: invitations, password resets, forced password resets. Use React Email for templates. Estimated volume: very low (< 100 emails/day at target scale). |
-| **MCP Servers** | Existing `lib/mcp-client.ts` (unchanged at protocol level) | Ownership changes: MCP connections move from per-user to per-org, assigned at org-wide or role level by Org Admin. Existing `executeMcpTool()` logic unchanged. |
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **Auth Layer <-> API Routes** | Function call: `requireAuth(req)` returns `AuthContext` | Every API route starts with auth. AuthContext is the single source of truth for "who is this user and what can they do?" |
-| **API Routes <-> Storage Layer** | Function call via `lib/storage.ts` using tenant-scoped client | API routes get tenant-scoped Prisma client from auth context. Storage functions receive this scoped client. |
-| **Chat Route <-> Prompt Stack** | Function call: `buildPromptStack(config)` | Chat route passes org/role/user instructions. Prompt stack builder handles truncation and budget enforcement. Returns assembled system prompt string. |
-| **Chat Route <-> Usage Tracker** | Function call in `onFinish`: `recordUsage()` and pre-check: `checkLimits()` | Limit check happens before streaming starts. Usage recording happens after streaming completes. Both are async but usage check blocks the request. |
-| **Admin Routes <-> Audit Logger** | Function call: `logAuditEvent(entry)` inside `prisma.$transaction()` | Audit log write is transactional with the admin action. Failure in either rolls back both. |
-| **Super Admin Dashboard <-> /api/admin/** | HTTP fetch from client components | Super Admin pages are full-page React components (not modals). Standard fetch pattern with auth token. |
-| **Org Admin Dashboard <-> /api/org/** | HTTP fetch from client components | Org Admin pages follow same pattern. All API responses automatically scoped to the admin's org by auth context. |
-
-## Database Schema Outline
-
-The schema redesign creates these new/modified models (detailed schema in STACK.md but architectural boundaries shown here):
-
-```
-New Models:
-  Organization     - Tenant entity, owns everything
-  OrgMember        - Junction: User <-> Org with role, status, custom instructions
-  Role             - Permission template within an org (system or custom)
-  Invitation       - Pending invitation to join org
-  AuditLog         - Immutable admin action log
-  UsageRecord      - Per-request token consumption
-  PlatformApiKey   - Anthropic API keys managed by Super Admin
-  PasswordPolicy   - Per-org password rules
-
-Modified Models:
-  User             - Add globalRole (SUPER_ADMIN | USER), remove anthropicApiKey
-  Session          - Add deviceInfo for session management UI
-  Conversation     - Add orgId for tenant scoping
-  McpConnection    - Move from per-user to per-org, add roleAssignment
-  Artifact         - Add orgId for tenant scoping
-
-Unchanged Models:
-  Message          - Scoped via Conversation (no direct orgId needed)
-  PasswordResetToken - Unchanged (scoped by email)
-```
-
-### Key Relationships
-
-```
-Organization  1--*  OrgMember
-Organization  1--*  Role
-Organization  1--*  Conversation
-Organization  1--*  McpConnection
-Organization  1--*  Invitation
-Organization  1--*  AuditLog
-Organization  1--*  UsageRecord
-Organization  *--*  PlatformApiKey  (via OrgApiKeyAssignment)
-
-User          1--*  OrgMember       (user can be in multiple orgs)
-User          1--*  Session
-
-OrgMember     *--1  Role
-OrgMember     1--*  Conversation    (via userId + orgId)
-
-Role          1--*  OrgMember
-Role          *--*  McpConnection   (role-level MCP assignments)
-
-Conversation  1--*  Message
-Conversation  1--*  Artifact
-Message       1--*  Artifact
-```
-
-## Build Order (Dependency Graph)
-
-Components must be built in this order due to data and functional dependencies:
-
-```
-Phase 1: Foundation
-  Database Schema + Prisma Models
-       |
-       v
-  Auth Middleware Enhancement (AuthContext)
-       |
-       v
-  Tenant-Scoped Prisma Extension
-       |
-       v
-  Permission Checker (requireRole)
-       |
-       v
-  Seed Script (Super Admin creation)
-
-Phase 2: Organization Core
-  Org Manager (CRUD, soft delete)
-       |
-       v
-  Role Manager (system templates, custom roles)
-       |
-       v
-  Invitation Service + Resend integration
-       |
-       v
-  Audit Logger
-
-Phase 3: Chat Integration
-  Prompt Stack Builder
-       |
-       v
-  Chat Route modifications (org-scoped, role-filtered models, org API key)
-       |
-       v
-  Usage Tracker (recording + limit enforcement)
-       |
-       v
-  MCP connection refactoring (per-org, role-assigned)
-
-Phase 4: Admin Dashboards
-  Shared admin components (data tables, charts)
-       |
-       v
-  Super Admin Dashboard (orgs, API keys, analytics)
-       |
-       +---> Org Admin Dashboard (members, roles, invitations, analytics)
-       |
-       v
-  Audit log viewer (both admin levels)
-
-Phase 5: Polish
-  Session management UI
-  Password policy enforcement
-  Conversation visibility controls
-  Usage limit banners in chat UI
-  Theme/branding propagation
-```
-
-**Build order rationale:**
-
-1. **Schema first** because every other component depends on the data model. The auth middleware enhancement cannot work without OrgMember and Role models.
-2. **Auth + tenant scoping second** because every API route depends on knowing "who is this user, in which org, with what role?"
-3. **Org/Role management before chat** because the chat modifications need org and role data to exist.
-4. **Invitation service before dashboards** because admins need to be able to add users before the dashboards provide UI for it (CLI/seed can bootstrap, but invitation is core).
-5. **Chat integration before dashboards** because the chat route changes are the core value -- the dashboards are management tools around it.
-6. **Dashboards last** because they are read-heavy visualization of data created by earlier phases. They can be built once the data exists.
-7. **Polish last** because session management, password policies, and usage banners are refinements on a working system.
+#### C. Input Validation Hardening
+
+**Where:** Existing pattern -- Zod schemas in `lib/validation.ts` + per-route validation. Add missing schemas.
+
+**Routes needing Zod validation audit:**
+- All `PATCH` routes that accept body JSON
+- File upload routes (size limits already enforced, add content-type validation)
+- MCP connection URLs (validate URL format, block internal IPs)
+
+#### D. CSRF Protection
+
+**Where:** Not needed for bearer-token API. Bearer token in `Authorization` header is inherently CSRF-resistant -- browsers do not auto-attach custom headers in cross-origin requests.
+
+The login form uses `POST` with JSON body + no cookies for auth = no CSRF vector.
+
+### Files Created/Modified
+
+| File | Change |
+|------|--------|
+| `lib/rate-limiter.ts` | **NEW** -- In-memory sliding window rate limiter |
+| `next.config.ts` | Add security headers |
+| `app/api/auth/login/route.ts` | Add rate limiting |
+| `app/api/auth/find-org/route.ts` | Add rate limiting |
+| `app/api/auth/password-reset/route.ts` | Add rate limiting |
+| `app/api/chat/route.ts` | Add rate limiting |
+| `lib/validation.ts` | Add missing Zod schemas |
+
+---
+
+## 8. Suggested Build Order
+
+Based on dependency analysis of the changes above:
+
+### Phase 1: Schema + Prompt Stack (Foundation)
+
+**Why first:** All other features depend on schema being in place.
+
+1. Add schema fields (OrgSettings: `orgRestrictions`, `promptSuggestions`; Role: `restrictions`)
+2. Run `db:push`
+3. Update `composeSystemPrompt()` to 6-layer
+4. Update chat route to pass new fields
+5. Add restriction editor UI (reuse `instruction-editor.tsx`)
+6. Add restriction CRUD API endpoints
+
+**Dependencies downstream:** Prompt suggestions UI, admin page layouts
+
+### Phase 2: Admin UI Overhaul (Sidebar + Layouts)
+
+**Why second:** Structural UI changes that affect all admin pages. Do before adding new content to pages.
+
+1. Refactor `AdminSidebar` with collapse trigger, profile expander, nav changes
+2. Visual cleanup across all admin pages (scrollbars, borders, spacing)
+3. Relayout admin pages as needed
+4. User settings page UI improvements
+
+**Dependencies downstream:** None blocked, but better to have layout stable before adding prompt suggestion editor
+
+### Phase 3: Prompt Suggestions + Login + Chat Welcome
+
+**Why third:** Builds on stable schema (Phase 1) and stable admin layout (Phase 2).
+
+1. Prompt suggestions admin CRUD API
+2. Prompt suggestions editor in Org Admin settings
+3. Chat welcome screen: render suggestions, model icons, side-by-side logos
+4. Login page visual consistency and polish
+
+### Phase 4: Security Hardening
+
+**Why fourth:** Non-breaking additions that wrap existing handlers.
+
+1. Rate limiter utility
+2. Apply rate limits to auth routes and chat
+3. Security headers in next.config.ts
+4. Input validation audit (missing Zod schemas)
+5. Debug log cleanup (remove `console.log` statements in chat route)
+6. Fix remaining TypeScript `as any` casts where possible
+
+### Phase 5: Testing & CI
+
+**Why last:** Tests validate the completed features. Writing tests before features are stable wastes effort on test maintenance.
+
+1. Vitest config + path aliases
+2. Unit tests (prompt sanitizer, system prompt composition, encryption, validation)
+3. Integration tests (auth middleware, tenant isolation, usage limits)
+4. Playwright config
+5. E2E tests (login, chat, admin navigation)
+6. CI pipeline (.github/workflows)
+
+### Phase 6: Functionality Audit
+
+**Why last:** Cross-cutting verification after all features are built.
+
+1. Walk every admin UI control, verify backend responds correctly
+2. Document any broken or unconnected controls
+3. Fix discovered issues
+4. Manual browser testing checklist completion (12 pending from v1.0)
+
+---
+
+## 9. Component Hierarchy Summary
+
+### New Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| (none needed) | -- | All v1.1 features use existing components or modify them |
+
+### Modified Components
+
+| Component | Change |
+|-----------|--------|
+| `components/admin/admin-sidebar.tsx` | Collapse trigger, profile expander, nav restructure |
+| `components/full-chat-app.tsx` | Prompt suggestions rendering, model icons on welcome, logo layout |
+| `components/org-login-page.tsx` | Visual polish |
+| `components/admin/role-form-modal.tsx` | Role restrictions tab |
+
+### New API Routes
+
+| Route | Purpose |
+|-------|---------|
+| `app/api/org/[slug]/admin/settings/prompt-suggestions/route.ts` | Prompt suggestions CRUD |
+
+### Modified API Routes
+
+| Route | Change |
+|-------|--------|
+| `app/api/chat/route.ts` | Pass restriction layers, add rate limiting |
+| `app/api/org/[slug]/models/route.ts` | Include promptSuggestions in response |
+| `app/api/org/[slug]/admin/instructions/route.ts` | Accept/return `orgRestrictions` |
+| `app/api/org/[slug]/admin/roles/[roleId]/instructions/route.ts` | Accept/return `restrictions` |
+| `app/api/auth/login/route.ts` | Add rate limiting |
+| `app/api/auth/find-org/route.ts` | Add rate limiting |
+
+### New Library Files
+
+| File | Purpose |
+|------|---------|
+| `lib/rate-limiter.ts` | In-memory sliding window rate limiter |
+| `vitest.config.ts` | Test configuration |
+| `playwright.config.ts` | E2E test configuration |
+
+---
+
+## 10. Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Next.js Middleware for Auth
+**What:** Moving auth checks from route handlers to `middleware.ts`
+**Why bad:** CVE-2025-29927 demonstrated middleware bypass. The codebase explicitly chose route-handler-level auth.
+**Instead:** Keep `requireAuth/requireOrgAuth/requireSuperAdmin` at handler level. Use `next.config.ts` headers for security headers only.
+
+### Anti-Pattern 2: Separate Sidebar Components per Admin Type
+**What:** Creating `SuperAdminSidebar` and `OrgAdminSidebar` as distinct components
+**Why bad:** Duplicated collapse logic, tooltip logic, footer logic. The existing `variant` prop pattern works.
+**Instead:** Keep single `AdminSidebar` with `variant` prop. Shared collapse behavior.
+
+### Anti-Pattern 3: Prompt Suggestions as a Separate DB Model
+**What:** Creating a `PromptSuggestion` model with id, orgId, title, prompt, sortOrder, etc.
+**Why bad:** Over-engineering for a JSON array. Adds migration, relation, CRUD complexity for 3-8 items per org.
+**Instead:** Json field on OrgSettings. Validate with Zod on save.
+
+### Anti-Pattern 4: Redis for Rate Limiting
+**What:** Adding Redis dependency for rate limiting
+**Why bad:** Over-engineering for 5-20 orgs self-hosted. Adds infrastructure complexity.
+**Instead:** In-memory Map with periodic cleanup. If scaling past ~1000 concurrent users, revisit.
+
+### Anti-Pattern 5: Testing the Chat Route with Real Anthropic API
+**What:** Integration tests that hit the real Anthropic API
+**Why bad:** Slow, costly, flaky, non-deterministic. Streaming makes assertions difficult.
+**Instead:** Mock `streamText` at the Vercel AI SDK level. Test prompt composition and usage tracking separately as unit tests.
+
+---
 
 ## Sources
 
-- [Prisma Multi-Tenancy with Client Extensions](https://dev.to/murilogervasio/how-to-make-multi-tenant-applications-with-nestjs-and-a-prisma-proxy-to-automatically-filter-tenant-queries--4kl2) - MEDIUM confidence
-- [PostgreSQL Row-Level Security for Multi-Tenant Applications](https://www.permit.io/blog/implementing-fine-grained-postgres-permissions-for-multi-tenant-applications) - MEDIUM confidence
-- [Securing Multi-Tenant Applications with RLS in PostgreSQL + Prisma](https://medium.com/@francolabuschagne90/securing-multi-tenant-applications-using-row-level-security-in-postgresql-with-prisma-orm-4237f4d4bd35) - MEDIUM confidence
-- [Multi-Tenancy Implementation with Next.js and Prisma](https://qaffaf.medium.com/implementing-multi-tenancy-in-a-next-js-4f2608633a38) - MEDIUM confidence
-- [CVE-2025-29927: Next.js Middleware Authorization Bypass](https://projectdiscovery.io/blog/nextjs-middleware-authorization-bypass) - HIGH confidence (security advisory)
-- [Next.js Authentication Guide 2026 (WorkOS)](https://workos.com/blog/nextjs-app-router-authentication-guide-2026) - MEDIUM confidence
-- [Immutable Audit Logs in PostgreSQL](https://hoop.dev/blog/immutable-audit-logs-in-postgresql-with-pgcli/) - MEDIUM confidence
-- [Multi-Tenant SaaS Architecture Patterns](https://www.bytebase.com/blog/multi-tenant-database-architecture-patterns-explained/) - MEDIUM confidence
-- [Resend + Next.js Integration](https://resend.com/docs/send-with-nextjs) - HIGH confidence (official docs)
-- [Multi-Tenant AI Agent Architecture](https://brimlabs.ai/blog/how-to-build-scalable-multi-tenant-architectures-for-ai-enabled-saas/) - LOW confidence (single source)
-- [RBAC Design Patterns for PostgreSQL](https://medium.com/@07rohit/designing-a-role-based-access-control-rbac-system-a-scalable-approach-441f05168933) - MEDIUM confidence
-
----
-*Architecture research for: RBAC Multi-Tenant AI Chat SaaS Platform*
-*Researched: 2026-02-26*
+- Direct codebase analysis (HIGH confidence -- all recommendations based on reading actual source files)
+- `components/ui/sidebar.tsx` -- verified collapse infrastructure exists (cookie persistence, icon mode, tooltips)
+- `lib/services/system-prompt-service.ts` -- verified 4-layer composition pattern
+- `prisma/schema.prisma` -- verified OrgSettings and Role models
+- `app/api/chat/route.ts` -- verified prompt assembly integration point
+- `app/api/org/[slug]/admin/settings/login-page/route.ts` -- verified existing login customization API
+- `lib/auth-middleware.ts` -- verified route-handler-level auth pattern
+- `lib/prompt-sanitizer.ts` -- verified sanitization for untrusted layers
