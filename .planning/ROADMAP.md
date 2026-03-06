@@ -49,7 +49,7 @@
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Schema fields, 6-layer prompt composition, restriction CRUD service, API endpoints, chat route wiring
+- [x] 08-01-PLAN.md — Schema fields, 6-layer prompt composition, restriction CRUD service, API endpoints, chat route wiring
 - [ ] 08-02-PLAN.md — Restriction textareas in admin UI (collapsible), Enhance button on all prompt surfaces
 
 ### Phase 9: Admin UI Overhaul
@@ -144,7 +144,7 @@ Plans:
 | 5. Super Admin Dashboard | v1.0 | 11/11 | Complete | 2026-03-04 |
 | 6. Org Admin Dashboard | v1.0 | 8/8 | Complete | 2026-03-05 |
 | 7. Theming, Branding, and Compliance | v1.0 | 7/7 | Complete | 2026-03-05 |
-| 8. Schema & Prompt Stack | v1.1 | 0/2 | Not started | - |
+| 8. Schema & Prompt Stack | v1.1 | 1/2 | In progress | - |
 | 9. Admin UI Overhaul | v1.1 | 0/3 | Not started | - |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 0/3 | Not started | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |

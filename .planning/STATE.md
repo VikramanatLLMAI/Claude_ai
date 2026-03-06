@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
-status: ready_to_plan
+status: executing
 last_updated: "2026-03-06"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 15
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 8 of 13 (Schema & Prompt Stack) — first phase of v1.1
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-06 — Roadmap created for v1.1 Harden & Polish
+Plan: 1 of 2 in current phase
+Status: Executing
+Last activity: 2026-03-06 — Completed 08-01 (schema + prompt stack)
 
-Progress: [||||||||||..............] 62/77 plans (v1.0 complete, v1.1 starting)
+Progress: [|||||||||||.............] 63/77 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -46,6 +46,8 @@ Recent decisions affecting current work:
 
 - v1.1 scope: 56 requirements across 11 categories, 6 phases (8-13)
 - Phase ordering: schema first, then UI, then features, then security, then tests, then audit
+- Character-based validation for restriction fields (not token-based) -- simpler for admins
+- Override-prevention preamble is hardcoded, not admin-editable
 
 ### Pending Todos
 
@@ -60,5 +62,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Roadmap created for v1.1 milestone
-Next step: Plan Phase 8 (Schema & Prompt Stack)
+Stopped at: Completed 08-01-PLAN.md
+Next step: Execute 08-02 (restrictions UI)
