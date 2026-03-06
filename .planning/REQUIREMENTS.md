@@ -20,16 +20,16 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 - [x] **NAV-01**: Org Admin sidebar has profile expander section with Logout, Settings, Admin Console links
 - [x] **NAV-02**: Admin Console has "Back to Chat" button in top-left header area
 - [x] **NAV-03**: Sign Out is removed from Org Admin console (available via chat interface profile)
-- [ ] **NAV-04**: Chat interface profile expander includes "Admin Console" link for org admins
+- [x] **NAV-04**: Chat interface profile expander includes "Admin Console" link for org admins
 
 ### Admin Visual Polish
 
-- [ ] **POLISH-01**: All admin pages have proper scrollbars when content overflows
-- [ ] **POLISH-02**: Unwanted borders, lines, and boxes are removed across all admin pages
-- [ ] **POLISH-03**: Consistent spacing, typography, and visual hierarchy across Super Admin and Org Admin
-- [ ] **POLISH-04**: Admin pages match Vercel-level clean, minimal design aesthetic
-- [ ] **POLISH-05**: Instructions, MCP connections, and Settings pages have improved layouts
-- [ ] **POLISH-06**: All admin data tables, forms, and modals have consistent styling
+- [x] **POLISH-01**: All admin pages have proper scrollbars when content overflows
+- [x] **POLISH-02**: Unwanted borders, lines, and boxes are removed across all admin pages
+- [x] **POLISH-03**: Consistent spacing, typography, and visual hierarchy across Super Admin and Org Admin
+- [x] **POLISH-04**: Admin pages match Vercel-level clean, minimal design aesthetic
+- [x] **POLISH-05**: Instructions, MCP connections, and Settings pages have improved layouts
+- [x] **POLISH-06**: All admin data tables, forms, and modals have consistent styling
 - [x] **POLISH-07**: User settings page has improved UI/UX design
 
 ### Prompt Stack
@@ -152,13 +152,13 @@ Explicitly excluded. Documented to prevent scope creep.
 | NAV-01 | Phase 9 | Complete |
 | NAV-02 | Phase 9 | Complete |
 | NAV-03 | Phase 9 | Complete |
-| NAV-04 | Phase 9 | Pending |
-| POLISH-01 | Phase 9 | Pending |
-| POLISH-02 | Phase 9 | Pending |
-| POLISH-03 | Phase 9 | Pending |
-| POLISH-04 | Phase 9 | Pending |
-| POLISH-05 | Phase 9 | Pending |
-| POLISH-06 | Phase 9 | Pending |
+| NAV-04 | Phase 9 | Complete |
+| POLISH-01 | Phase 9 | Complete |
+| POLISH-02 | Phase 9 | Complete |
+| POLISH-03 | Phase 9 | Complete |
+| POLISH-04 | Phase 9 | Complete |
+| POLISH-05 | Phase 9 | Complete |
+| POLISH-06 | Phase 9 | Complete |
 | POLISH-07 | Phase 9 | Complete |
 | SUGG-01 | Phase 10 | Pending |
 | SUGG-02 | Phase 10 | Pending |
