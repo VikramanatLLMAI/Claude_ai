@@ -42,12 +42,9 @@ import { cn } from "@/lib/utils"
 import { useChat } from "@ai-sdk/react"
 import { type UIMessage, DefaultChatTransport } from "ai"
 import {
-  BookOpen,
   ChevronUp,
-  Code2,
   Copy,
   FolderOpen,
-  Home,
   LogOut,
   MessageSquare,
   MoreHorizontal,
@@ -91,16 +88,9 @@ import { FileCard } from "@/components/prompt-kit/file-card"
 import { ClaudeChatInput, type ClaudeChatInputHandle } from "@/components/ui/claude-style-chat-input"
 import { SettingsModal } from "@/components/settings-modal"
 import { UsageBanner } from "@/components/chat/usage-banner"
+import { WelcomeScreen } from "@/components/chat/welcome-screen"
+import type { PromptSuggestion } from "@/lib/icon-map"
 // Image import removed - welcome state no longer uses logo
-
-// Time-based greeting helper
-function getGreeting(): string {
-  const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return "Good morning"
-  if (hour >= 12 && hour < 17) return "Good afternoon"
-  if (hour >= 17 && hour < 21) return "Good evening"
-  return "Hey there"
-}
 
 // DEPRECATED: Hardcoded CLAUDE_MODELS removed in Phase 3.
 // Models are now fetched dynamically from GET /api/org/[slug]/models.
@@ -670,6 +660,10 @@ function ChatContent({
   onOpenMcpSettings,
   permittedModels,
   orgSlug,
+  orgName,
+  orgLogoBase64,
+  orgLogoDisplayMode,
+  promptSuggestions,
 }: {
   conversationId: string | null
   selectedModel: ClaudeModelId
@@ -679,6 +673,10 @@ function ChatContent({
   onOpenMcpSettings: () => void
   permittedModels: PermittedModel[]
   orgSlug: string | null
+  orgName: string
+  orgLogoBase64: string | null
+  orgLogoDisplayMode: string
+  promptSuggestions: PromptSuggestion[]
 }) {
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [thinkingEnabled, setThinkingEnabled] = useState(false)
@@ -1577,86 +1575,38 @@ function ChatContent({
                   )}
 
                   {isWelcomeVisible ? (
-                    <motion.div
-                      key="welcome"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
-                      transition={{ duration: 0.3 }}
-                      className="flex h-full flex-col items-center justify-center px-6"
-                    >
-                      <div className="w-full max-w-2xl flex flex-col items-center text-center">
-                        {/* Time-based greeting */}
-                        <motion.h1
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.15, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-                          className="text-3xl md:text-4xl font-light text-foreground mb-8"
-                        >
-                          {getGreeting()}, {userName}
-                        </motion.h1>
-
-                        {/* Centered input */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-                          className="w-full mb-5"
-                        >
-                          <ClaudeChatInput
-                            ref={chatInputRef}
-                            onSendMessage={handleSendMessage}
-                            models={permittedModels.map(m => ({ id: m.id, name: m.name, description: m.description || m.generationGroup || "" }))}
-                            defaultModel={selectedModel}
-                            placeholder="How can I help you today?"
-                            isLoading={isLoading}
-                            onStop={stop}
-                            webSearchEnabled={webSearchEnabled}
-                            onWebSearchChange={setWebSearchEnabled}
-                            isThinkingEnabled={thinkingEnabled}
-                            onThinkingChange={setThinkingEnabled}
-                            activeMcpIds={activeMcpIds}
-                            onMcpToggle={(connectionId, isActive) => {
-                              setActiveMcpIds((prev) =>
-                                isActive
-                                  ? [...prev, connectionId]
-                                  : prev.filter((id) => id !== connectionId)
-                              )
-                            }}
-                            McpConnectionsSubmenu={McpConnectionsSubmenu}
-                            onManageConnectors={onOpenMcpSettings}
-                            disabled={usageBlocked}
-                            disabledPlaceholder="Daily usage limit reached. Please wait for the limit to reset."
-                          />
-                        </motion.div>
-
-                        {/* Suggestion chips */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.25, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-                          className="flex flex-wrap justify-center gap-2"
-                        >
-                          {[
-                            { label: "Write", icon: Pencil },
-                            { label: "Learn", icon: BookOpen },
-                            { label: "Code", icon: Code2 },
-                            { label: "Life stuff", icon: Home },
-                          ].map((chip) => (
-                            <button
-                              key={chip.label}
-                              onClick={() => chatInputRef.current?.setMessage(chip.label + ": ")}
-                              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full
-                                         border border-border bg-transparent text-muted-foreground
-                                         hover:bg-muted hover:text-foreground transition-colors"
-                            >
-                              <chip.icon className="size-4" />
-                              {chip.label}
-                            </button>
-                          ))}
-                        </motion.div>
-                      </div>
-                    </motion.div>
+                    <WelcomeScreen
+                      userName={userName}
+                      orgName={orgName}
+                      orgLogoBase64={orgLogoBase64}
+                      orgLogoDisplayMode={orgLogoDisplayMode}
+                      suggestions={promptSuggestions}
+                      chatInputRef={chatInputRef}
+                      chatInputProps={{
+                        onSendMessage: handleSendMessage,
+                        models: permittedModels.map(m => ({ id: m.id, name: m.name, description: m.description || m.generationGroup || "" })),
+                        defaultModel: selectedModel,
+                        placeholder: "How can I help you today?",
+                        isLoading,
+                        onStop: stop,
+                        webSearchEnabled,
+                        onWebSearchChange: setWebSearchEnabled,
+                        isThinkingEnabled: thinkingEnabled,
+                        onThinkingChange: setThinkingEnabled,
+                        activeMcpIds,
+                        onMcpToggle: (connectionId, isActive) => {
+                          setActiveMcpIds((prev) =>
+                            isActive
+                              ? [...prev, connectionId]
+                              : prev.filter((id) => id !== connectionId)
+                          )
+                        },
+                        McpConnectionsSubmenu,
+                        onManageConnectors: onOpenMcpSettings,
+                        disabled: usageBlocked,
+                        disabledPlaceholder: "Daily usage limit reached. Please wait for the limit to reset.",
+                      }}
+                    />
                   ) : (
                     messages.map((message, index) => {
                       const isAssistant = message.role === "assistant"
@@ -2083,8 +2033,10 @@ function FullChatApp() {
   const [permittedModels, setPermittedModels] = useState<PermittedModel[]>([])
   const [isOrgAdmin, setIsOrgAdmin] = useState(false)
   const [orgSlug, setOrgSlug] = useState<string | null>(null)
+  const [orgName, setOrgName] = useState<string>("")
   const [orgLogo, setOrgLogo] = useState<string | null>(null)
   const [orgLogoDisplayMode, setOrgLogoDisplayMode] = useState<string>("PLATFORM_AND_ORG")
+  const [promptSuggestions, setPromptSuggestions] = useState<PromptSuggestion[]>([])
   const router = useRouter()
 
   // Load user name, email, and org context from session on mount
@@ -2097,6 +2049,7 @@ function FullChatApp() {
       const sessionData = localStorage.getItem(AUTH_SESSION_KEY)
       if (sessionData) {
         const session = JSON.parse(sessionData)
+        if (session.organization?.name) setOrgName(session.organization.name)
         if (session.organization?.logoBase64) setOrgLogo(session.organization.logoBase64)
         if (session.organization?.logoDisplayMode) setOrgLogoDisplayMode(session.organization.logoDisplayMode)
       }
@@ -2129,6 +2082,9 @@ function FullChatApp() {
         }
         if (typeof data.isOrgAdmin === "boolean") {
           setIsOrgAdmin(data.isOrgAdmin)
+        }
+        if (Array.isArray(data.promptSuggestions)) {
+          setPromptSuggestions(data.promptSuggestions)
         }
       } catch (error) {
         console.error("[Chat] Error fetching permitted models:", error)
@@ -2280,6 +2236,10 @@ function FullChatApp() {
             onOpenMcpSettings={() => { setSettingsTab("mcp"); setSettingsOpen(true) }}
             permittedModels={permittedModels}
             orgSlug={orgSlug}
+            orgName={orgName}
+            orgLogoBase64={orgLogo}
+            orgLogoDisplayMode={orgLogoDisplayMode}
+            promptSuggestions={promptSuggestions}
           />
         </SidebarInset>
       </SidebarProvider>
