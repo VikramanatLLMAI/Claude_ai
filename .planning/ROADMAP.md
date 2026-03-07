@@ -28,7 +28,7 @@
 **Milestone Goal:** Elevate both admin dashboards and user settings to production-grade SaaS quality with Vercel-level polish, add 6-layer prompt stack with restrictions, prompt suggestions, login customization, and harden with security, testing, and a full functionality audit.
 
 - [x] **Phase 8: Schema & Prompt Stack** - Add restriction layers to the prompt system and schema fields for suggestions (2/2 plans complete)
-- [x] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages (5/5 plans complete)
+- [x] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages (6/6 plans complete)
 - [ ] **Phase 10: Prompt Suggestions, Login Polish & Chat Welcome** - Starter prompts, login customization UI, and welcome screen improvements
 - [ ] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup
 - [ ] **Phase 12: Testing & CI** - Vitest unit tests, Playwright E2E tests, and GitHub Actions pipeline
@@ -62,7 +62,7 @@ Plans:
   3. All admin pages scroll properly when content overflows, with no unwanted borders or visual artifacts
   4. Admin pages have consistent spacing, typography, and visual hierarchy matching a clean minimal design aesthetic
   5. User settings page has improved UI/UX design with consistent styling
-**Plans:** 5 plans
+**Plans:** 6 plans
 
 Plans:
 - [x] 09-01-PLAN.md — Sidebar collapse with icon mode, profile expanders, AdminPageHeader component, layout cleanup
@@ -70,6 +70,7 @@ Plans:
 - [x] 09-03-PLAN.md — Settings modal UI/UX polish across all 8 tabs
 - [x] 09-04-PLAN.md — Fix collapsed sidebar profile menu (popover), footer layout, session lastUsedAt timestamps
 - [x] 09-05-PLAN.md — Settings modal UX improvements (default tab, labels, bulk revoke, unknown device display)
+- [x] 09-06-PLAN.md — Gap closure: session timestamp backfill and null-safe UI fallback
 
 ### Phase 10: Prompt Suggestions, Login Polish & Chat Welcome
 **Goal**: Chat welcome screen shows clickable starter prompts and org branding, and login pages have consistent design with admin-customizable text

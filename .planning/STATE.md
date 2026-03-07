@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: unknown
-last_updated: "2026-03-07T03:21:09.059Z"
+last_updated: "2026-03-07T04:09:03Z"
 progress:
   total_phases: 2
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 8
+  completed_plans: 8
 ---
 
 ---
@@ -61,12 +61,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 9 of 13 (Admin UI Overhaul) -- COMPLETE (gap closure done)
-Plan: 5 of 5 in current phase (phase complete)
-Status: Phase 9 complete (including gap closure plans)
-Last activity: 2026-03-07 — Completed 09-05 (settings modal UX polish)
+Phase: 9 of 13 (Admin UI Overhaul) -- COMPLETE (all gap closure done)
+Plan: 6 of 6 in current phase (phase complete)
+Status: Phase 9 fully complete (including all gap closure plans)
+Last activity: 2026-03-07 — Completed 09-06 (session timestamp backfill)
 
-Progress: [|||||||||||||||.........] 69/77 plans (v1.0 complete, v1.1 in progress)
+Progress: [|||||||||||||||.........] 70/78 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -98,6 +98,8 @@ Recent decisions affecting current work:
 - Settings modal: header bar shows current tab title for orientation
 - Settings modal: default tab is Profile (not General)
 - InstructionEditor label prop made optional for flexible contextual usage
+- Backfill script placed in prisma/ directory (scripts/ is gitignored)
+- Null lastUsedAt sessions show "Since X ago" (createdAt-based) to distinguish from active sessions
 
 ### Pending Todos
 
@@ -112,5 +114,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-07
-Stopped at: Completed 09-05-PLAN.md (settings modal UX polish -- Phase 9 fully complete)
+Stopped at: Completed 09-06-PLAN.md (session timestamp backfill -- Phase 9 fully complete)
 Next step: Plan/execute Phase 10 (Prompt Suggestions, Login Polish & Chat Welcome)
