@@ -99,7 +99,7 @@ Plans:
   3. Semantic-meaning charts (error rates, invitation status) retain fixed hex colors
   4. Shared chart utilities (EmptyState, formatters, color constants) are extracted to chart-utils.tsx
   5. No gradient fills remain -- all area charts use solid fills with low opacity
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 10.1-01-PLAN.md — Create chart.tsx wrapper + chart-utils.tsx utilities, migrate 8 Super Admin charts
@@ -167,7 +167,7 @@ Plans:
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
-| 10.1. Migrate Recharts to shadcn/ui Charts | v1.1 | 0/2 | Not started | - |
+| 10.1. Migrate Recharts to shadcn/ui Charts | 1/2 | In Progress|  | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |
