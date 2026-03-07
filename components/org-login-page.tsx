@@ -195,7 +195,7 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Left Column - Org Branding */}
-      <div className="hidden flex-col justify-between bg-gradient-to-br from-slate-900 to-slate-800 p-10 text-white lg:flex xl:p-14">
+      <div className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex xl:p-14">
         {/* Logo */}
         <div>
           {org.logoDisplayMode === "PLATFORM_AND_ORG" ? (
@@ -209,7 +209,7 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
                 priority
                 unoptimized
               />
-              <div className="h-8 w-px bg-white/20" />
+              <div className="h-8 w-px bg-primary-foreground/20" />
               {org.logoBase64 ? (
                 <img
                   src={org.logoBase64}
@@ -217,7 +217,7 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
                   className="h-[36px] w-auto object-contain"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/10 text-sm font-bold">
                   {initials}
                 </div>
               )}
@@ -231,7 +231,7 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
                   className="h-[50px] w-auto object-contain"
                 />
               ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-xl font-bold text-white">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-foreground/10 text-xl font-bold">
                   {initials}
                 </div>
               )}
@@ -247,13 +247,13 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
 
           {badge && (
             <div className="mt-3">
-              <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-full bg-primary-foreground/10 px-3 py-1 text-xs font-medium backdrop-blur-sm">
                 {badge}
               </span>
             </div>
           )}
 
-          <p className="mt-5 text-sm leading-relaxed text-white/70 xl:text-base">
+          <p className="mt-5 text-sm leading-relaxed text-primary-foreground/70 xl:text-base">
             {description}
           </p>
 
@@ -280,11 +280,11 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
                       transition: { type: "spring", stiffness: 300, damping: 30 },
                     },
                   }}
-                  className="rounded-xl bg-white/10 p-4 backdrop-blur-sm"
+                  className="rounded-xl bg-primary-foreground/10 p-4 backdrop-blur-sm"
                 >
-                  <IconComponent className="mb-2 size-5 text-white/80" />
-                  <p className="text-sm font-medium text-white">{card.title}</p>
-                  <p className="mt-0.5 text-xs text-white/60">{card.subtitle}</p>
+                  <IconComponent className="mb-2 size-5 text-primary-foreground/80" />
+                  <p className="text-sm font-medium">{card.title}</p>
+                  <p className="mt-0.5 text-xs text-primary-foreground/60">{card.subtitle}</p>
                 </motion.div>
               )
             })}
@@ -292,9 +292,9 @@ export function OrgLoginPage({ org, loginBranding }: OrgLoginPageProps) {
         </div>
 
         {/* Footer */}
-        <p className="text-xs text-white/40">
+        <p className="text-xs text-primary-foreground/40">
           Powered by{" "}
-          <Link href="/" className="hover:text-white/60 transition-colors">
+          <Link href="/" className="hover:text-primary-foreground/60 transition-colors">
             LLMatscale.ai
           </Link>
         </p>

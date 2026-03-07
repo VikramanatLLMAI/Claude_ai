@@ -170,7 +170,7 @@ export function FindMyOrg() {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Left Column - Platform Branding */}
-      <div className="hidden flex-col justify-between bg-gradient-to-br from-slate-900 to-slate-800 p-10 text-white lg:flex xl:p-14">
+      <div className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex xl:p-14">
         {/* Logo */}
         <div>
           <Image
@@ -191,12 +191,12 @@ export function FindMyOrg() {
           </h2>
 
           <div className="mt-3">
-            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+            <span className="inline-flex items-center rounded-full bg-primary-foreground/10 px-3 py-1 text-xs font-medium backdrop-blur-sm">
               Powered by Claude
             </span>
           </div>
 
-          <p className="mt-5 text-sm leading-relaxed text-white/70 xl:text-base">
+          <p className="mt-5 text-sm leading-relaxed text-primary-foreground/70 xl:text-base">
             Deploy intelligent AI assistants to your organization with
             enterprise-grade security, role-based access control, and complete
             data isolation.
@@ -225,11 +225,11 @@ export function FindMyOrg() {
                       transition: { type: "spring", stiffness: 300, damping: 30 },
                     },
                   }}
-                  className="rounded-xl bg-white/10 p-4 backdrop-blur-sm"
+                  className="rounded-xl bg-primary-foreground/10 p-4 backdrop-blur-sm"
                 >
-                  <IconComponent className="mb-2 size-5 text-white/80" />
-                  <p className="text-sm font-medium text-white">{card.title}</p>
-                  <p className="mt-0.5 text-xs text-white/60">{card.subtitle}</p>
+                  <IconComponent className="mb-2 size-5 text-primary-foreground/80" />
+                  <p className="text-sm font-medium">{card.title}</p>
+                  <p className="mt-0.5 text-xs text-primary-foreground/60">{card.subtitle}</p>
                 </motion.div>
               )
             })}
@@ -237,7 +237,7 @@ export function FindMyOrg() {
         </div>
 
         {/* Footer */}
-        <p className="text-xs text-white/40">
+        <p className="text-xs text-primary-foreground/40">
           &copy; 2026 LLM at Scale.AI. All Rights Reserved.
         </p>
       </div>

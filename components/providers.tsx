@@ -28,12 +28,15 @@ export function Providers({ children }: ProvidersProps) {
       }
     }
 
-    // Apply saved color theme
-    const savedColorTheme = localStorage.getItem("llmatscale_color_theme")
-    if (savedColorTheme && savedColorTheme !== "claude") {
-      document.documentElement.setAttribute("data-theme", savedColorTheme)
-    } else {
-      document.documentElement.removeAttribute("data-theme")
+    // Apply saved color theme — but NOT on org pages where org theme takes precedence
+    const isOrgPage = window.location.pathname.startsWith("/org/")
+    if (!isOrgPage) {
+      const savedColorTheme = localStorage.getItem("llmatscale_color_theme")
+      if (savedColorTheme && savedColorTheme !== "claude") {
+        document.documentElement.setAttribute("data-theme", savedColorTheme)
+      } else {
+        document.documentElement.removeAttribute("data-theme")
+      }
     }
 
     // Apply saved font size

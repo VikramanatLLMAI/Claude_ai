@@ -217,7 +217,7 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-2 py-3 group-data-[collapsible=icon]:px-2">
+      <SidebarHeader className="border-b border-sidebar-border px-2 h-14 justify-center group-data-[collapsible=icon]:px-2">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <button
             onClick={toggleSidebar}

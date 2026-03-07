@@ -274,29 +274,29 @@ export function BrandingEditor({ orgSlug }: BrandingEditorProps) {
               Live Preview
             </h3>
             <div className="overflow-hidden rounded-xl border border-border shadow-lg">
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white">
+              <div className="bg-primary p-8 text-primary-foreground">
                 {/* Preview Headline */}
                 <h2 className="text-xl font-bold leading-tight">
                   {headline || (
-                    <span className="text-white/30">Your Headline</span>
+                    <span className="opacity-30">Your Headline</span>
                   )}
                 </h2>
 
                 {/* Preview Badge */}
                 {(badge || !headline) && (
                   <div className="mt-2">
-                    <span className="inline-flex items-center rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+                    <span className="inline-flex items-center rounded-full bg-primary-foreground/10 px-2.5 py-0.5 text-[10px] font-medium backdrop-blur-sm">
                       {badge || (
-                        <span className="text-white/30">Badge text</span>
+                        <span className="opacity-30">Badge text</span>
                       )}
                     </span>
                   </div>
                 )}
 
                 {/* Preview Description */}
-                <p className="mt-3 text-xs leading-relaxed text-white/70">
+                <p className="mt-3 text-xs leading-relaxed text-primary-foreground/70">
                   {description || (
-                    <span className="text-white/30">
+                    <span className="opacity-30">
                       Your description will appear here...
                     </span>
                   )}
@@ -310,17 +310,17 @@ export function BrandingEditor({ orgSlug }: BrandingEditorProps) {
                     return (
                       <div
                         key={i}
-                        className="rounded-lg bg-white/10 p-3 backdrop-blur-sm"
+                        className="rounded-lg bg-primary-foreground/10 p-3 backdrop-blur-sm"
                       >
-                        <IconComponent className="mb-1.5 size-4 text-white/80" />
-                        <p className="text-xs font-medium text-white">
+                        <IconComponent className="mb-1.5 size-4 text-primary-foreground/80" />
+                        <p className="text-xs font-medium">
                           {card.title || (
-                            <span className="text-white/30">Card title</span>
+                            <span className="opacity-30">Card title</span>
                           )}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-white/60">
+                        <p className="mt-0.5 text-[10px] text-primary-foreground/60">
                           {card.subtitle || (
-                            <span className={hasContent ? "text-white/30" : "text-white/20"}>
+                            <span className={hasContent ? "opacity-30" : "opacity-20"}>
                               Subtitle
                             </span>
                           )}
