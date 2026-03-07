@@ -1507,7 +1507,7 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
                                         : `${session.browser || "Unknown"} on ${session.os || "Unknown"}`}
                                     </p>
                                     <p className="text-xs text-muted-foreground truncate">
-                                      {session.ipAddress || "Unknown IP"} &middot; {session.isCurrent ? "Active now" : `Active ${getRelativeTime(session.lastUsedAt)}`}
+                                      {session.ipAddress || "Unknown IP"} &middot; {session.isCurrent ? "Active now" : session.lastUsedAt ? `Active ${getRelativeTime(session.lastUsedAt)}` : `Since ${getRelativeTime(session.createdAt)}`}
                                     </p>
                                   </div>
                                 </div>
