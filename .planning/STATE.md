@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 10 of 13 (Prompt Suggestions, Login Polish & Chat Welcome)
-Plan: 1 of 3 in current phase (10-01 complete)
+Plan: 2 of 3 in current phase (10-02 complete)
 Status: Executing Phase 10
-Last activity: 2026-03-07 -- Completed 10-01 (schema + services + API)
+Last activity: 2026-03-07 -- Completed 10-02 (welcome screen + suggestions tab)
 
-Progress: [||||||||||||||||........] 71/78 plans (v1.0 complete, v1.1 in progress)
+Progress: [|||||||||||||||||.......] 72/78 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -63,6 +63,8 @@ Recent decisions affecting current work:
 - Null lastUsedAt sessions show "Since X ago" (createdAt-based) to distinguish from active sessions
 - LoginBranding as separate model from OrgSettings for structured feature card JSON
 - Icon map uses string names for DB storage, resolved to Lucide components at render time
+- WelcomeScreen extracted as standalone component with chatInputProps bag pattern
+- Native HTML select for icon picker in role form (no Select UI component yet)
 
 ### Pending Todos
 
@@ -77,5 +79,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-07
-Stopped at: Completed 10-01-PLAN.md (schema + services + API for prompt suggestions and login branding)
-Next step: Execute Phase 10 Plan 02 (Welcome Screen)
+Stopped at: Completed 10-02-PLAN.md (welcome screen + suggestions tab)
+Next step: Execute Phase 10 Plan 03 (Login Redesign)

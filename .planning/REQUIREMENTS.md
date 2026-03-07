@@ -44,15 +44,15 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 ### Prompt Suggestions
 
 - [x] **SUGG-01**: Org Admin can configure starter prompt suggestions (4-6 items) for chat welcome screen
-- [ ] **SUGG-02**: Chat welcome screen displays clickable prompt suggestion cards
-- [ ] **SUGG-03**: Clicking a suggestion populates the chat input (does not auto-send)
+- [x] **SUGG-02**: Chat welcome screen displays clickable prompt suggestion cards
+- [x] **SUGG-03**: Clicking a suggestion populates the chat input (does not auto-send)
 - [x] **SUGG-04**: Default suggestions shown when org has not configured custom ones
 
 ### Chat Welcome Screen
 
-- [ ] **WELCOME-01**: Welcome screen is extracted into a separate component from full-chat-app.tsx
-- [ ] **WELCOME-02**: Model icons moved from chat sidebar to welcome screen (above greeting)
-- [ ] **WELCOME-03**: Welcome screen shows org + platform logos side-by-side based on logoDisplayMode
+- [x] **WELCOME-01**: Welcome screen is extracted into a separate component from full-chat-app.tsx
+- [x] **WELCOME-02**: Model icons moved from chat sidebar to welcome screen (above greeting)
+- [x] **WELCOME-03**: Welcome screen shows org + platform logos side-by-side based on logoDisplayMode
 
 ### Login & Branding
 
@@ -161,12 +161,12 @@ Explicitly excluded. Documented to prevent scope creep.
 | POLISH-06 | Phase 9 | Complete |
 | POLISH-07 | Phase 9 | Complete |
 | SUGG-01 | Phase 10 | Complete |
-| SUGG-02 | Phase 10 | Pending |
-| SUGG-03 | Phase 10 | Pending |
+| SUGG-02 | Phase 10 | Complete |
+| SUGG-03 | Phase 10 | Complete |
 | SUGG-04 | Phase 10 | Complete |
-| WELCOME-01 | Phase 10 | Pending |
-| WELCOME-02 | Phase 10 | Pending |
-| WELCOME-03 | Phase 10 | Pending |
+| WELCOME-01 | Phase 10 | Complete |
+| WELCOME-02 | Phase 10 | Complete |
+| WELCOME-03 | Phase 10 | Complete |
 | LOGIN-01 | Phase 10 | Pending |
 | LOGIN-02 | Phase 10 | Complete |
 | LOGIN-03 | Phase 10 | Complete |
