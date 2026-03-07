@@ -418,6 +418,14 @@ export async function requireSuperAdmin(
     );
   }
 
+  // Fire-and-forget: update session lastUsedAt for accurate session timestamps
+  if (auth.sessionId) {
+    prisma.session.update({
+      where: { id: auth.sessionId },
+      data: { lastUsedAt: new Date() },
+    }).catch(() => {});
+  }
+
   return {
     user: auth.user as User & { isSuperAdmin: true },
   };
