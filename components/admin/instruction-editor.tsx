@@ -16,7 +16,7 @@ interface InstructionEditorProps {
   onSave?: () => void
   saving?: boolean
   maxTokens: number
-  label: string
+  label?: string
   description?: string
   placeholder?: string
   disabled?: boolean
@@ -102,7 +102,7 @@ export function InstructionEditor({
   return (
     <div className="space-y-2" ref={containerRef}>
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-foreground">{label}</label>
+        {label && <label className="text-sm font-medium text-foreground">{label}</label>}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

@@ -54,7 +54,7 @@ const SETTINGS_TABS: { id: SettingsTab; label: string; icon: React.ElementType }
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "api-keys", label: "API Keys", icon: Key },
   { id: "mcp", label: "MCP", icon: Plug },
-  { id: "instructions", label: "Instructions Tuning", icon: SlidersHorizontal },
+  { id: "instructions", label: "Instructions", icon: SlidersHorizontal },
   { id: "sessions", label: "Sessions", icon: Monitor },
   { id: "advanced", label: "Advanced", icon: Sliders },
 ]
@@ -75,7 +75,7 @@ interface SettingsModalProps {
   orgSlug?: string | null
 }
 
-export function SettingsModal({ open, onClose, defaultTab = "general", currentModel, onDefaultModelChange, permittedModels, orgSlug }: SettingsModalProps) {
+export function SettingsModal({ open, onClose, defaultTab = "profile", currentModel, onDefaultModelChange, permittedModels, orgSlug }: SettingsModalProps) {
   // Use permitted models from API if available, otherwise fallback
   const CLAUDE_MODELS = (permittedModels && permittedModels.length > 0) ? permittedModels : FALLBACK_MODELS
   const [activeTab, setActiveTab] = useState<SettingsTab>(defaultTab)
@@ -168,6 +168,7 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
   const [sessionsLoading, setSessionsLoading] = useState(false)
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null)
   const [sessionConfirmId, setSessionConfirmId] = useState<string | null>(null)
+  const [revokingAll, setRevokingAll] = useState(false)
 
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem(AUTH_TOKEN_KEY) || ""
@@ -442,6 +443,27 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
     } finally {
       setRevokingSessionId(null)
       setSessionConfirmId(null)
+    }
+  }
+
+  const handleRevokeAllOtherSessions = async () => {
+    const otherSessions = sessions.filter(s => !s.isCurrent)
+    if (otherSessions.length === 0 || !orgSlug) return
+    setRevokingAll(true)
+    try {
+      await Promise.all(
+        otherSessions.map(s =>
+          fetch(`/api/org/${orgSlug}/sessions/${s.id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          })
+        )
+      )
+      setSessions(prev => prev.filter(s => s.isCurrent))
+    } catch (error) {
+      console.error("Error revoking sessions:", error)
+    } finally {
+      setRevokingAll(false)
     }
   }
 
@@ -1265,6 +1287,14 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                       </Button>
                     </div>
                   </div>
+
+                  <Separator />
+
+                  <div className="rounded-md border border-border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Your API key is encrypted and stored securely. It is used when your organization does not have a platform-assigned API key.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -1350,8 +1380,6 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                           value={customInstructions}
                           onChange={setCustomInstructions}
                           maxTokens={200}
-                          label="Custom Instructions"
-                          description="Personalize how the AI responds to you. These instructions are added to every conversation."
                           disabled={!instructionsEnabled}
                           disabledMessage="Custom instructions disabled by your admin."
                         />
@@ -1399,11 +1427,31 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
               {/* SESSIONS TAB */}
               {activeTab === "sessions" && (
                 <div className="space-y-6">
-                  <div className="space-y-0.5">
-                    <h4 className="text-sm font-medium text-foreground">Active Sessions</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Manage your active sessions across devices.
-                    </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <h4 className="text-sm font-medium text-foreground">Active Sessions</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Manage your active sessions across devices.
+                      </p>
+                    </div>
+                    {orgSlug && sessions.filter(s => !s.isCurrent).length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive shrink-0"
+                        onClick={handleRevokeAllOtherSessions}
+                        disabled={revokingAll}
+                      >
+                        {revokingAll ? (
+                          <>
+                            <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                            Revoking...
+                          </>
+                        ) : (
+                          "Revoke All Others"
+                        )}
+                      </Button>
+                    )}
                   </div>
 
                   {!orgSlug ? (
@@ -1454,7 +1502,9 @@ export function SettingsModal({ open, onClose, defaultTab = "general", currentMo
                                   </div>
                                   <div className="min-w-0">
                                     <p className="text-sm font-medium text-foreground truncate">
-                                      {session.browser} on {session.os}
+                                      {session.browser === "Unknown" && session.os === "Unknown"
+                                        ? "Unknown Device"
+                                        : `${session.browser || "Unknown"} on ${session.os || "Unknown"}`}
                                     </p>
                                     <p className="text-xs text-muted-foreground truncate">
                                       {session.ipAddress || "Unknown IP"} &middot; {session.isCurrent ? "Active now" : `Active ${getRelativeTime(session.lastUsedAt)}`}
