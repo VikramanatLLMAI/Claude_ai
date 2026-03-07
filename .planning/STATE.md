@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-last_updated: "2026-03-07T08:07:00Z"
+last_updated: "2026-03-07T09:00:00Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 11
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 10 - Prompt Suggestions, Login Polish & Chat Welcome
+**Current focus:** Phase 10 complete -- ready for Phase 11
 
 ## Current Position
 
-Phase: 10 of 13 (Prompt Suggestions, Login Polish & Chat Welcome)
-Plan: 2 of 3 in current phase (10-02 complete)
-Status: Executing Phase 10
-Last activity: 2026-03-07 -- Completed 10-02 (welcome screen + suggestions tab)
+Phase: 10 of 13 (Prompt Suggestions, Login Polish & Chat Welcome) -- COMPLETE
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 10 complete
+Last activity: 2026-03-07 -- Completed 10-03 (login redesign + branding editor)
 
-Progress: [|||||||||||||||||.......] 72/78 plans (v1.0 complete, v1.1 in progress)
+Progress: [||||||||||||||||||||||||] 75/78 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -65,6 +65,8 @@ Recent decisions affecting current work:
 - Icon map uses string names for DB storage, resolved to Lucide components at render time
 - WelcomeScreen extracted as standalone component with chatInputProps bag pattern
 - Native HTML select for icon picker in role form (no Select UI component yet)
+- Two-column login layout: left branding panel (hidden on mobile), right form panel
+- Live preview editor pattern for branding admin page
 
 ### Pending Todos
 
@@ -72,12 +74,11 @@ None.
 
 ### Blockers/Concerns
 
-- full-chat-app.tsx (99KB) is fragile -- extract welcome screen before modifying (Phase 10)
 - CSP headers may break Sandpack/Mermaid/KaTeX -- add incrementally with testing (Phase 11)
 - Prompt restriction layers need adversarial testing to verify override-prevention (Phase 8)
 
 ## Session Continuity
 
 Last session: 2026-03-07
-Stopped at: Completed 10-02-PLAN.md (welcome screen + suggestions tab)
-Next step: Execute Phase 10 Plan 03 (Login Redesign)
+Stopped at: Completed 10-03-PLAN.md (login redesign + branding editor)
+Next step: Execute Phase 11 (Security & Headers)

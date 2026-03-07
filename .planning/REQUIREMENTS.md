@@ -56,10 +56,10 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 ### Login & Branding
 
-- [ ] **LOGIN-01**: All login pages (bare domain, org login) use consistent visual design (port 3000 reference style)
+- [x] **LOGIN-01**: All login pages (bare domain, org login) use consistent visual design (port 3000 reference style)
 - [x] **LOGIN-02**: Org Admin can customize login page tagline via admin settings
 - [x] **LOGIN-03**: Org Admin can customize login page welcome/description text via admin settings
-- [ ] **LOGIN-04**: Login page customization has live preview in admin UI
+- [x] **LOGIN-04**: Login page customization has live preview in admin UI
 
 ### Security Hardening
 
@@ -167,10 +167,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | WELCOME-01 | Phase 10 | Complete |
 | WELCOME-02 | Phase 10 | Complete |
 | WELCOME-03 | Phase 10 | Complete |
-| LOGIN-01 | Phase 10 | Pending |
+| LOGIN-01 | Phase 10 | Complete |
 | LOGIN-02 | Phase 10 | Complete |
 | LOGIN-03 | Phase 10 | Complete |
-| LOGIN-04 | Phase 10 | Pending |
+| LOGIN-04 | Phase 10 | Complete |
 | SEC-01 | Phase 11 | Pending |
 | SEC-02 | Phase 11 | Pending |
 | SEC-03 | Phase 11 | Pending |
