@@ -5,12 +5,8 @@
 /**
  * Analytics Chart Components for Super Admin Dashboard
  *
- * All chart components use recharts v3.7.0 (already installed).
+ * All chart components use shadcn/ui Chart wrappers over recharts v3.7.0.
  * PeakUsageHeatmap uses a custom CSS grid (no native heatmap in Recharts).
- *
- * Note: Recharts v3 has strict TypeScript types for Tooltip formatters/labelFormatters.
- * We use `as any` casts on those props to stay compatible with both the type-checker
- * and the runtime API. This is the established pattern for recharts v3 + React 19.
  *
  * Exports:
  * - UsageTrendChart: Stacked area chart for daily token usage (SANA-05)
@@ -31,58 +27,20 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-// ============================================
-// Color Palette
-// ============================================
-
-const CHART_COLORS = [
-  "#3b82f6", // blue-500
-  "#10b981", // emerald-500
-  "#8b5cf6", // violet-500
-  "#f59e0b", // amber-500
-  "#ef4444", // red-500
-  "#06b6d4", // cyan-500
-  "#ec4899", // pink-500
-  "#84cc16", // lime-500
-  "#f97316", // orange-500
-  "#6366f1", // indigo-500
-]
-
-const ERROR_COLORS: Record<string, string> = {
-  rate_limit: "#ef4444",
-  context_length: "#f59e0b",
-  api_error: "#8b5cf6",
-  timeout: "#06b6d4",
-  other: "#94a3b8",
-}
-
-// ============================================
-// Formatters
-// ============================================
-
-function formatTokens(value: number): string {
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return String(value)
-}
-
-function formatDate(date: string): string {
-  return new Date(date + "T00:00:00").toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })
-}
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
+import { EmptyState, formatTokens, formatDate, ERROR_COLORS } from "@/components/admin/chart-utils"
 
 // ============================================
 // Types (matching platform-analytics-service)
@@ -154,6 +112,21 @@ export interface FeatureAdoptionItem {
 // UsageTrendChart (SANA-05)
 // ============================================
 
+const usageTrendConfig = {
+  inputTokens: {
+    label: "Input",
+    color: "var(--chart-1)",
+  },
+  outputTokens: {
+    label: "Output",
+    color: "var(--chart-2)",
+  },
+  thinkingTokens: {
+    label: "Thinking",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig
+
 interface UsageTrendChartProps {
   data: UsageTrendPoint[]
 }
@@ -168,28 +141,15 @@ export function UsageTrendChart({ data }: UsageTrendChartProps) {
         {data.length === 0 ? (
           <EmptyState message="No usage data in this period" />
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-              <defs>
-                <linearGradient id="inputGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="outputGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="thinkingGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+          <ChartContainer config={usageTrendConfig} className="min-h-[300px] w-full">
+            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
                 tick={{ fontSize: 11 }}
                 tickLine={false}
+                axisLine={false}
               />
               <YAxis
                 tickFormatter={formatTokens}
@@ -197,52 +157,37 @@ export function UsageTrendChart({ data }: UsageTrendChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip
-                formatter={((value: number, name: string) => [
-                  formatTokens(value),
-                  name === "inputTokens"
-                    ? "Input"
-                    : name === "outputTokens"
-                    ? "Output"
-                    : "Thinking",
-                ]) as any}
-                labelFormatter={((label: string) => formatDate(label)) as any}
-              />
-              <Legend
-                formatter={(value: string) =>
-                  value === "inputTokens"
-                    ? "Input"
-                    : value === "outputTokens"
-                    ? "Output"
-                    : "Thinking"
-                }
-              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
               <Area
                 type="monotone"
                 dataKey="inputTokens"
                 stackId="1"
-                stroke="#3b82f6"
-                fill="url(#inputGrad)"
+                fill="var(--color-inputTokens)"
+                fillOpacity={0.2}
+                stroke="var(--color-inputTokens)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
                 dataKey="outputTokens"
                 stackId="1"
-                stroke="#10b981"
-                fill="url(#outputGrad)"
+                fill="var(--color-outputTokens)"
+                fillOpacity={0.2}
+                stroke="var(--color-outputTokens)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
                 dataKey="thinkingTokens"
                 stackId="1"
-                stroke="#8b5cf6"
-                fill="url(#thinkingGrad)"
+                fill="var(--color-thinkingTokens)"
+                fillOpacity={0.2}
+                stroke="var(--color-thinkingTokens)"
                 strokeWidth={2}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -272,6 +217,15 @@ export function TokensByOrgChart({ data }: TokensByOrgChartProps) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, orgTokens]) => ({ date, ...orgTokens }))
 
+  // Build dynamic ChartConfig from org names
+  const chartVars = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
+  const chartConfig: ChartConfig = Object.fromEntries(
+    orgNames.map((name, i) => [
+      name,
+      { label: name, color: chartVars[i % chartVars.length] },
+    ])
+  )
+
   return (
     <Card>
       <CardHeader>
@@ -281,14 +235,15 @@ export function TokensByOrgChart({ data }: TokensByOrgChartProps) {
         {chartData.length === 0 ? (
           <EmptyState message="No token data in this period" />
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+            <AreaChart data={chartData} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
                 tick={{ fontSize: 11 }}
                 tickLine={false}
+                axisLine={false}
               />
               <YAxis
                 tickFormatter={formatTokens}
@@ -296,25 +251,22 @@ export function TokensByOrgChart({ data }: TokensByOrgChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip
-                formatter={((value: number, name: string) => [formatTokens(value), name]) as any}
-                labelFormatter={((label: string) => formatDate(label)) as any}
-              />
-              <Legend />
-              {orgNames.map((orgName, i) => (
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {orgNames.map((orgName) => (
                 <Area
                   key={orgName}
                   type="monotone"
                   dataKey={orgName}
                   stackId="1"
-                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
-                  fill={CHART_COLORS[i % CHART_COLORS.length]}
+                  fill={`var(--color-${orgName})`}
                   fillOpacity={0.2}
+                  stroke={`var(--color-${orgName})`}
                   strokeWidth={2}
                 />
               ))}
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -325,6 +277,13 @@ export function TokensByOrgChart({ data }: TokensByOrgChartProps) {
 // TopOrgsChart (SANA-06)
 // ============================================
 
+const topOrgsConfig = {
+  tokens: {
+    label: "Tokens",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig
+
 interface TopOrgsChartProps {
   data: TopOrgUsage[]
 }
@@ -333,7 +292,7 @@ export function TopOrgsChart({ data }: TopOrgsChartProps) {
   const chartData = [...data]
     .sort((a, b) => a.totalTokens - b.totalTokens)
     .map((d) => ({
-      name: d.name.length > 20 ? d.name.slice(0, 20) + "…" : d.name,
+      name: d.name.length > 20 ? d.name.slice(0, 20) + "\u2026" : d.name,
       tokens: d.totalTokens,
       messages: d.totalMessages,
     }))
@@ -347,14 +306,19 @@ export function TopOrgsChart({ data }: TopOrgsChartProps) {
         {data.length === 0 ? (
           <EmptyState message="No usage data in this period" />
         ) : (
-          <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 40)}>
+          <ChartContainer
+            config={topOrgsConfig}
+            className="min-h-[200px] w-full"
+            style={{ height: Math.max(200, chartData.length * 40) }}
+          >
             <BarChart
               data={chartData}
               layout="vertical"
+              accessibilityLayer
               margin={{ top: 4, right: 80, bottom: 0, left: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border/50" />
-              <XAxis type="number" tickFormatter={formatTokens} tick={{ fontSize: 11 }} tickLine={false} />
+              <CartesianGrid horizontal={false} />
+              <XAxis type="number" tickFormatter={formatTokens} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis
                 type="category"
                 dataKey="name"
@@ -363,12 +327,15 @@ export function TopOrgsChart({ data }: TopOrgsChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip
-                formatter={((value: number) => [formatTokens(value), "Tokens"]) as any}
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="tokens"
+                fill="var(--color-tokens)"
+                radius={[0, 4, 4, 0]}
+                label={{ position: "right", formatter: (v: number) => formatTokens(v), fontSize: 11 } as any}
               />
-              <Bar dataKey="tokens" fill="#3b82f6" radius={[0, 4, 4, 0]} label={{ position: "right", formatter: (v: number) => formatTokens(v), fontSize: 11 } as any} />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -379,46 +346,24 @@ export function TopOrgsChart({ data }: TopOrgsChartProps) {
 // ErrorRateChart (SANA-07)
 // ============================================
 
+const errorChartConfig = {
+  rate_limit: { label: "Rate Limit", color: ERROR_COLORS.rate_limit },
+  context_length: { label: "Context Length", color: ERROR_COLORS.context_length },
+  api_error: { label: "API Error", color: ERROR_COLORS.api_error },
+  timeout: { label: "Timeout", color: ERROR_COLORS.timeout },
+  other: { label: "Other", color: ERROR_COLORS.other },
+} satisfies ChartConfig
+
 interface ErrorRateChartProps {
   data: ErrorRateItem[]
 }
 
-const RADIAN = Math.PI / 180
-function renderCustomLabel({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-}: {
-  cx: number
-  cy: number
-  midAngle: number
-  innerRadius: number
-  outerRadius: number
-  percent: number
-}) {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
-  if (percent < 0.05) return null
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor="middle"
-      dominantBaseline="central"
-      fontSize={12}
-      fontWeight={600}
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  )
-}
-
 export function ErrorRateChart({ data }: ErrorRateChartProps) {
+  const chartData = data.map((item) => ({
+    ...item,
+    fill: `var(--color-${item.type})`,
+  }))
+
   return (
     <Card>
       <CardHeader>
@@ -428,30 +373,21 @@ export function ErrorRateChart({ data }: ErrorRateChartProps) {
         {data.length === 0 ? (
           <EmptyState message="No errors recorded in this period" icon="check" />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
+          <ChartContainer config={errorChartConfig} className="min-h-[260px] w-full">
+            <PieChart accessibilityLayer>
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Pie
-                data={data}
+                data={chartData}
                 dataKey="count"
                 nameKey="type"
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
                 outerRadius={100}
-                labelLine={false}
-                label={renderCustomLabel as any}
-              >
-                {data.map((entry, i) => (
-                  <Cell
-                    key={entry.type}
-                    fill={ERROR_COLORS[entry.type] ?? CHART_COLORS[i % CHART_COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={((value: number, name: string) => [value, name]) as any} />
-              <Legend />
+              />
+              <ChartLegend content={<ChartLegendContent nameKey="type" />} />
             </PieChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -521,7 +457,7 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
                         style={{
                           backgroundColor: `rgba(34, 197, 94, ${alpha})`,
                         }}
-                        title={`${DAY_LABELS[dayIndex]} ${hour}:00 — ${count} requests`}
+                        title={`${DAY_LABELS[dayIndex]} ${hour}:00 -- ${count} requests`}
                       />
                     )
                   })}
@@ -552,6 +488,13 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
 // ApiKeyConsumptionChart (SANA-09)
 // ============================================
 
+const apiKeyConfig = {
+  tokens: {
+    label: "Tokens",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig
+
 interface ApiKeyConsumptionChartProps {
   data: ApiKeyConsumptionItem[]
 }
@@ -561,7 +504,7 @@ export function ApiKeyConsumptionChart({ data }: ApiKeyConsumptionChartProps) {
     .sort((a, b) => b.totalTokens - a.totalTokens)
     .map((d) => ({
       name:
-        d.keyName.length > 18 ? d.keyName.slice(0, 18) + "…" : d.keyName,
+        d.keyName.length > 18 ? d.keyName.slice(0, 18) + "\u2026" : d.keyName,
       org: d.orgName ?? "Unassigned",
       tokens: d.totalTokens,
       requests: d.totalRequests,
@@ -576,14 +519,19 @@ export function ApiKeyConsumptionChart({ data }: ApiKeyConsumptionChartProps) {
         {chartData.every((d) => d.tokens === 0) ? (
           <EmptyState message="No API key usage data in this period" />
         ) : (
-          <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 44)}>
+          <ChartContainer
+            config={apiKeyConfig}
+            className="min-h-[200px] w-full"
+            style={{ height: Math.max(200, chartData.length * 44) }}
+          >
             <BarChart
               data={chartData}
               layout="vertical"
+              accessibilityLayer
               margin={{ top: 4, right: 80, bottom: 0, left: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border/50" />
-              <XAxis type="number" tickFormatter={formatTokens} tick={{ fontSize: 11 }} tickLine={false} />
+              <CartesianGrid horizontal={false} />
+              <XAxis type="number" tickFormatter={formatTokens} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis
                 type="category"
                 dataKey="name"
@@ -592,15 +540,15 @@ export function ApiKeyConsumptionChart({ data }: ApiKeyConsumptionChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip
-                formatter={((value: number, field: string) => [
-                  field === "tokens" ? formatTokens(value) : value,
-                  field === "tokens" ? "Tokens" : "Requests",
-                ]) as any}
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="tokens"
+                fill="var(--color-tokens)"
+                radius={[0, 4, 4, 0]}
+                label={{ position: "right", formatter: (v: number) => formatTokens(v), fontSize: 11 } as any}
               />
-              <Bar dataKey="tokens" fill="#6366f1" radius={[0, 4, 4, 0]} label={{ position: "right", formatter: (v: number) => formatTokens(v), fontSize: 11 } as any} />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -610,6 +558,13 @@ export function ApiKeyConsumptionChart({ data }: ApiKeyConsumptionChartProps) {
 // ============================================
 // McpUsageChart (SANA-10)
 // ============================================
+
+const mcpUsageConfig = {
+  toolInvocations: {
+    label: "Invocations",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig
 
 interface McpUsageChartProps {
   data: McpUsageTrendPoint[]
@@ -625,35 +580,28 @@ export function McpUsageChart({ data }: McpUsageChartProps) {
         {data.length === 0 ? (
           <EmptyState message="No MCP tool usage in this period" />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-              <defs>
-                <linearGradient id="mcpGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+          <ChartContainer config={mcpUsageConfig} className="min-h-[260px] w-full">
+            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
                 tick={{ fontSize: 11 }}
                 tickLine={false}
+                axisLine={false}
               />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip
-                formatter={((value: number) => [value, "Tool Invocations"]) as any}
-                labelFormatter={((label: string) => formatDate(label)) as any}
-              />
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Area
                 type="monotone"
                 dataKey="toolInvocations"
-                stroke="#06b6d4"
-                fill="url(#mcpGrad)"
+                fill="var(--color-toolInvocations)"
+                fillOpacity={0.2}
+                stroke="var(--color-toolInvocations)"
                 strokeWidth={2}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -663,6 +611,17 @@ export function McpUsageChart({ data }: McpUsageChartProps) {
 // ============================================
 // RegistrationTrendChart (SANA-11)
 // ============================================
+
+const registrationConfig = {
+  newOrgs: {
+    label: "New Organizations",
+    color: "var(--chart-1)",
+  },
+  newUsers: {
+    label: "New Users",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig
 
 interface RegistrationTrendChartProps {
   data: RegistrationTrendPoint[]
@@ -678,54 +637,37 @@ export function RegistrationTrendChart({ data }: RegistrationTrendChartProps) {
         {data.length === 0 ? (
           <EmptyState message="No new registrations in this period" />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
-              <defs>
-                <linearGradient id="orgRegGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="userRegGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+          <ChartContainer config={registrationConfig} className="min-h-[260px] w-full">
+            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
                 tick={{ fontSize: 11 }}
                 tickLine={false}
+                axisLine={false}
               />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
-              <Tooltip
-                formatter={((value: number, name: string) => [
-                  value,
-                  name === "newOrgs" ? "New Orgs" : "New Users",
-                ]) as any}
-                labelFormatter={((label: string) => formatDate(label)) as any}
-              />
-              <Legend
-                formatter={(value: string) =>
-                  value === "newOrgs" ? "New Organizations" : "New Users"
-                }
-              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
               <Area
                 type="monotone"
                 dataKey="newOrgs"
-                stroke="#3b82f6"
-                fill="url(#orgRegGrad)"
+                fill="var(--color-newOrgs)"
+                fillOpacity={0.2}
+                stroke="var(--color-newOrgs)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
                 dataKey="newUsers"
-                stroke="#10b981"
-                fill="url(#userRegGrad)"
+                fill="var(--color-newUsers)"
+                fillOpacity={0.2}
+                stroke="var(--color-newUsers)"
                 strokeWidth={2}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -735,6 +677,13 @@ export function RegistrationTrendChart({ data }: RegistrationTrendChartProps) {
 // ============================================
 // FeatureAdoptionChart (SANA-12)
 // ============================================
+
+const featureAdoptionConfig = {
+  percentage: {
+    label: "Adoption",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig
 
 interface FeatureAdoptionChartProps {
   data: FeatureAdoptionItem[]
@@ -752,19 +701,25 @@ export function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps) {
         {data.length === 0 ? (
           <EmptyState message="No feature adoption data available" />
         ) : (
-          <ResponsiveContainer width="100%" height={Math.max(180, chartData.length * 48)}>
+          <ChartContainer
+            config={featureAdoptionConfig}
+            className="min-h-[180px] w-full"
+            style={{ height: Math.max(180, chartData.length * 48) }}
+          >
             <BarChart
               data={chartData}
               layout="vertical"
+              accessibilityLayer
               margin={{ top: 4, right: 80, bottom: 0, left: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border/50" />
+              <CartesianGrid horizontal={false} />
               <XAxis
                 type="number"
                 domain={[0, 100]}
                 tickFormatter={(v: number) => `${v}%`}
                 tick={{ fontSize: 11 }}
                 tickLine={false}
+                axisLine={false}
               />
               <YAxis
                 type="category"
@@ -774,69 +729,17 @@ export function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <Tooltip
-                formatter={((value: number, _name: string, item: any) => [
-                  `${value}% (${item?.payload?.orgCount ?? 0} orgs)`,
-                  "Adoption",
-                ]) as any}
-              />
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Bar
                 dataKey="percentage"
-                fill="#10b981"
+                fill="var(--color-percentage)"
                 radius={[0, 4, 4, 0]}
                 label={{ position: "right", formatter: (v: number) => `${v}%`, fontSize: 11 } as any}
               />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
-  )
-}
-
-// ============================================
-// Shared Empty State
-// ============================================
-
-function EmptyState({
-  message,
-  icon = "chart",
-}: {
-  message: string
-  icon?: "chart" | "check"
-}) {
-  return (
-    <div className="flex h-48 flex-col items-center justify-center gap-2 text-muted-foreground">
-      {icon === "check" ? (
-        <svg
-          className="h-10 w-10 text-emerald-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ) : (
-        <svg
-          className="h-10 w-10"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
-      )}
-      <p className="text-sm">{message}</p>
-    </div>
   )
 }
