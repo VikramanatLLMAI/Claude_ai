@@ -34,7 +34,7 @@ progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 15
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -44,16 +44,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 9 - Admin UI Overhaul
+**Current focus:** Phase 9 - Admin UI Overhaul (gap closure)
 
 ## Current Position
 
-Phase: 9 of 13 (Admin UI Overhaul) -- COMPLETE
-Plan: 3 of 3 in current phase (phase complete)
-Status: Phase 9 complete
-Last activity: 2026-03-06 — Completed 09-02 (admin page visual polish)
+Phase: 9 of 13 (Admin UI Overhaul) -- COMPLETE (gap closure done)
+Plan: 5 of 5 in current phase (phase complete)
+Status: Phase 9 complete (including gap closure plans)
+Last activity: 2026-03-07 — Completed 09-05 (settings modal UX polish)
 
-Progress: [||||||||||||||..........] 67/77 plans (v1.0 complete, v1.1 in progress)
+Progress: [|||||||||||||||.........] 69/77 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -77,11 +77,14 @@ Recent decisions affecting current work:
 - Enhance button uses Haiku 4.5 with maxOutputTokens (AI SDK v6 naming)
 - Restriction textareas use raw textarea with character count (not InstructionEditor with token count)
 - ChevronLeft icon for sidebar collapse trigger (not PanelLeft from SidebarTrigger)
-- Profile expander uses Radix Collapsible inside SidebarMenu for consistent styling
+- Profile expander uses Radix Collapsible (expanded) or DropdownMenu (collapsed) in SidebarMenu
+- Avatar initial uses name > email > "?" fallback chain (not hardcoded role letters)
 - AdminBreadcrumb removed -- replaced by AdminPageHeader per page
 - Settings modal: h4 text-sm font-medium headings (not uppercase tracking-wider)
 - Settings modal: Label + Separator components for consistent form patterns
 - Settings modal: header bar shows current tab title for orientation
+- Settings modal: default tab is Profile (not General)
+- InstructionEditor label prop made optional for flexible contextual usage
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Completed 09-02-PLAN.md (admin page visual polish — Phase 9 complete)
+Last session: 2026-03-07
+Stopped at: Completed 09-05-PLAN.md (settings modal UX polish -- Phase 9 fully complete)
 Next step: Plan/execute Phase 10 (Prompt Suggestions, Login Polish & Chat Welcome)
