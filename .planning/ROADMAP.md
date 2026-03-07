@@ -28,7 +28,7 @@
 **Milestone Goal:** Elevate both admin dashboards and user settings to production-grade SaaS quality with Vercel-level polish, add 6-layer prompt stack with restrictions, prompt suggestions, login customization, and harden with security, testing, and a full functionality audit.
 
 - [x] **Phase 8: Schema & Prompt Stack** - Add restriction layers to the prompt system and schema fields for suggestions (2/2 plans complete)
-- [x] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages
+- [ ] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages (gap closure in progress)
 - [ ] **Phase 10: Prompt Suggestions, Login Polish & Chat Welcome** - Starter prompts, login customization UI, and welcome screen improvements
 - [ ] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup
 - [ ] **Phase 12: Testing & CI** - Vitest unit tests, Playwright E2E tests, and GitHub Actions pipeline
@@ -62,12 +62,14 @@ Plans:
   3. All admin pages scroll properly when content overflows, with no unwanted borders or visual artifacts
   4. Admin pages have consistent spacing, typography, and visual hierarchy matching a clean minimal design aesthetic
   5. User settings page has improved UI/UX design with consistent styling
-**Plans:** 3 plans
+**Plans:** 5 plans
 
 Plans:
 - [x] 09-01-PLAN.md — Sidebar collapse with icon mode, profile expanders, AdminPageHeader component, layout cleanup
 - [x] 09-02-PLAN.md — Visual polish across all 20 admin pages (headers, layouts, scroll), Admin Console link in chat dropdown
 - [x] 09-03-PLAN.md — Settings modal UI/UX polish across all 8 tabs
+- [ ] 09-04-PLAN.md — Fix collapsed sidebar profile menu (popover), footer layout, session lastUsedAt timestamps
+- [ ] 09-05-PLAN.md — Settings modal UX improvements (default tab, labels, bulk revoke, unknown device display)
 
 ### Phase 10: Prompt Suggestions, Login Polish & Chat Welcome
 **Goal**: Chat welcome screen shows clickable starter prompts and org branding, and login pages have consistent design with admin-customizable text
@@ -145,7 +147,7 @@ Plans:
 | 6. Org Admin Dashboard | v1.0 | 8/8 | Complete | 2026-03-05 |
 | 7. Theming, Branding, and Compliance | v1.0 | 7/7 | Complete | 2026-03-05 |
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
-| 9. Admin UI Overhaul | v1.1 | 3/3 | Complete | 2026-03-06 |
+| 9. Admin UI Overhaul | v1.1 | 3/5 | Gap closure | - |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 0/3 | Not started | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
