@@ -4,7 +4,6 @@
 // Known npm packages that Claude commonly generates in React artifacts
 const KNOWN_PACKAGES: Record<string, string> = {
   // Charting
-  'recharts': '2.15.3',
   'd3': '7.9.0',
   'chart.js': '4.4.9',
   'react-chartjs-2': '5.3.0',

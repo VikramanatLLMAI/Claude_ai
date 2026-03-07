@@ -11,7 +11,7 @@
 | **AI Integration** | Vercel AI SDK v6.0.97 (`useChat` hook) |
 | **Icons** | Lucide React v0.473.0 |
 | **Animations** | Framer Motion (`motion/react`) |
-| **Charts** | Recharts v3.7.0 |
+| **Charts** | shadcn/ui Charts (Recharts v3.7.0 wrapper) |
 | **Tables** | TanStack Table |
 
 ## Directory Structure
@@ -260,8 +260,8 @@ Components for the Super Admin and Org Admin consoles.
 
 | Component | Size | Purpose |
 |-----------|------|---------|
-| `analytics-charts.tsx` | 28KB | Super Admin analytics: usage trends, top orgs, error rates, heatmaps, API key consumption, MCP usage, registrations, feature adoption (Recharts) |
-| `org-analytics-charts.tsx` | 40KB | Org Admin analytics: usage trends, per-user/role breakdowns, model distribution, MCP usage, response times, error rates, invitation status, inactive users (Recharts) |
+| `analytics-charts.tsx` | 28KB | Super Admin analytics: usage trends, top orgs, error rates, heatmaps, API key consumption, MCP usage, registrations, feature adoption (shadcn/ui Charts) |
+| `org-analytics-charts.tsx` | 40KB | Org Admin analytics: usage trends, per-user/role breakdowns, model distribution, MCP usage, response times, error rates, invitation status, inactive users (shadcn/ui Charts) |
 | `kpi-card.tsx` | 2KB | Reusable KPI summary card with icon, value, subtitle, and trend indicator |
 
 ### Model Management
@@ -622,5 +622,5 @@ export function MyComponent({
 - [TailwindCSS](https://tailwindcss.com/docs)
 - [Lucide Icons](https://lucide.dev)
 - [Framer Motion](https://www.framer.com/motion)
-- [Recharts](https://recharts.org)
+- [shadcn/ui Charts](https://ui.shadcn.com/docs/components/radix/chart)
 - [TanStack Table](https://tanstack.com/table)
