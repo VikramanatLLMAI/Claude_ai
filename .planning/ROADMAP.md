@@ -79,14 +79,14 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Org Admin can configure 4-6 starter prompt suggestions from the admin UI, and they appear as clickable cards on the chat welcome screen
   2. Clicking a suggestion card populates the chat input without auto-sending; default suggestions appear when no custom ones are configured
-  3. Welcome screen is a separate component showing model icons above the greeting and org + platform logos side-by-side based on logoDisplayMode
+  3. Welcome screen is a separate component showing org + platform logos side-by-side based on logoDisplayMode (no model icons per user decision)
   4. All login pages (bare domain and org login) share a consistent visual design, and Org Admin can customize tagline and welcome text with live preview in admin settings
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
-- [ ] 10-03: TBD
+- [ ] 10-01-PLAN.md — Schema (LoginBranding model, Role.promptSuggestions), services, API endpoints, icon map utility, sidebar link
+- [ ] 10-02-PLAN.md — WelcomeScreen component extraction with logos and suggestion chips, Suggestions tab in role form modal
+- [ ] 10-03-PLAN.md — Two-column login page redesign (bare domain + org), Branding admin page with live preview
 
 ### Phase 11: Security Hardening
 **Goal**: All API routes have rate limiting and input validation, security headers are configured, and tech debt is cleaned up
@@ -148,7 +148,7 @@ Plans:
 | 6. Org Admin Dashboard | v1.0 | 8/8 | Complete | 2026-03-05 |
 | 7. Theming, Branding, and Compliance | v1.0 | 7/7 | Complete | 2026-03-05 |
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
-| 9. Admin UI Overhaul | v1.1 | 3/5 | Gap closure | - |
+| 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 0/3 | Not started | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
