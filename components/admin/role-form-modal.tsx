@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Settings, Cpu, Gauge, ShieldCheck, Loader2, Info } from "lucide-react"
+import { Settings, Cpu, Gauge, ShieldCheck, Sparkles, Loader2, Info } from "lucide-react"
+import { getIcon, getIconNames, type PromptSuggestion } from "@/lib/icon-map"
 import {
   Dialog,
   DialogContent,
@@ -31,13 +32,14 @@ interface RoleFormModalProps {
 }
 
 /**
- * RoleFormModal -- 4-tab create/edit modal for role configuration.
+ * RoleFormModal -- 5-tab create/edit modal for role configuration.
  *
  * Tabs:
  * 1. General (Settings icon): name, description
  * 2. Models & Tools (Cpu icon): model assignment + MCP note
  * 3. Limits (Gauge icon): daily request/token limits with toggle+input
  * 4. Permissions (ShieldCheck icon): custom instructions toggle, personal MCP toggle+count
+ * 5. Suggestions (Sparkles icon): 4 prompt suggestion chips for welcome screen
  *
  * Create mode: POST /api/org/[slug]/admin/roles
  * Edit mode:   PUT /api/org/[slug]/admin/roles/[roleId]
@@ -61,6 +63,12 @@ export function RoleFormModal({
   const [customInstructionsEnabled, setCustomInstructionsEnabled] = React.useState(true)
   const [personalMcpEnabled, setPersonalMcpEnabled] = React.useState(false)
   const [personalMcpMaxCount, setPersonalMcpMaxCount] = React.useState<number>(3)
+  const [promptSuggestions, setPromptSuggestions] = React.useState<PromptSuggestion[]>([
+    { icon: "Pencil", label: "", prompt: "" },
+    { icon: "BookOpen", label: "", prompt: "" },
+    { icon: "Code2", label: "", prompt: "" },
+    { icon: "Home", label: "", prompt: "" },
+  ])
   const [saving, setSaving] = React.useState(false)
   const [activeTab, setActiveTab] = React.useState("general")
 
@@ -79,6 +87,16 @@ export function RoleFormModal({
         setCustomInstructionsEnabled(role.customInstructionsEnabled)
         setPersonalMcpEnabled(role.personalMcpEnabled)
         setPersonalMcpMaxCount(role.personalMcpMaxCount)
+        if (role.promptSuggestions && Array.isArray(role.promptSuggestions) && role.promptSuggestions.length > 0) {
+          setPromptSuggestions(role.promptSuggestions as PromptSuggestion[])
+        } else {
+          setPromptSuggestions([
+            { icon: "Pencil", label: "", prompt: "" },
+            { icon: "BookOpen", label: "", prompt: "" },
+            { icon: "Code2", label: "", prompt: "" },
+            { icon: "Home", label: "", prompt: "" },
+          ])
+        }
       } else {
         // Create mode defaults
         setName("")
@@ -91,6 +109,12 @@ export function RoleFormModal({
         setCustomInstructionsEnabled(true)
         setPersonalMcpEnabled(false)
         setPersonalMcpMaxCount(3)
+        setPromptSuggestions([
+          { icon: "Pencil", label: "", prompt: "" },
+          { icon: "BookOpen", label: "", prompt: "" },
+          { icon: "Code2", label: "", prompt: "" },
+          { icon: "Home", label: "", prompt: "" },
+        ])
       }
     }
   }, [open, mode, role])
@@ -117,6 +141,8 @@ export function RoleFormModal({
     setSaving(true)
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY)
+      // Filter out empty suggestions (all fields empty = use defaults)
+      const filteredSuggestions = promptSuggestions.filter(s => s.label.trim() || s.prompt.trim())
       const payload = {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -126,6 +152,7 @@ export function RoleFormModal({
         personalMcpMaxCount: personalMcpEnabled ? personalMcpMaxCount : 0,
         dailyRequestLimit: requestLimitEnabled ? dailyRequestLimit : null,
         dailyTokenLimit: tokenLimitEnabled ? dailyTokenLimit : null,
+        promptSuggestions: filteredSuggestions.length > 0 ? filteredSuggestions : [],
       }
 
       const url = mode === "create"
@@ -165,13 +192,21 @@ export function RoleFormModal({
     name, description, allowedModels, customInstructionsEnabled,
     personalMcpEnabled, personalMcpMaxCount, requestLimitEnabled,
     dailyRequestLimit, tokenLimitEnabled, dailyTokenLimit,
-    mode, role, orgSlug, onOpenChange, onSuccess,
+    promptSuggestions, mode, role, orgSlug, onOpenChange, onSuccess,
   ])
 
   // Model change handler for RoleModelAssignment (no-op save -- we collect state only)
   const handleModelsChange = React.useCallback(async (modelIds: string[]) => {
     setAllowedModels(modelIds)
   }, [])
+
+  // Update a single suggestion field
+  const updateSuggestion = React.useCallback((index: number, field: keyof PromptSuggestion, value: string) => {
+    setPromptSuggestions(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s))
+  }, [])
+
+  // Available icon names for selector
+  const iconNames = React.useMemo(() => getIconNames(), [])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,7 +223,7 @@ export function RoleFormModal({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="general" className="gap-1.5 text-xs sm:text-sm">
               <Settings className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">General</span>
@@ -204,6 +239,10 @@ export function RoleFormModal({
             <TabsTrigger value="permissions" className="gap-1.5 text-xs sm:text-sm">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Permissions</span>
+            </TabsTrigger>
+            <TabsTrigger value="suggestions" className="gap-1.5 text-xs sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Suggestions</span>
             </TabsTrigger>
           </TabsList>
 
@@ -405,6 +444,78 @@ export function RoleFormModal({
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          {/* Tab 5: Suggestions */}
+          <TabsContent value="suggestions" className="space-y-6 mt-4">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">
+                Configure 4 starter prompt suggestions shown on the chat welcome screen for users with this role.
+                Leave all fields empty to use defaults.
+              </p>
+            </div>
+            {promptSuggestions.map((suggestion, index) => {
+              const IconPreview = getIcon(suggestion.icon)
+              return (
+                <div key={index} className="space-y-3 p-4 rounded-lg border">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <IconPreview className="size-4" />
+                    Suggestion {index + 1}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Icon</Label>
+                      <select
+                        value={suggestion.icon}
+                        onChange={(e) => updateSuggestion(index, "icon", e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        {iconNames.map((iconName) => (
+                          <option key={iconName} value={iconName}>
+                            {iconName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Label</Label>
+                      <Input
+                        value={suggestion.label}
+                        onChange={(e) => updateSuggestion(index, "label", e.target.value)}
+                        placeholder="e.g., Write"
+                        maxLength={30}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Prompt text</Label>
+                    <textarea
+                      value={suggestion.prompt}
+                      onChange={(e) => updateSuggestion(index, "prompt", e.target.value)}
+                      placeholder="e.g., Help me write a professional email about..."
+                      maxLength={500}
+                      rows={2}
+                      className="w-full px-3 py-2 text-sm rounded-md border border-input bg-transparent resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <p className="text-xs text-muted-foreground text-right">{suggestion.prompt.length}/500</p>
+                  </div>
+                </div>
+              )
+            })}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setPromptSuggestions([
+                { icon: "Pencil", label: "", prompt: "" },
+                { icon: "BookOpen", label: "", prompt: "" },
+                { icon: "Code2", label: "", prompt: "" },
+                { icon: "Home", label: "", prompt: "" },
+              ])}
+              className="text-muted-foreground"
+            >
+              Reset to defaults
+            </Button>
           </TabsContent>
         </Tabs>
 

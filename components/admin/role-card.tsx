@@ -40,6 +40,7 @@ export interface RoleData {
   personalMcpMaxCount: number
   dailyRequestLimit: number | null
   dailyTokenLimit: number | null
+  promptSuggestions?: unknown[]
   createdAt: string
   updatedAt: string
   _count: { members: number }
