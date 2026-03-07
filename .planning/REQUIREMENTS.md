@@ -66,9 +66,9 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 - [x] **CHART-01**: shadcn/ui chart wrapper component (ChartContainer, ChartTooltip, ChartLegend) created at components/ui/chart.tsx
 - [x] **CHART-02**: Shared chart utilities (EmptyState, formatters, color constants) extracted to components/admin/chart-utils.tsx
 - [x] **CHART-03**: Super Admin analytics charts (8 components) migrated from direct Recharts to shadcn/ui Chart wrappers
-- [ ] **CHART-04**: Org Admin analytics charts (9 components) migrated from direct Recharts to shadcn/ui Chart wrappers
-- [ ] **CHART-05**: Charts use CSS variable colors that auto-adapt to light/dark mode and active theme
-- [ ] **CHART-06**: Recharts removed from Sandpack dependency list and documentation updated to reference shadcn/ui Charts
+- [x] **CHART-04**: Org Admin analytics charts (9 components) migrated from direct Recharts to shadcn/ui Chart wrappers
+- [x] **CHART-05**: Charts use CSS variable colors that auto-adapt to light/dark mode and active theme
+- [x] **CHART-06**: Recharts removed from Sandpack dependency list and documentation updated to reference shadcn/ui Charts
 
 ### Security Hardening
 
@@ -183,9 +183,9 @@ Explicitly excluded. Documented to prevent scope creep.
 | CHART-01 | Phase 10.1 | Complete |
 | CHART-02 | Phase 10.1 | Complete |
 | CHART-03 | Phase 10.1 | Complete |
-| CHART-04 | Phase 10.1 | Pending |
-| CHART-05 | Phase 10.1 | Pending |
-| CHART-06 | Phase 10.1 | Pending |
+| CHART-04 | Phase 10.1 | Complete |
+| CHART-05 | Phase 10.1 | Complete |
+| CHART-06 | Phase 10.1 | Complete |
 | SEC-01 | Phase 11 | Pending |
 | SEC-02 | Phase 11 | Pending |
 | SEC-03 | Phase 11 | Pending |
