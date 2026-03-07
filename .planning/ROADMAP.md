@@ -30,6 +30,7 @@
 - [x] **Phase 8: Schema & Prompt Stack** - Add restriction layers to the prompt system and schema fields for suggestions (2/2 plans complete)
 - [x] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages (6/6 plans complete)
 - [x] **Phase 10: Prompt Suggestions, Login Polish & Chat Welcome** - Starter prompts, login customization UI, and welcome screen improvements (completed 2026-03-07)
+- [ ] **Phase 10.1: Migrate Recharts to shadcn/ui Charts** - Replace direct Recharts usage with shadcn/ui Chart wrappers for theme-aware, consistent analytics charts (2 plans)
 - [ ] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup
 - [ ] **Phase 12: Testing & CI** - Vitest unit tests, Playwright E2E tests, and GitHub Actions pipeline
 - [ ] **Phase 13: Functionality Audit** - Verify every UI control works end-to-end, fix mismatches, complete pending tests
@@ -88,6 +89,22 @@ Plans:
 - [x] 10-02-PLAN.md — WelcomeScreen component extraction with logos and suggestion chips, Suggestions tab in role form modal
 - [x] 10-03-PLAN.md — Two-column login page redesign (bare domain + org), Branding admin page with live preview
 
+### Phase 10.1: Migrate Recharts to shadcn/ui Charts (INSERTED)
+**Goal**: All admin analytics charts use shadcn/ui Chart wrappers (ChartContainer, ChartTooltip, ChartLegend) with CSS variable theming instead of direct Recharts with hardcoded colors
+**Depends on:** Phase 10
+**Requirements**: CHART-01, CHART-02, CHART-03, CHART-04, CHART-05, CHART-06
+**Success Criteria** (what must be TRUE):
+  1. All 17 Recharts-based chart components use ChartContainer instead of ResponsiveContainer, with ChartTooltip and ChartLegend wrappers
+  2. Charts use CSS variable colors (var(--color-{key})) that auto-adapt to light/dark mode and active theme
+  3. Semantic-meaning charts (error rates, invitation status) retain fixed hex colors
+  4. Shared chart utilities (EmptyState, formatters, color constants) are extracted to chart-utils.tsx
+  5. No gradient fills remain -- all area charts use solid fills with low opacity
+**Plans:** 2 plans
+
+Plans:
+- [ ] 10.1-01-PLAN.md — Create chart.tsx wrapper + chart-utils.tsx utilities, migrate 8 Super Admin charts
+- [ ] 10.1-02-PLAN.md — Migrate 9 Org Admin charts, cleanup dependencies, update documentation
+
 ### Phase 11: Security Hardening
 **Goal**: All API routes have rate limiting and input validation, security headers are configured, and tech debt is cleaned up
 **Depends on**: Phase 10 (all features complete before locking down with security)
@@ -136,7 +153,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** Phases 8 -> 9 -> 10 -> 11 -> 12 -> 13
+**Execution Order:** Phases 8 -> 9 -> 10 -> 10.1 -> 11 -> 12 -> 13
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -149,7 +166,8 @@ Plans:
 | 7. Theming, Branding, and Compliance | v1.0 | 7/7 | Complete | 2026-03-05 |
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
-| 10. Prompt Suggestions, Login Polish & Chat Welcome | 3/3 | Complete    | 2026-03-07 | - |
+| 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
+| 10.1. Migrate Recharts to shadcn/ui Charts | v1.1 | 0/2 | Not started | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |

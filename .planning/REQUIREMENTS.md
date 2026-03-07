@@ -61,6 +61,15 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 - [x] **LOGIN-03**: Org Admin can customize login page welcome/description text via admin settings
 - [x] **LOGIN-04**: Login page customization has live preview in admin UI
 
+### Chart Migration
+
+- [ ] **CHART-01**: shadcn/ui chart wrapper component (ChartContainer, ChartTooltip, ChartLegend) created at components/ui/chart.tsx
+- [ ] **CHART-02**: Shared chart utilities (EmptyState, formatters, color constants) extracted to components/admin/chart-utils.tsx
+- [ ] **CHART-03**: Super Admin analytics charts (8 components) migrated from direct Recharts to shadcn/ui Chart wrappers
+- [ ] **CHART-04**: Org Admin analytics charts (9 components) migrated from direct Recharts to shadcn/ui Chart wrappers
+- [ ] **CHART-05**: Charts use CSS variable colors that auto-adapt to light/dark mode and active theme
+- [ ] **CHART-06**: Recharts removed from Sandpack dependency list and documentation updated to reference shadcn/ui Charts
+
 ### Security Hardening
 
 - [ ] **SEC-01**: Rate limiting on auth routes (login, register, password reset) with sliding window
@@ -171,6 +180,12 @@ Explicitly excluded. Documented to prevent scope creep.
 | LOGIN-02 | Phase 10 | Complete |
 | LOGIN-03 | Phase 10 | Complete |
 | LOGIN-04 | Phase 10 | Complete |
+| CHART-01 | Phase 10.1 | Pending |
+| CHART-02 | Phase 10.1 | Pending |
+| CHART-03 | Phase 10.1 | Pending |
+| CHART-04 | Phase 10.1 | Pending |
+| CHART-05 | Phase 10.1 | Pending |
+| CHART-06 | Phase 10.1 | Pending |
 | SEC-01 | Phase 11 | Pending |
 | SEC-02 | Phase 11 | Pending |
 | SEC-03 | Phase 11 | Pending |
@@ -196,10 +211,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | AUDIT-04 | Phase 13 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 56 total
-- Mapped to phases: 56
+- v1.1 requirements: 62 total
+- Mapped to phases: 62
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-06*
-*Last updated: 2026-03-06 after roadmap creation*
+*Last updated: 2026-03-07 after Phase 10.1 planning*
