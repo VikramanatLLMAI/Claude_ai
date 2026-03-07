@@ -84,9 +84,9 @@ Plans:
 **Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 10-01-PLAN.md — Schema (LoginBranding model, Role.promptSuggestions), services, API endpoints, icon map utility, sidebar link
-- [ ] 10-02-PLAN.md — WelcomeScreen component extraction with logos and suggestion chips, Suggestions tab in role form modal
-- [ ] 10-03-PLAN.md — Two-column login page redesign (bare domain + org), Branding admin page with live preview
+- [x] 10-01-PLAN.md — Schema (LoginBranding model, Role.promptSuggestions), services, API endpoints, icon map utility, sidebar link
+- [x] 10-02-PLAN.md — WelcomeScreen component extraction with logos and suggestion chips, Suggestions tab in role form modal
+- [x] 10-03-PLAN.md — Two-column login page redesign (bare domain + org), Branding admin page with live preview
 
 ### Phase 11: Security Hardening
 **Goal**: All API routes have rate limiting and input validation, security headers are configured, and tech debt is cleaned up

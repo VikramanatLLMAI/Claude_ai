@@ -3,7 +3,7 @@ status: complete
 phase: 10-prompt-suggestions-login-polish-chat-welcome
 source: 10-01-SUMMARY.md, 10-02-SUMMARY.md, 10-03-SUMMARY.md
 started: 2026-03-07T09:30:00Z
-updated: 2026-03-07T10:15:00Z
+updated: 2026-03-07T11:00:00Z
 ---
 
 ## Current Test
@@ -55,6 +55,31 @@ passed: 9
 issues: 0
 pending: 0
 skipped: 0
+
+## Post-UAT Fixes
+
+Issues identified by user during manual review (not caught by automated UAT):
+
+### Fix 1: Admin header border misalignment
+- **Issue:** Sidebar header border-b and main page header border-b were at different vertical positions
+- **Root cause:** AdminPageHeader used py-5 (variable height ~68-90px) vs sidebar header py-3 (56px)
+- **Fix:** Both set to h-14 (56px); description moved below border in AdminPageHeader
+- **Files:** admin-page-header.tsx, admin-sidebar.tsx
+- **Commit:** e402f73
+
+### Fix 2: Login branding panel used hardcoded color
+- **Issue:** Left branding panel used fixed `from-slate-900 to-slate-800` gradient instead of org theme color
+- **Root cause:** Hardcoded Tailwind classes instead of theme-aware CSS variables
+- **Fix:** Replaced with `bg-primary text-primary-foreground` and all `white/XX` variants with `primary-foreground/XX`
+- **Files:** find-my-org.tsx, org-login-page.tsx, branding-editor.tsx
+- **Commit:** e402f73
+
+### Fix 3: Org theme not applied to chat UI
+- **Issue:** Theme applied to admin console and login pages but not to chat page
+- **Root cause:** `Providers` (root layout) useEffect overwrites `data-theme` with user's personal localStorage preference after `OrgThemeProvider` sets the org theme (React runs child effects before parent effects)
+- **Fix:** Skip personal color theme override on `/org/*` pages so org theme takes precedence
+- **Files:** providers.tsx
+- **Commit:** e402f73
 
 ## Gaps
 
