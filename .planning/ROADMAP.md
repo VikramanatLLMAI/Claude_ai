@@ -81,7 +81,7 @@ Plans:
   2. Clicking a suggestion card populates the chat input without auto-sending; default suggestions appear when no custom ones are configured
   3. Welcome screen is a separate component showing org + platform logos side-by-side based on logoDisplayMode (no model icons per user decision)
   4. All login pages (bare domain and org login) share a consistent visual design, and Org Admin can customize tagline and welcome text with live preview in admin settings
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] 10-01-PLAN.md — Schema (LoginBranding model, Role.promptSuggestions), services, API endpoints, icon map utility, sidebar link
@@ -149,7 +149,7 @@ Plans:
 | 7. Theming, Branding, and Compliance | v1.0 | 7/7 | Complete | 2026-03-05 |
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
-| 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 0/3 | Not started | - |
+| 10. Prompt Suggestions, Login Polish & Chat Welcome | 1/3 | In Progress|  | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |

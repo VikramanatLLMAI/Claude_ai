@@ -2,65 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
-status: unknown
-last_updated: "2026-03-07T04:15:00.158Z"
-progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
----
-
----
-gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Harden & Polish
-status: unknown
-last_updated: "2026-03-07T04:09:03Z"
-progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
----
-
----
-gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Harden & Polish
-status: unknown
-last_updated: "2026-03-06T13:54:30.124Z"
-progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
----
-
----
-gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Harden & Polish
-status: unknown
-last_updated: "2026-03-06T07:02:19.652Z"
-progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
----
-
----
-gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Harden & Polish
 status: executing
-last_updated: "2026-03-06"
+last_updated: "2026-03-07T08:07:00Z"
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 15
-  completed_plans: 6
+  completed_phases: 2
+  total_plans: 11
+  completed_plans: 9
 ---
 
 # Project State
@@ -70,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 9 - Admin UI Overhaul (gap closure)
+**Current focus:** Phase 10 - Prompt Suggestions, Login Polish & Chat Welcome
 
 ## Current Position
 
-Phase: 9 of 13 (Admin UI Overhaul) -- COMPLETE (all gap closure done)
-Plan: 6 of 6 in current phase (phase complete)
-Status: Phase 9 fully complete (including all gap closure plans)
-Last activity: 2026-03-07 — Completed 09-06 (session timestamp backfill)
+Phase: 10 of 13 (Prompt Suggestions, Login Polish & Chat Welcome)
+Plan: 1 of 3 in current phase (10-01 complete)
+Status: Executing Phase 10
+Last activity: 2026-03-07 -- Completed 10-01 (schema + services + API)
 
-Progress: [|||||||||||||||.........] 70/78 plans (v1.0 complete, v1.1 in progress)
+Progress: [||||||||||||||||........] 71/78 plans (v1.0 complete, v1.1 in progress)
 
 ## Performance Metrics
 
@@ -113,6 +61,8 @@ Recent decisions affecting current work:
 - InstructionEditor label prop made optional for flexible contextual usage
 - Backfill script placed in prisma/ directory (scripts/ is gitignored)
 - Null lastUsedAt sessions show "Since X ago" (createdAt-based) to distinguish from active sessions
+- LoginBranding as separate model from OrgSettings for structured feature card JSON
+- Icon map uses string names for DB storage, resolved to Lucide components at render time
 
 ### Pending Todos
 
@@ -127,5 +77,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-07
-Stopped at: Completed 09-06-PLAN.md (session timestamp backfill -- Phase 9 fully complete)
-Next step: Plan/execute Phase 10 (Prompt Suggestions, Login Polish & Chat Welcome)
+Stopped at: Completed 10-01-PLAN.md (schema + services + API for prompt suggestions and login branding)
+Next step: Execute Phase 10 Plan 02 (Welcome Screen)

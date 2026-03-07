@@ -43,10 +43,10 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 ### Prompt Suggestions
 
-- [ ] **SUGG-01**: Org Admin can configure starter prompt suggestions (4-6 items) for chat welcome screen
+- [x] **SUGG-01**: Org Admin can configure starter prompt suggestions (4-6 items) for chat welcome screen
 - [ ] **SUGG-02**: Chat welcome screen displays clickable prompt suggestion cards
 - [ ] **SUGG-03**: Clicking a suggestion populates the chat input (does not auto-send)
-- [ ] **SUGG-04**: Default suggestions shown when org has not configured custom ones
+- [x] **SUGG-04**: Default suggestions shown when org has not configured custom ones
 
 ### Chat Welcome Screen
 
@@ -57,8 +57,8 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 ### Login & Branding
 
 - [ ] **LOGIN-01**: All login pages (bare domain, org login) use consistent visual design (port 3000 reference style)
-- [ ] **LOGIN-02**: Org Admin can customize login page tagline via admin settings
-- [ ] **LOGIN-03**: Org Admin can customize login page welcome/description text via admin settings
+- [x] **LOGIN-02**: Org Admin can customize login page tagline via admin settings
+- [x] **LOGIN-03**: Org Admin can customize login page welcome/description text via admin settings
 - [ ] **LOGIN-04**: Login page customization has live preview in admin UI
 
 ### Security Hardening
@@ -160,16 +160,16 @@ Explicitly excluded. Documented to prevent scope creep.
 | POLISH-05 | Phase 9 | Complete |
 | POLISH-06 | Phase 9 | Complete |
 | POLISH-07 | Phase 9 | Complete |
-| SUGG-01 | Phase 10 | Pending |
+| SUGG-01 | Phase 10 | Complete |
 | SUGG-02 | Phase 10 | Pending |
 | SUGG-03 | Phase 10 | Pending |
-| SUGG-04 | Phase 10 | Pending |
+| SUGG-04 | Phase 10 | Complete |
 | WELCOME-01 | Phase 10 | Pending |
 | WELCOME-02 | Phase 10 | Pending |
 | WELCOME-03 | Phase 10 | Pending |
 | LOGIN-01 | Phase 10 | Pending |
-| LOGIN-02 | Phase 10 | Pending |
-| LOGIN-03 | Phase 10 | Pending |
+| LOGIN-02 | Phase 10 | Complete |
+| LOGIN-03 | Phase 10 | Complete |
 | LOGIN-04 | Phase 10 | Pending |
 | SEC-01 | Phase 11 | Pending |
 | SEC-02 | Phase 11 | Pending |
