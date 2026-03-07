@@ -117,6 +117,7 @@ model Organization {
   passwordPolicy       PasswordPolicy?
   themeAssignments     OrgThemeAssignment[]
   settings             OrgSettings?
+  loginBranding        LoginBranding?
 
   @@unique([slug], where: { deletedAt: null })
   @@index([status])
@@ -165,6 +166,7 @@ model Role {
   personalMcpMaxCount        Int     @default(3) @map("personal_mcp_max_count")
   dailyRequestLimit          Int?    @map("daily_request_limit") // null = unlimited
   dailyTokenLimit            Int?    @map("daily_token_limit") // null = unlimited
+  promptSuggestions          Json    @default("[]") @map("prompt_suggestions")
   createdAt                  DateTime @default(now()) @map("created_at")
   updatedAt                  DateTime @updatedAt @map("updated_at")
 
@@ -527,4 +529,24 @@ model McpConnection {
   @@index([userId])
   @@index([organizationId])
   @@map("mcp_connections")
+}
+
+// ============================================================================
+// LOGIN BRANDING
+// ============================================================================
+
+// LoginBranding - per-org login page branding configuration
+model LoginBranding {
+  id               String   @id @default(uuid())
+  organizationId   String   @unique @map("organization_id")
+  loginHeadline    String?  @map("login_headline")
+  loginBadge       String?  @map("login_badge")
+  loginDescription String?  @map("login_description") @db.Text
+  loginFeatureCards Json    @default("[]") @map("login_feature_cards")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("login_brandings")
 }
