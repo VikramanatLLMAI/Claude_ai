@@ -41,6 +41,14 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -202,8 +210,8 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
     )
   }
 
-  // Get user initial for avatar
-  const userInitial = currentUser?.name?.charAt(0)?.toUpperCase() || (isOrgAdmin ? "A" : "S")
+  // Get user initial for avatar — use name first, then email, then fallback
+  const userInitial = currentUser?.name?.charAt(0)?.toUpperCase() || currentUser?.email?.charAt(0)?.toUpperCase() || "?"
 
   return (
     <Sidebar collapsible="icon">
@@ -231,7 +239,7 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="overflow-y-auto">
         {isOrgAdmin && orgSlug ? (
           // Org Admin: Grouped navigation
           getOrgAdminNavGroups(orgSlug).map((group) => (
@@ -258,48 +266,85 @@ export function AdminSidebar({ variant, orgSlug, orgName }: AdminSidebarProps) {
       <SidebarFooter className="border-t border-sidebar-border p-2 group-data-[collapsible=icon]:p-1.5">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton size="lg" tooltip={currentUser?.name || "Account"}>
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium">
-                    {userInitial}
-                  </div>
-                  <span className="truncate font-medium group-data-[collapsible=icon]:hidden">
-                    {currentUser?.name || (isOrgAdmin ? "Admin" : "Super Admin")}
-                  </span>
-                  <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
-                <div className="px-3 py-2">
+            {state === "collapsed" ? (
+              /* Collapsed mode: DropdownMenu popover anchored to avatar */
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton size="lg" tooltip={currentUser?.name || "Account"}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium">
+                      {userInitial}
+                    </div>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="center" className="w-56">
                   {currentUser?.email && (
-                    <p className="truncate text-xs text-muted-foreground mb-2">
-                      {currentUser.email}
-                    </p>
+                    <>
+                      <DropdownMenuLabel className="font-normal text-xs text-muted-foreground truncate">
+                        {currentUser.email}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                    </>
                   )}
                   {isOrgAdmin && orgSlug && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start h-8 text-sm"
-                      onClick={() => router.push(`/org/${orgSlug}/chat`)}
-                    >
+                    <DropdownMenuItem onClick={() => router.push(`/org/${orgSlug}/chat`)}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back to Chat
-                    </Button>
+                    </DropdownMenuItem>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start h-8 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
                     onClick={handleSignOut}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Log Out
-                  </Button>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              /* Expanded mode: Collapsible profile expander */
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton size="lg" tooltip={currentUser?.name || "Account"}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium">
+                      {userInitial}
+                    </div>
+                    <span className="truncate font-medium">
+                      {currentUser?.name || (isOrgAdmin ? "Admin" : "Super Admin")}
+                    </span>
+                    <ChevronUp className="ml-auto h-4 w-4" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-3 py-2">
+                    {currentUser?.email && (
+                      <p className="truncate text-xs text-muted-foreground mb-2">
+                        {currentUser.email}
+                      </p>
+                    )}
+                    {isOrgAdmin && orgSlug && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start h-8 text-sm"
+                        onClick={() => router.push(`/org/${orgSlug}/chat`)}
+                      >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Chat
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start h-8 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log Out
+                    </Button>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
