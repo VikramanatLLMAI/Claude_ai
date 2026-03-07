@@ -19,6 +19,12 @@ import { z } from 'zod';
  * allowedModels: string array, limits: positive integers or null,
  * personalMcpMaxCount: nonnegative integer (0 means MCP disabled).
  */
+const PromptSuggestionSchema = z.object({
+  icon: z.string().max(50),
+  label: z.string().max(100),
+  prompt: z.string().max(500),
+});
+
 const CreateRoleSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters').max(50, 'Name must be at most 50 characters'),
   description: z.string().max(200, 'Description must be at most 200 characters').optional(),
@@ -29,6 +35,7 @@ const CreateRoleSchema = z.object({
   personalMcpMaxCount: z.number().int().nonnegative().optional(),
   dailyRequestLimit: z.number().int().positive().nullable().optional(),
   dailyTokenLimit: z.number().int().positive().nullable().optional(),
+  promptSuggestions: z.array(PromptSuggestionSchema).max(4, 'Maximum 4 prompt suggestions allowed').optional(),
 });
 
 /**
@@ -57,6 +64,7 @@ export async function GET(req: NextRequest) {
         personalMcpMaxCount: true,
         dailyRequestLimit: true,
         dailyTokenLimit: true,
+        promptSuggestions: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -112,6 +120,7 @@ export async function POST(req: NextRequest) {
         personalMcpMaxCount: data.personalMcpMaxCount,
         dailyRequestLimit: data.dailyRequestLimit,
         dailyTokenLimit: data.dailyTokenLimit,
+        promptSuggestions: data.promptSuggestions,
       },
       {
         userId: authResult.user.id,

@@ -33,6 +33,7 @@ export interface CreateRoleInput {
   personalMcpMaxCount?: number;
   dailyRequestLimit?: number | null;
   dailyTokenLimit?: number | null;
+  promptSuggestions?: Array<{ icon: string; label: string; prompt: string }>;
 }
 
 export interface UpdateRoleInput {
@@ -47,6 +48,7 @@ export interface UpdateRoleInput {
   personalMcpMaxCount?: number;
   dailyRequestLimit?: number | null;
   dailyTokenLimit?: number | null;
+  promptSuggestions?: Array<{ icon: string; label: string; prompt: string }>;
 }
 
 export interface AuditContext {
@@ -108,6 +110,7 @@ export async function createRole(
           personalMcpMaxCount: data.personalMcpMaxCount ?? 3,
           dailyRequestLimit: data.dailyRequestLimit ?? null,
           dailyTokenLimit: data.dailyTokenLimit ?? null,
+          promptSuggestions: (data.promptSuggestions as any) ?? [],
         },
       });
 
@@ -189,6 +192,7 @@ export async function updateRole(
       if (data.personalMcpMaxCount !== undefined) updateData.personalMcpMaxCount = data.personalMcpMaxCount;
       if (data.dailyRequestLimit !== undefined) updateData.dailyRequestLimit = data.dailyRequestLimit;
       if (data.dailyTokenLimit !== undefined) updateData.dailyTokenLimit = data.dailyTokenLimit;
+      if (data.promptSuggestions !== undefined) updateData.promptSuggestions = data.promptSuggestions;
 
       const updated = await tx.role.update({
         where: { id: roleId },

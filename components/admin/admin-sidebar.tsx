@@ -23,6 +23,7 @@ import {
   ScrollText,
   MessageCircle,
   ChevronUp,
+  Paintbrush,
 } from "lucide-react"
 import {
   Sidebar,
@@ -130,6 +131,7 @@ function getOrgAdminNavGroups(orgSlug: string): NavGroup[] {
       label: "Settings",
       items: [
         { label: "Settings", icon: Settings, href: `${base}/settings`, enabled: true },
+        { label: "Branding", icon: Paintbrush, href: `${base}/branding`, enabled: true },
       ],
     },
   ]

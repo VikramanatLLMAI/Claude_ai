@@ -22,6 +22,12 @@ interface RouteParams {
  * Zod schema for role update payload.
  * Same fields as create but all optional.
  */
+const PromptSuggestionSchema = z.object({
+  icon: z.string().max(50),
+  label: z.string().max(100),
+  prompt: z.string().max(500),
+});
+
 const UpdateRoleSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters').max(50, 'Name must be at most 50 characters').optional(),
   description: z.string().max(200, 'Description must be at most 200 characters').optional().nullable(),
@@ -32,6 +38,7 @@ const UpdateRoleSchema = z.object({
   personalMcpMaxCount: z.number().int().nonnegative().optional(),
   dailyRequestLimit: z.number().int().positive().nullable().optional(),
   dailyTokenLimit: z.number().int().positive().nullable().optional(),
+  promptSuggestions: z.array(PromptSuggestionSchema).max(4, 'Maximum 4 prompt suggestions allowed').optional(),
 });
 
 /**
@@ -71,6 +78,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         personalMcpMaxCount: data.personalMcpMaxCount,
         dailyRequestLimit: data.dailyRequestLimit,
         dailyTokenLimit: data.dailyTokenLimit,
+        promptSuggestions: data.promptSuggestions,
       },
       {
         userId: authResult.user.id,

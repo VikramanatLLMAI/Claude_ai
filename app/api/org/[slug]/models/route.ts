@@ -41,5 +41,6 @@ export async function GET(req: NextRequest) {
     })),
     defaultModel: models[0]?.modelId || null,
     isOrgAdmin,
+    promptSuggestions: (role.promptSuggestions as any[]) || [],
   });
 }
