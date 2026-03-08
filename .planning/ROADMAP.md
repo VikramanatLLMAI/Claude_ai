@@ -133,12 +133,12 @@ Plans:
   1. Vitest runs with path aliases, happy-dom, and TypeScript support; unit tests pass for auth middleware, tenant isolation, prompt sanitizer/composition, and usage limit enforcement
   2. Playwright is configured and E2E tests pass for login flow (bare domain + org login) and admin navigation (sidebar collapse, profile expander, back-to-chat)
   3. GitHub Actions CI pipeline runs unit tests with a PostgreSQL service container on every push, and Playwright tests on pull requests
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 12-01: TBD
-- [ ] 12-02: TBD
-- [ ] 12-03: TBD
+- [ ] 12-01-PLAN.md — Vitest config, test helpers (mock-db, mock-auth, factories), directory structure, npm scripts
+- [ ] 12-02-PLAN.md — Unit tests for auth middleware, tenant isolation, encryption, prompt sanitizer, system prompt composition, usage limits
+- [ ] 12-03-PLAN.md — Playwright config, E2E tests (login flow, admin navigation), GitHub Actions CI pipeline
 
 ### Phase 13: Functionality Audit
 **Goal**: Every UI control in the application has verified working backend implementation, and all pending v1.0 browser tests are complete
