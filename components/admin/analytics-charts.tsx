@@ -40,7 +40,8 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { EmptyState, formatTokens, formatDate, ERROR_COLORS } from "@/components/admin/chart-utils"
+import { EmptyState, formatTokens, formatDate, padSinglePointData, ERROR_COLORS } from "@/components/admin/chart-utils"
+import { Tooltip as RadixTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 
 // ============================================
 // Types (matching platform-analytics-service)
@@ -142,7 +143,7 @@ export function UsageTrendChart({ data }: UsageTrendChartProps) {
           <EmptyState message="No usage data in this period" />
         ) : (
           <ChartContainer config={usageTrendConfig} className="min-h-[300px] w-full">
-            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+            <AreaChart data={padSinglePointData(data)} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -157,7 +158,7 @@ export function UsageTrendChart({ data }: UsageTrendChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />} />
               <ChartLegend content={<ChartLegendContent />} />
               <Area
                 type="monotone"
@@ -236,7 +237,7 @@ export function TokensByOrgChart({ data }: TokensByOrgChartProps) {
           <EmptyState message="No token data in this period" />
         ) : (
           <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-            <AreaChart data={chartData} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+            <AreaChart data={padSinglePointData(chartData)} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -251,7 +252,7 @@ export function TokensByOrgChart({ data }: TokensByOrgChartProps) {
                 tickLine={false}
                 axisLine={false}
               />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />} />
               <ChartLegend content={<ChartLegendContent />} />
               {orgNames.map((orgName) => (
                 <Area
@@ -424,9 +425,9 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
         {data.length === 0 ? (
           <EmptyState message="No usage data in this period" />
         ) : (
-          <div className="overflow-x-auto">
+          <TooltipProvider delayDuration={0}>
             <div
-              className="grid gap-0.5 min-w-[600px]"
+              className="grid gap-0.5"
               style={{ gridTemplateColumns: "48px repeat(24, 1fr)" }}
             >
               {/* Header row: hour labels */}
@@ -439,11 +440,8 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
 
               {/* Data rows: day x hour */}
               {DAY_LABELS.map((dayLabel, dayIndex) => (
-                <>
-                  <div
-                    key={`label-${dayIndex}`}
-                    className="h-7 flex items-center justify-end pr-2 text-xs text-muted-foreground"
-                  >
+                <div key={`row-${dayIndex}`} className="contents">
+                  <div className="h-7 flex items-center justify-end pr-2 text-xs text-muted-foreground">
                     {dayLabel}
                   </div>
                   {Array.from({ length: 24 }, (_, hour) => {
@@ -451,17 +449,22 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
                     const intensity = maxCount > 0 ? count / maxCount : 0
                     const alpha = 0.08 + intensity * 0.85
                     return (
-                      <div
-                        key={`cell-${dayIndex}-${hour}`}
-                        className="h-7 rounded-sm cursor-default"
-                        style={{
-                          backgroundColor: `rgba(34, 197, 94, ${alpha})`,
-                        }}
-                        title={`${DAY_LABELS[dayIndex]} ${hour}:00 -- ${count} requests`}
-                      />
+                      <RadixTooltip key={`cell-${dayIndex}-${hour}`}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="h-7 rounded-sm cursor-default"
+                            style={{
+                              backgroundColor: `rgba(34, 197, 94, ${alpha})`,
+                            }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {DAY_LABELS[dayIndex]} {hour}:00 -- {count} requests
+                        </TooltipContent>
+                      </RadixTooltip>
                     )
                   })}
-                </>
+                </div>
               ))}
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
@@ -477,7 +480,7 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
               </div>
               <span>High</span>
             </div>
-          </div>
+          </TooltipProvider>
         )}
       </CardContent>
     </Card>
@@ -581,7 +584,7 @@ export function McpUsageChart({ data }: McpUsageChartProps) {
           <EmptyState message="No MCP tool usage in this period" />
         ) : (
           <ChartContainer config={mcpUsageConfig} className="min-h-[260px] w-full">
-            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+            <AreaChart data={padSinglePointData(data)} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -591,7 +594,7 @@ export function McpUsageChart({ data }: McpUsageChartProps) {
                 axisLine={false}
               />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />} />
               <Area
                 type="monotone"
                 dataKey="toolInvocations"
@@ -638,7 +641,7 @@ export function RegistrationTrendChart({ data }: RegistrationTrendChartProps) {
           <EmptyState message="No new registrations in this period" />
         ) : (
           <ChartContainer config={registrationConfig} className="min-h-[260px] w-full">
-            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+            <AreaChart data={padSinglePointData(data)} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -648,7 +651,7 @@ export function RegistrationTrendChart({ data }: RegistrationTrendChartProps) {
                 axisLine={false}
               />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />} />
               <ChartLegend content={<ChartLegendContent />} />
               <Area
                 type="monotone"
