@@ -31,7 +31,7 @@
 - [x] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages (6/6 plans complete)
 - [x] **Phase 10: Prompt Suggestions, Login Polish & Chat Welcome** - Starter prompts, login customization UI, and welcome screen improvements (completed 2026-03-07)
 - [x] **Phase 10.1: Migrate Recharts to shadcn/ui Charts** - Replace direct Recharts usage with shadcn/ui Chart wrappers for theme-aware, consistent analytics charts (4 plans, gap closure in progress) (completed 2026-03-08)
-- [ ] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup
+- [x] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup (completed 2026-03-08)
 - [ ] **Phase 12: Testing & CI** - Vitest unit tests, Playwright E2E tests, and GitHub Actions pipeline
 - [ ] **Phase 13: Functionality Audit** - Verify every UI control works end-to-end, fix mismatches, complete pending tests
 
@@ -117,7 +117,7 @@ Plans:
   3. Content-Security-Policy is active in report-only mode without breaking Sandpack live preview, Mermaid diagrams, or KaTeX rendering
   4. Mutation requests validate Origin header; all API routes have Zod input validation
   5. Debug console.log statements are removed from API routes, and tenantDb aggregate casts are reviewed and minimized
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 11-01-PLAN.md — Rate limiter module, origin validator, and security headers in next.config.ts
@@ -172,6 +172,6 @@ Plans:
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
 | 10.1. Migrate Recharts to shadcn/ui Charts | 4/4 | Complete    | 2026-03-08 | - |
-| 11. Security Hardening | 3/4 | In Progress|  | - |
+| 11. Security Hardening | 4/4 | Complete   | 2026-03-08 | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |

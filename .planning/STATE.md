@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Completed 11-03-PLAN.md (debug logging removal + type safety)
-last_updated: "2026-03-08T09:01:34.853Z"
+stopped_at: Completed 11-02-PLAN.md (rate limiting + origin validation wiring)
+last_updated: "2026-03-08T09:13:42.714Z"
 last_activity: 2026-03-08 -- Completed 11-04 (input validation hardening)
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 ---
@@ -138,6 +138,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Absent Origin header allowed on mutations (Bearer token auth is CSRF-immune)
 - [Phase 11]: Removed onStepFinish callback entirely from chat route (debug-only logging)
 - [Phase 11]: Used typeof prisma.model pattern for tenantDb type casts, Prisma.InputJsonValue for Json fields
+- [Phase 11]: Origin validation before auth check on mutations (fail fast, save DB lookups)
+- [Phase 11]: Rate limiting after auth check for user-keyed routes (needs user.id)
 
 ### Pending Todos
 
@@ -150,6 +152,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-08T09:01:10.009Z
-Stopped at: Completed 11-03-PLAN.md (debug logging removal + type safety)
+Last session: 2026-03-08T09:13:42.712Z
+Stopped at: Completed 11-02-PLAN.md (rate limiting + origin validation wiring)
 Next step: Continue Phase 11 remaining plans or advance to Phase 12

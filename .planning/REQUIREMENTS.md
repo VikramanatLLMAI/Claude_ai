@@ -81,7 +81,7 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 ### Tech Debt
 
-- [ ] **DEBT-01**: Rate limiting TODO on find-org route resolved
+- [x] **DEBT-01**: Rate limiting TODO on find-org route resolved
 - [x] **DEBT-02**: console.log debug statements removed from chat route and API routes
 - [x] **DEBT-03**: TypeScript `as any` casts on tenantDb aggregates reviewed and minimized
 - [x] **DEBT-04**: Input validation audit across all API routes (Zod schemas)
@@ -192,7 +192,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | SEC-04 | Phase 11 | Complete |
 | SEC-05 | Phase 11 | Complete |
 | SEC-06 | Phase 11 | Complete |
-| DEBT-01 | Phase 11 | Pending |
+| DEBT-01 | Phase 11 | Complete |
 | DEBT-02 | Phase 11 | Complete |
 | DEBT-03 | Phase 11 | Complete |
 | DEBT-04 | Phase 11 | Complete |
