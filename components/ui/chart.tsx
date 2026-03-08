@@ -107,7 +107,9 @@ const ChartContainer = React.forwardRef<
           "[&_.recharts-sector]:outline-none",
           "[&_.recharts-surface]:outline-none",
           "[&_.recharts-tooltip-wrapper]:!z-50",
-          "flex justify-center text-xs [&_.recharts-responsive-container]:!h-full",
+          "flex flex-col text-xs",
+          "min-h-[200px] w-full",
+          "[&_.recharts-responsive-container]:flex-1",
           className
         )}
         style={

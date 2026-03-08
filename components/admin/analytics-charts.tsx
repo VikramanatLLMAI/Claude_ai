@@ -459,7 +459,7 @@ export function PeakUsageHeatmap({ data }: PeakUsageHeatmapProps) {
                           />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-xs">
-                          {DAY_LABELS[dayIndex]} {hour}:00 -- {count} requests
+                          {DAY_LABELS[dayIndex]} {hour}:00 - {count} requests
                         </TooltipContent>
                       </RadixTooltip>
                     )
