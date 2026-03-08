@@ -57,12 +57,6 @@ export async function GET(req: NextRequest) {
   try {
     const result = await runScheduledCleanup();
 
-    console.log(
-      `[Cron Cleanup] Purged ${result.purgedOrgs.count} orgs, ` +
-      `${result.expiredInvitations.count} invitations, ` +
-      `${result.expiredSessions.count} sessions`
-    );
-
     return NextResponse.json(result);
   } catch (error) {
     console.error('Cron cleanup error:', error);

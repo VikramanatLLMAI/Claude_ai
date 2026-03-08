@@ -46,8 +46,6 @@ export async function POST(req: Request) {
       // In production, send email here with reset link:
       // await sendPasswordResetEmail(user.email, resetToken);
 
-      console.log(`[Password Reset] Token generated for ${email}: ${resetToken}`);
-
       // For demo purposes, we'll include the token in the response
       // NEVER do this in production - token should only be sent via email
       if (process.env.NODE_ENV === 'development') {

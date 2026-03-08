@@ -157,23 +157,16 @@ export async function POST(req: NextRequest) {
     // Filter client-requested MCP IDs against authorized set
     const filteredMcpIds = (activeMcpIds || []).filter((id: string) => authorizedMcpIds.has(id));
 
-    // DEBUG: Log the activeMcpIds received from frontend
-    console.log(`[Chat] activeMcpIds from request:`, JSON.stringify(activeMcpIds));
-    console.log(`[Chat] filteredMcpIds (authorized):`, JSON.stringify(filteredMcpIds));
+    // MCP IDs filtered against authorized set
 
     // Load MCP tools if any authorized connections are active
     if (filteredMcpIds && filteredMcpIds.length > 0) {
-      console.log(`[Chat] Attempting to load MCP tools from ${filteredMcpIds.length} connections:`, filteredMcpIds);
       try {
         const { tools: mcpTools, descriptions } = await loadActiveMcpToolsWithDescriptions(filteredMcpIds);
         const mcpToolCount = Object.keys(mcpTools).length;
         if (mcpToolCount > 0) {
           Object.assign(tools, mcpTools);
           mcpToolDescriptions = descriptions;
-          console.log(`[Chat] Successfully loaded ${mcpToolCount} MCP tools:`, Object.keys(mcpTools));
-          console.log(`[Chat] MCP tool descriptions for prompt:`, descriptions.map(d => d.name));
-        } else {
-          console.log(`[Chat] No MCP tools loaded. Ensure connections are tested and tools are discovered.`);
         }
       } catch (error) {
         console.error('[Chat] Error loading MCP tools:', error);
@@ -184,10 +177,8 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const messages = await convertToModelMessages(uiMessages as any);
 
-    // Log available tools
     const toolNames = Object.keys(tools);
     const hasTools = toolNames.length > 0;
-    console.log(`[Chat] Available tools (${toolNames.length}):`, toolNames);
 
     // D. 6-layer system prompt composition (PRMT-01 through PRMT-06, PROMPT-04, PROMPT-05)
     // Fetch org settings for org-level instructions and restrictions
@@ -209,8 +200,6 @@ export async function POST(req: NextRequest) {
         customInstructionsEnabled: role.customInstructionsEnabled,
       }
     );
-    console.log(`[Chat] System prompt composed with 6-layer stack, ${mcpToolDescriptions.length} MCP tool descriptions`);
-
     // Fit messages within the context window (trim tool results + drop old groups)
     const fittedMessages = fitMessagesToContextWindow(messages, systemPrompt);
 
@@ -225,49 +214,6 @@ export async function POST(req: NextRequest) {
       messages: fittedMessages,
       maxTokens: modelInfo?.maxOutputTokens ?? 65536,
       ...(thinkingMode !== 'none' ? {} : { temperature: 0.7 }),
-      // Log tool calls for debugging - this is called after each step (including tool executions)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onStepFinish: (event: any) => {
-        console.log(`[Chat] ========== STEP FINISHED ==========`);
-        console.log(`[Chat] Step type: ${event.stepType}`);
-        console.log(`[Chat] Finish reason: ${event.finishReason}`);
-
-        if (event.toolCalls && event.toolCalls.length > 0) {
-          console.log(`[Chat] Tool calls made:`, event.toolCalls.map((tc: Record<string, unknown>) => ({
-            name: tc.toolName,
-            args: JSON.stringify(tc.args ?? {}).substring(0, 200)
-          })));
-        }
-
-        if (event.toolResults && event.toolResults.length > 0) {
-          console.log(`[Chat] Tool results received:`);
-          event.toolResults.forEach((tr: Record<string, unknown>, i: number) => {
-            const trResult = tr.result;
-            const resultStr = trResult === undefined || trResult === null
-              ? '(no result)'
-              : typeof trResult === 'string'
-                ? trResult.substring(0, 300)
-                : JSON.stringify(trResult).substring(0, 300);
-            console.log(`[Chat]   Result ${i + 1} (${tr.toolName || 'unknown'}):`, resultStr);
-            // Log file_ids from code execution results
-            if (trResult && typeof trResult === 'object') {
-              const resultObj = trResult as Record<string, unknown>;
-              const content = resultObj.content as Array<Record<string, unknown>> | undefined;
-              if (content && Array.isArray(content) && content.length > 0) {
-                const fileIds = content.filter(c => c.file_id).map(c => c.file_id);
-                if (fileIds.length > 0) {
-                  console.log(`[Chat]   File IDs in result:`, fileIds);
-                }
-              }
-            }
-          });
-        }
-
-        if (event.text) {
-          console.log(`[Chat] Text generated: ${event.text.substring(0, 200)}...`);
-        }
-        console.log(`[Chat] ========================================`);
-      },
     };
 
     // Add tools if any are defined
@@ -275,7 +221,6 @@ export async function POST(req: NextRequest) {
       streamConfig.tools = tools;
       // Enable multi-step tool calls - model continues after tool results until done
       streamConfig.stopWhen = stepCountIs(20);
-      console.log(`[Chat] Tools attached to model config:`, Object.keys(tools));
     }
 
     // Build anthropic provider options
@@ -287,10 +232,8 @@ export async function POST(req: NextRequest) {
       // For Opus 4.6 use 'max', for Sonnet 4.6 use 'high' (max is Opus-only)
       const effort = modelId === 'claude-opus-4-6' ? 'max' : 'high';
       anthropicOptions.effort = effort;
-      console.log(`[Chat] Adaptive thinking enabled (effort: ${effort})`);
     } else if (thinkingMode === 'manual') {
       anthropicOptions.thinking = { type: 'enabled', budgetTokens: 16000 };
-      console.log(`[Chat] Manual thinking enabled (budget: 16000)`);
     }
 
     // Agent skills for code execution (always enabled)
@@ -399,8 +342,6 @@ export async function POST(req: NextRequest) {
             } catch {
               // Use what we have from the output
             }
-
-            console.log(`[Chat] File download: ${file.fileId} (${file.filename})`);
 
             // Write file-download data chunk through the SSE stream
             writer.write({
@@ -543,7 +484,6 @@ export async function POST(req: NextRequest) {
               requestDurationMs: requestEnd - requestStart,
             },
           });
-          console.log(`[Chat] Usage recorded: input=${totalUsage.inputTokens}, output=${totalUsage.outputTokens}, model=${modelId}`);
         } catch (usageError) {
           console.error('[Chat] Error recording usage:', usageError);
           // Do NOT fail the chat request if usage recording fails

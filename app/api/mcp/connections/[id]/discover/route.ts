@@ -99,7 +99,6 @@ export async function POST(
       // Add session ID to headers if available (required for stateful MCP servers)
       if (connection.sessionId) {
         headers['Mcp-Session-Id'] = connection.sessionId;
-        console.log('[MCP Discover] Using session ID:', connection.sessionId);
       }
 
       // Send tools/list request via JSON-RPC
