@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Completed 12-03-PLAN.md
-last_updated: "2026-03-08T11:43:24.137Z"
-last_activity: 2026-03-08 -- Completed 12-03 (E2E tests & CI pipeline)
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-08T11:44:00Z"
+last_activity: 2026-03-08 -- Completed 12-02 (critical backend unit tests)
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 22
-  completed_plans: 21
-  percent: 95
+  completed_plans: 22
+  percent: 100
 ---
 
 ---
@@ -99,11 +99,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 12 of 13 (Testing & CI)
-Plan: 3 of 3 in current phase (12-03 complete)
-Status: Executing Phase 12
-Last activity: 2026-03-08 -- Completed 12-03 (E2E tests & CI pipeline)
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase 12 Complete
+Last activity: 2026-03-08 -- Completed 12-02 (critical backend unit tests)
 
-Progress: [██████████] 95% -- 21/22 plans (v1.0 complete, v1.1 Phase 12 in progress)
+Progress: [██████████] 100% -- 22/22 plans (v1.0 + v1.1 complete)
 
 ## Performance Metrics
 
@@ -159,6 +159,9 @@ Recent decisions affecting current work:
 - [Phase 12]: passWithNoTests in vitest config for CI-safe zero-test exit code
 - [Phase 12]: Chromium-only Playwright project for speed and CI simplicity
 - [Phase 12]: CI e2e job only on PRs to main; unit+lint on every push
+- [Phase 12]: Tenant isolation tested by capturing $extends callback and invoking $allOperations directly
+- [Phase 12]: Encryption tests use real crypto (no mocks) for AES-256-GCM and scrypt
+- [Phase 12]: Usage service tests use lightweight mock tenantDb objects
 
 ### Pending Todos
 
@@ -171,6 +174,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-08T11:43:24.134Z
-Stopped at: Completed 12-03-PLAN.md
-Next step: Continue Phase 11 remaining plans or advance to Phase 12
+Last session: 2026-03-08T11:44:00Z
+Stopped at: Completed 12-02-PLAN.md
+Next step: Phase 12 complete -- all 22 v1.1 plans done

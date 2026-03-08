@@ -89,10 +89,10 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 ### Testing & CI
 
 - [x] **TEST-01**: Vitest configured with path aliases, happy-dom, and TypeScript support
-- [ ] **TEST-02**: Unit tests for auth middleware (session validation, org auth, super admin check)
-- [ ] **TEST-03**: Unit tests for tenant isolation (org-scoped queries, cross-org prevention)
-- [ ] **TEST-04**: Unit tests for prompt sanitizer and system prompt composition
-- [ ] **TEST-05**: Unit tests for usage limit enforcement
+- [x] **TEST-02**: Unit tests for auth middleware (session validation, org auth, super admin check)
+- [x] **TEST-03**: Unit tests for tenant isolation (org-scoped queries, cross-org prevention)
+- [x] **TEST-04**: Unit tests for prompt sanitizer and system prompt composition
+- [x] **TEST-05**: Unit tests for usage limit enforcement
 - [x] **TEST-06**: Playwright configured for E2E testing
 - [x] **TEST-07**: E2E tests for login flow (bare domain, org login)
 - [x] **TEST-08**: E2E tests for admin navigation (sidebar, profile, back-to-chat)
@@ -197,10 +197,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | DEBT-03 | Phase 11 | Complete |
 | DEBT-04 | Phase 11 | Complete |
 | TEST-01 | Phase 12 | Complete |
-| TEST-02 | Phase 12 | Pending |
-| TEST-03 | Phase 12 | Pending |
-| TEST-04 | Phase 12 | Pending |
-| TEST-05 | Phase 12 | Pending |
+| TEST-02 | Phase 12 | Complete |
+| TEST-03 | Phase 12 | Complete |
+| TEST-04 | Phase 12 | Complete |
+| TEST-05 | Phase 12 | Complete |
 | TEST-06 | Phase 12 | Complete |
 | TEST-07 | Phase 12 | Complete |
 | TEST-08 | Phase 12 | Complete |
