@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
+import { validate, UpdateArtifactSchema } from '@/lib/validation';
 
 // GET /api/artifacts/[id] - Get a single artifact with full content
 export async function GET(
@@ -62,7 +63,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { title, content } = body;
+    const result = validate(UpdateArtifactSchema, body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
+        { status: 400 }
+      );
+    }
+    const data = result.data!;
 
     const artifact = await tenantDb.artifact.findUnique({
       where: { id },
@@ -85,8 +93,8 @@ export async function PATCH(
     const updated = await tenantDb.artifact.update({
       where: { id },
       data: {
-        ...(title && { title }),
-        ...(content && { content }),
+        ...(data.title && { title: data.title }),
+        ...(data.content && { content: data.content }),
       },
     });
 

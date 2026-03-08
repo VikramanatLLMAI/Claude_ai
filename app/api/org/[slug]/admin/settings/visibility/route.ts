@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { auditLog, getIpAddress } from '@/lib/services/audit-service';
+import { validate, ConversationVisibilityToggleSchema } from '@/lib/validation';
 
 /**
  * GET - Return current conversationVisibility boolean
@@ -41,7 +42,14 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const enabled = Boolean(body.enabled);
+    const result = validate(ConversationVisibilityToggleSchema, body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
+        { status: 400 }
+      );
+    }
+    const enabled = result.data!.enabled;
 
     await prisma.$transaction(async (tx) => {
       await tx.orgSettings.update({

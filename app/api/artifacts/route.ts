@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
+import { validate, CreateArtifactSchema } from '@/lib/validation';
 
 // GET /api/artifacts?conversationId=xxx - Get all artifacts for a conversation
 export async function GET(req: NextRequest) {
@@ -63,18 +64,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { conversationId, messageId, type, title, content } = body;
-
-    if (!conversationId || !messageId || !title || !content) {
+    const result = validate(CreateArtifactSchema, body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'conversationId, messageId, title, and content are required' },
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
         { status: 400 }
       );
     }
+    const data = result.data!;
 
     // Verify user owns this conversation (tenant-scoped)
     const conversation = await tenantDb.conversation.findUnique({
-      where: { id: conversationId },
+      where: { id: data.conversationId },
     });
     if (!conversation || conversation.userId !== user.id) {
       return NextResponse.json(
@@ -86,12 +87,12 @@ export async function POST(req: NextRequest) {
     const artifact = await tenantDb.artifact.create({
       data: {
         organizationId: '' as string,
-        conversationId,
-        messageId,
+        conversationId: data.conversationId,
+        messageId: data.messageId,
         userId: user.id,
-        type: type || 'html',
-        title,
-        content,
+        type: data.type,
+        title: data.title,
+        content: data.content,
       },
     });
 

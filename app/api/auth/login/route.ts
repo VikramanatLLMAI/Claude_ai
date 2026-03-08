@@ -15,19 +15,20 @@ import {
   getPasswordPolicy,
   checkPasswordChangeRequired,
 } from '@/lib/services/password-policy-service';
+import { validate, LoginRequestSchema } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password } = body;
-
-    // Validate required fields
-    if (!email || !password) {
+    const result = validate(LoginRequestSchema, body);
+    if (!result.success) {
       return Response.json(
-        { error: 'Email and password are required' },
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
         { status: 400 }
       );
     }
+
+    const { email, password } = result.data!;
 
     // Find user by email
     const user = await getUserByEmail(email);
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Resolve org context from URL (if present) with body.slug fallback for org login page
-    const slug = resolveOrgSlug(req) || body.slug || null;
+    const slug = resolveOrgSlug(req) || result.data!.slug || null;
     let organizationId: string | null = null;
     let orgInfo: { id: string; name: string; slug: string; logoBase64: string | null; logoDisplayMode: string } | null = null;
 

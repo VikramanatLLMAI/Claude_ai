@@ -14,6 +14,7 @@ import {
   getOnboardingConfig,
   updateOnboardingConfig,
 } from '@/lib/services/onboarding-service';
+import { validate, UpdateOnboardingConfigSchema } from '@/lib/validation';
 
 /**
  * GET - Return current onboarding config (text + version)
@@ -35,20 +36,20 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const text = body.text;
-
-    if (typeof text !== 'string') {
+    const result = validate(UpdateOnboardingConfigSchema, body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'text must be a string' },
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
         { status: 400 }
       );
     }
+    const data = result.data!;
 
     const ipAddress = getIpAddress(req);
 
     await updateOnboardingConfig(
       auth.organization.id,
-      text,
+      data.text,
       auth.user.id,
       ipAddress
     );

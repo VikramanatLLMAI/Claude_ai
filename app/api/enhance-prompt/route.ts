@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, requireSuperAdmin } from '@/lib/auth-middleware';
 import { generateText } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { validate, EnhancePromptSchema } from '@/lib/validation';
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   platform:
@@ -30,22 +31,15 @@ const VALID_TYPES = Object.keys(SYSTEM_PROMPTS);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { text, type } = body;
-
-    // Validate inputs
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    const validation = validate(EnhancePromptSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Text is required and must be non-empty' },
+        { error: 'Validation failed', details: validation.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
         { status: 400 }
       );
     }
 
-    if (!type || !VALID_TYPES.includes(type)) {
-      return NextResponse.json(
-        { error: `Type must be one of: ${VALID_TYPES.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    const { text, type } = validation.data!;
 
     // Auth check based on type
     if (type === 'platform') {

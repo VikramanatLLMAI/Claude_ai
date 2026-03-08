@@ -17,6 +17,7 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { exportConversations } from '@/lib/services/conversation-visibility-service';
 import JSZip from 'jszip';
+import { validate, ConversationExportSchema } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
   const auth = await requireOrgAdmin(req);
@@ -39,16 +40,15 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const conversationIds = body.conversationIds;
-
-    if (!Array.isArray(conversationIds) || conversationIds.length === 0) {
+    const result = validate(ConversationExportSchema, body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'conversationIds must be a non-empty array' },
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
         { status: 400 }
       );
     }
 
-    const exported = await exportConversations(tenantDb, conversationIds);
+    const exported = await exportConversations(tenantDb, result.data!.conversationIds);
 
     if (exported.length === 0) {
       return NextResponse.json(

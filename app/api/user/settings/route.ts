@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { updateUser } from '@/lib/storage';
+import { validate, UpdateUserSettingsSchema } from '@/lib/validation';
 
 // GET /api/user/settings - Get user settings
 export async function GET(req: NextRequest) {
@@ -31,14 +32,21 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, avatarBase64, preferences } = body;
+    const result = validate(UpdateUserSettingsSchema, body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
+        { status: 400 }
+      );
+    }
+    const data = result.data!;
 
     // Build update object
     const updates: Record<string, unknown> = {};
 
-    if (name !== undefined) updates.name = name;
-    if (avatarBase64 !== undefined) updates.avatarBase64 = avatarBase64;
-    if (preferences !== undefined) updates.preferences = preferences;
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.avatarBase64 !== undefined) updates.avatarBase64 = data.avatarBase64;
+    if (data.preferences !== undefined) updates.preferences = data.preferences;
 
     // Update user (unscoped — User is not org-scoped)
     const updatedUser = await updateUser(user.id, updates);

@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { encrypt, decrypt } from '@/lib/encryption';
+import { validate, AnthropicApiKeySchema } from '@/lib/validation';
 
 // GET /api/user/anthropic - Get Anthropic API key status (masked)
 export async function GET(req: NextRequest) {
@@ -62,23 +63,16 @@ export async function POST(req: NextRequest) {
   const { tenantDb } = auth;
 
   try {
-    const { apiKey } = await req.json();
-
-    if (!apiKey) {
+    const body = await req.json();
+    const result = validate(AnthropicApiKeySchema, body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'API key is required' },
+        { error: 'Validation failed', details: result.errors!.map(e => ({ field: e.path.join('.'), message: e.message })) },
         { status: 400 }
       );
     }
 
-    // Validate Anthropic API key format
-    if (!apiKey.startsWith('sk-ant-')) {
-      return NextResponse.json(
-        { error: 'Invalid Anthropic API key format. Key should start with "sk-ant-"' },
-        { status: 400 }
-      );
-    }
-
+    const { apiKey } = result.data!;
     const encryptedKey = encrypt(apiKey);
 
     // Upsert the org's Anthropic API key
