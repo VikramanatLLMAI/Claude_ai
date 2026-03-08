@@ -3,6 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
+stopped_at: Completed 11-03-PLAN.md (debug logging removal + type safety)
+last_updated: "2026-03-08T09:01:34.853Z"
+last_activity: 2026-03-08 -- Completed 11-04 (input validation hardening)
+progress:
+  total_phases: 7
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 18
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Harden & Polish
+status: executing
 stopped_at: Completed 11-01-PLAN.md
 last_updated: "2026-03-08T08:52:29.795Z"
 last_activity: 2026-03-07 -- Completed 10.1-02 (Org Admin charts migration + cleanup)
@@ -121,6 +136,8 @@ Recent decisions affecting current work:
 - [Phase 10.1]: Used ResponsiveContainer initialDimension prop to suppress -1 dimension warnings on initial render
 - [Phase 11]: CSP in Report-Only mode for safe monitoring before enforcement
 - [Phase 11]: Absent Origin header allowed on mutations (Bearer token auth is CSRF-immune)
+- [Phase 11]: Removed onStepFinish callback entirely from chat route (debug-only logging)
+- [Phase 11]: Used typeof prisma.model pattern for tenantDb type casts, Prisma.InputJsonValue for Json fields
 
 ### Pending Todos
 
@@ -133,6 +150,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-08T08:56:24Z
-Stopped at: Completed 11-04-PLAN.md (input validation hardening)
+Last session: 2026-03-08T09:01:10.009Z
+Stopped at: Completed 11-03-PLAN.md (debug logging removal + type safety)
 Next step: Continue Phase 11 remaining plans or advance to Phase 12
