@@ -50,9 +50,11 @@ import {
   formatTokens,
   formatDate,
   formatMs,
+  padSinglePointData,
   ERROR_COLORS,
   INVITATION_COLORS,
 } from "@/components/admin/chart-utils"
+import { Tooltip as RadixTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 
 // ============================================
 // Types (matching org-analytics-service)
@@ -181,7 +183,7 @@ export function OrgUsageTrendChart({ data, onExport }: OrgUsageTrendChartProps) 
           <EmptyState message="No usage data for this period" />
         ) : (
           <ChartContainer config={usageTrendConfig} className="min-h-[300px] w-full">
-            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+            <AreaChart data={padSinglePointData(data)} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -196,7 +198,7 @@ export function OrgUsageTrendChart({ data, onExport }: OrgUsageTrendChartProps) 
                 tickLine={false}
                 axisLine={false}
               />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />} />
               <ChartLegend content={<ChartLegendContent />} />
               <Area
                 type="monotone"
@@ -554,7 +556,7 @@ export function OrgMcpUsageChart({ data, onExport }: OrgMcpUsageChartProps) {
           <EmptyState message="No MCP tool usage in this period" />
         ) : (
           <ChartContainer config={mcpUsageConfig} className="min-h-[260px] w-full">
-            <AreaChart data={data} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+            <AreaChart data={padSinglePointData(data)} accessibilityLayer margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
@@ -564,7 +566,7 @@ export function OrgMcpUsageChart({ data, onExport }: OrgMcpUsageChartProps) {
                 axisLine={false}
               />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />} />
               <Area
                 type="monotone"
                 dataKey="toolCallCount"
@@ -737,9 +739,9 @@ export function OrgPeakUsageHeatmap({ data, onExport }: OrgPeakUsageHeatmapProps
         {data.length === 0 ? (
           <EmptyState message="No usage data for this period" />
         ) : (
-          <div className="overflow-x-auto">
+          <TooltipProvider delayDuration={0}>
             <div
-              className="grid gap-0.5 min-w-[600px]"
+              className="grid gap-0.5"
               style={{ gridTemplateColumns: "48px repeat(24, 1fr)" }}
             >
               {/* Header row: hour labels */}
@@ -761,14 +763,19 @@ export function OrgPeakUsageHeatmap({ data, onExport }: OrgPeakUsageHeatmapProps
                     const intensity = maxCount > 0 ? count / maxCount : 0
                     const alpha = 0.08 + intensity * 0.85
                     return (
-                      <div
-                        key={`cell-${dayIndex}-${hour}`}
-                        className="h-7 rounded-sm cursor-default"
-                        style={{
-                          backgroundColor: `rgba(34, 197, 94, ${alpha})`,
-                        }}
-                        title={`${DAY_LABELS[dayIndex]} ${hour}:00 - ${count} requests`}
-                      />
+                      <RadixTooltip key={`cell-${dayIndex}-${hour}`}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="h-7 rounded-sm cursor-default"
+                            style={{
+                              backgroundColor: `rgba(34, 197, 94, ${alpha})`,
+                            }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {DAY_LABELS[dayIndex]} {hour}:00 - {count} requests
+                        </TooltipContent>
+                      </RadixTooltip>
                     )
                   })}
                 </div>
@@ -787,7 +794,7 @@ export function OrgPeakUsageHeatmap({ data, onExport }: OrgPeakUsageHeatmapProps
               </div>
               <span>High</span>
             </div>
-          </div>
+          </TooltipProvider>
         )}
       </CardContent>
     </Card>
