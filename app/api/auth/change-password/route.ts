@@ -16,12 +16,17 @@ import {
 } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import {
   getPasswordPolicy,
   validatePasswordAgainstPolicy,
 } from '@/lib/services/password-policy-service';
 
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   try {
     // Require authentication
     const authResult = await requireAuth(req);

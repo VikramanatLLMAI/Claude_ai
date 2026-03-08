@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { getConversationDetail } from '@/lib/services/conversation-visibility-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function GET(
   req: NextRequest,
@@ -20,7 +22,11 @@ export async function GET(
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { organization, tenantDb } = auth;
+  const { user, organization, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
   const { id } = await params;
 
   try {

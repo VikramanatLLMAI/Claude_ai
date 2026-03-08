@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getAnthropicFilesClient } from '@/lib/anthropic-files';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function GET(
   req: NextRequest,
@@ -8,6 +10,10 @@ export async function GET(
 ) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${auth.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   const { fileId } = await params;
 

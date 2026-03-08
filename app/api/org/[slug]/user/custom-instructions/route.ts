@@ -16,6 +16,8 @@ import { requireOrgAuth } from '@/lib/auth-middleware';
 import { TOKEN_LIMITS, SERVER_MARGIN, estimateTokenCount } from '@/lib/token-counter';
 import { z } from 'zod';
 import { formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 // Max character limit: tokens * ~4 chars/token * server margin
 const MAX_CHARS = Math.ceil(TOKEN_LIMITS.user * 4 * SERVER_MARGIN);
@@ -52,6 +54,9 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/org/[slug]/user/custom-instructions
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
 

@@ -13,6 +13,8 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { saveRoleInstructions, saveRoleRestrictions } from '@/lib/services/instruction-service';
 import { RoleInstructionsSchema, RoleRestrictionsSchema, formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 interface RouteParams {
   params: Promise<{ slug: string; roleId: string }>;
@@ -21,6 +23,10 @@ interface RouteParams {
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${auth.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   const { roleId } = await params;
 
@@ -58,8 +64,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPatch = checkRateLimit(`api:${auth.user.id}`, RATE_LIMITS.api);
+  if (!rlPatch.allowed) return rateLimitResponse(rlPatch.retryAfterSeconds);
 
   const { roleId } = await params;
 

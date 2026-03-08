@@ -10,11 +10,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { resolveOrgSlug } from '@/lib/resolve-org';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     // Build base response

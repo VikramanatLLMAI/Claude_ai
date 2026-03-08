@@ -16,6 +16,8 @@ import {
   setActiveTheme,
 } from '@/lib/services/theme-service';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const SetActiveThemeSchema = z.object({
   activeTheme: z.string().min(1, 'Theme name is required'),
@@ -48,6 +50,9 @@ export async function GET(req: NextRequest) {
  * Server-side validates theme is in assigned set (OTHM-07).
  */
 export async function PUT(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

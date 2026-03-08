@@ -12,12 +12,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { encrypt, decrypt } from '@/lib/encryption';
 import { validate, AnthropicApiKeySchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 // GET /api/user/anthropic - Get Anthropic API key status (masked)
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { tenantDb } = auth;
+  const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     // Find the org's active Anthropic API key
@@ -58,9 +64,16 @@ export async function GET(req: NextRequest) {
 
 // POST /api/user/anthropic - Save Anthropic API key
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { tenantDb } = auth;
+  const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPost = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPost.allowed) return rateLimitResponse(rlPost.retryAfterSeconds);
 
   try {
     const body = await req.json();

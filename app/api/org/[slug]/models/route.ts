@@ -11,12 +11,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getModelsByIds } from '@/lib/services/model-registry-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { role, permissions } = auth;
+  const { user, role, permissions } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
   const allowedModelIds = Array.isArray(role.allowedModels)
     ? (role.allowedModels as string[])
     : [];

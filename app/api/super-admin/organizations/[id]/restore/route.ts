@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { restoreOrganization } from '@/lib/services/org-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -18,8 +20,15 @@ type RouteParams = { params: Promise<{ id: string }> };
  * POST /api/super-admin/organizations/[id]/restore
  */
 export async function POST(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPost = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlPost.allowed) return rateLimitResponse(rlPost.retryAfterSeconds);
 
   try {
     const { id } = await params;

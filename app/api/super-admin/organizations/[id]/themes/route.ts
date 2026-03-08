@@ -17,6 +17,8 @@ import {
   VALID_THEMES,
 } from '@/lib/services/theme-service';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -32,6 +34,10 @@ const SetThemesSchema = z.object({
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -55,8 +61,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
  * Body: { assignedThemes: string[], defaultTheme: string | null }
  */
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPut = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlPut.allowed) return rateLimitResponse(rlPut.retryAfterSeconds);
 
   try {
     const { id } = await params;

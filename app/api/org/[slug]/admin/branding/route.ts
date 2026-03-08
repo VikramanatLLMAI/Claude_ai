@@ -13,6 +13,8 @@ import { getLoginBranding, upsertLoginBranding } from '@/lib/services/login-bran
 import { getIpAddress, auditLog } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const FeatureCardSchema = z.object({
   icon: z.string().max(50),
@@ -56,6 +58,9 @@ export async function GET(req: NextRequest) {
  * PUT - Update login branding data
  */
 export async function PUT(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

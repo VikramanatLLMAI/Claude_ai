@@ -12,6 +12,8 @@ import { requireAuth, requireSuperAdmin } from '@/lib/auth-middleware';
 import { generateText } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { validate, EnhancePromptSchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   platform:
@@ -29,6 +31,9 @@ const SYSTEM_PROMPTS: Record<string, string> = {
 const VALID_TYPES = Object.keys(SYSTEM_PROMPTS);
 
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   try {
     const body = await req.json();
     const validation = validate(EnhancePromptSchema, body);

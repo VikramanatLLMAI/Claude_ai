@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { updateUser } from '@/lib/storage';
 import { validate, UpdateUserSettingsSchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 // GET /api/user/settings - Get user settings
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     return NextResponse.json({
@@ -26,9 +32,16 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/user/settings - Update user settings
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPatch = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPatch.allowed) return rateLimitResponse(rlPatch.retryAfterSeconds);
 
   try {
     const body = await req.json();

@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress, auditLog } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const MAX_LOGO_SIZE = 500 * 1024; // 500KB
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
@@ -21,6 +23,9 @@ const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
  * Converts to Base64 data URI and stores in Organization.logoBase64.
  */
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
@@ -91,6 +96,9 @@ export async function POST(req: NextRequest) {
  * Clears Organization.logoBase64 (set to null).
  */
 export async function DELETE(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

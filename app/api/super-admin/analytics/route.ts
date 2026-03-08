@@ -17,6 +17,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth-middleware';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import {
   getKpiSummary,
   getUsageTrends,
@@ -46,6 +48,10 @@ export async function GET(req: NextRequest) {
   // Auth check
   const auth = await requireSuperAdmin(req);
   if (auth instanceof NextResponse) return auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${auth.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   // Parse query params
   const { searchParams } = req.nextUrl;

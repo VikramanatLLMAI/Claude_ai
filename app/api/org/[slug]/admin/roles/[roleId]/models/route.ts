@@ -17,6 +17,8 @@ import { getModelsByIds } from '@/lib/services/model-registry-service';
 import { z } from 'zod';
 import { formatValidationErrors } from '@/lib/validation';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /** Zod schema: at least one model required per role */
 const UpdateAllowedModelsSchema = z.object({
@@ -81,6 +83,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string; roleId: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

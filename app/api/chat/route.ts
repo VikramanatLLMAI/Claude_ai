@@ -9,14 +9,23 @@ import { validate, ChatRequestSchema, formatValidationErrors } from '@/lib/valid
 import { composeSystemPrompt } from '@/lib/services/system-prompt-service';
 import { getModelByModelId } from '@/lib/services/model-registry-service';
 import { checkUserUsageLimits, getOrgMonthlyUsage, checkOrgMonthlyCeiling } from '@/lib/services/usage-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import type { Prisma } from '@/lib/generated/prisma/client';
 
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, orgMember, organization, role, tenantDb } = auth;
+
+  // Rate limiting: 10 requests per minute per user (chat tier)
+  const rl = checkRateLimit(`chat:${user.id}`, RATE_LIMITS.chat);
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
 
   try {
     // Issue 2: Validate request body with Zod schema

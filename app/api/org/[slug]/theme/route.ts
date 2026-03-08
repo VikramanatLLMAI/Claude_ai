@@ -10,6 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getActiveTheme } from '@/lib/services/theme-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET /api/org/[slug]/theme
@@ -20,6 +22,10 @@ import { getActiveTheme } from '@/lib/services/theme-service';
 export async function GET(req: NextRequest) {
   const authResult = await requireOrgAuth(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const activeTheme = await getActiveTheme(authResult.organization.id);

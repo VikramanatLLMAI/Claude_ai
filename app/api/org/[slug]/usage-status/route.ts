@@ -13,11 +13,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { getUserUsageSummary } from '@/lib/services/usage-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, role, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const summary = await getUserUsageSummary(tenantDb, user.id, role);

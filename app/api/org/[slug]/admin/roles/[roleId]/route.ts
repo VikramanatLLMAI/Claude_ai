@@ -13,6 +13,8 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { updateRole, deleteRole } from '@/lib/services/role-service';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 interface RouteParams {
   params: Promise<{ slug: string; roleId: string }>;
@@ -46,8 +48,15 @@ const UpdateRoleSchema = z.object({
  * Update a role (system or custom). Returns 200 with updated role.
  */
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPut = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlPut.allowed) return rateLimitResponse(rlPut.retryAfterSeconds);
 
   try {
     const { roleId } = await params;
@@ -114,8 +123,15 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
  * ODEF-02: if deleted role was org's defaultRoleId, clearing happens in service layer.
  */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlDel = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlDel.allowed) return rateLimitResponse(rlDel.retryAfterSeconds);
 
   try {
     const { roleId } = await params;

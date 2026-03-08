@@ -20,6 +20,8 @@ import {
   formatValidationErrors,
 } from '@/lib/validation';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -30,6 +32,10 @@ type RouteParams = { params: Promise<{ id: string }> };
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -67,8 +73,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
  * Update a Super Admin's name or email.
  */
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPatch = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlPatch.allowed) return rateLimitResponse(rlPatch.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -118,8 +131,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
  * Delete a Super Admin user.
  */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlDel = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlDel.allowed) return rateLimitResponse(rlDel.retryAfterSeconds);
 
   try {
     const { id } = await params;

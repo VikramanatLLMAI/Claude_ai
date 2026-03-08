@@ -18,12 +18,21 @@ import prisma from '@/lib/db';
 import { exportConversations } from '@/lib/services/conversation-visibility-service';
 import JSZip from 'jszip';
 import { validate, ConversationExportSchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { organization, tenantDb } = auth;
+  const { user, organization, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPost = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPost.allowed) return rateLimitResponse(rlPost.retryAfterSeconds);
 
   try {
     // Check visibility is enabled

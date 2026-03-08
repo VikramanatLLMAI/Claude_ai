@@ -19,6 +19,8 @@ import {
   deleteOrgMember,
 } from '@/lib/services/org-user-service';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * Zod schema for PATCH body.
@@ -52,6 +54,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string; userId: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
@@ -118,6 +122,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string; userId: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

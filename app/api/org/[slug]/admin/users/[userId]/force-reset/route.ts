@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { forcePasswordReset } from '@/lib/services/password-policy-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * POST /api/org/[slug]/admin/users/[userId]/force-reset
@@ -23,6 +25,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string; userId: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

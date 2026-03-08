@@ -13,6 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { decrypt } from '@/lib/encryption';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * Compute masked key: first 7 chars + "..." + last 4 chars of decrypted key.
@@ -30,6 +32,10 @@ function maskKey(rawKey: string): string {
 export async function GET(req: NextRequest) {
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   const orgId = authResult.organization.id;
 

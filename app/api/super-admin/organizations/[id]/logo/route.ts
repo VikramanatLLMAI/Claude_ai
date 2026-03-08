@@ -12,6 +12,8 @@ import { requireSuperAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { updateOrgLogo } from '@/lib/services/org-service';
 import { OrgLogoSchema, formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -19,8 +21,15 @@ type RouteParams = { params: Promise<{ id: string }> };
  * PATCH /api/super-admin/organizations/[id]/logo
  */
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPatch = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlPatch.allowed) return rateLimitResponse(rlPatch.retryAfterSeconds);
 
   try {
     const { id } = await params;

@@ -8,10 +8,19 @@
  * (org name, role name, email) when a valid token is provided.
  */
 
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateInvitationToken } from '@/lib/services/registration-service';
 
 export async function GET(req: NextRequest) {
+  // Rate limiting: 5 requests per 15 minutes per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  const rl = checkRateLimit(`auth:${ip}`, RATE_LIMITS.auth);
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
+
   try {
     const token = req.nextUrl.searchParams.get('token');
 

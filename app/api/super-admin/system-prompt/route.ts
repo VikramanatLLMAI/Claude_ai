@@ -17,6 +17,8 @@ import { getIpAddress } from '@/lib/services/audit-service';
 import { getPlatformSettings, updatePlatformSettings } from '@/lib/services/platform-settings-service';
 import { DEFAULT_PLATFORM_PROMPT } from '@/lib/system-prompts';
 import { UpdatePlatformPromptSchema, formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function GET(req: NextRequest) {
   const auth = await requireSuperAdmin(req);
@@ -38,6 +40,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireSuperAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

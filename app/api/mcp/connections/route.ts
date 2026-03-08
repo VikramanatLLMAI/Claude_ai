@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encrypt } from '@/lib/encryption';
 import { requireOrgAuth } from '@/lib/auth-middleware';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 // GET /api/mcp/connections - List all MCP connections for user in current org
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const connections = await tenantDb.mcpConnection.findMany({
@@ -39,9 +45,16 @@ export async function GET(req: NextRequest) {
 
 // POST /api/mcp/connections - Create a new MCP connection
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPost = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPost.allowed) return rateLimitResponse(rlPost.retryAfterSeconds);
 
   try {
     const body = await req.json();

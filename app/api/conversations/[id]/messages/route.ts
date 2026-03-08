@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { toUIMessage } from '@/lib/storage';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import type { Prisma } from '@/lib/generated/prisma/client';
 
 interface RouteParams {
@@ -12,6 +14,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -50,9 +56,16 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 // POST /api/conversations/[id]/messages - Add message to conversation
 export async function POST(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPost = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPost.allowed) return rateLimitResponse(rlPost.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -115,9 +128,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/conversations/[id]/messages - Clear all messages in conversation
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlDel = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlDel.allowed) return rateLimitResponse(rlDel.retryAfterSeconds);
 
   try {
     const { id } = await params;

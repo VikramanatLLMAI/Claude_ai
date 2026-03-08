@@ -13,6 +13,8 @@ import { getIpAddress } from '@/lib/services/audit-service';
 import { startImpersonation } from '@/lib/services/impersonation-service';
 import { z } from 'zod';
 import { formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const StartImpersonationSchema = z.object({
   duration: z.union([z.literal(15), z.literal(30), z.literal(60)]),
@@ -30,6 +32,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

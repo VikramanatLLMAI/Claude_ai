@@ -17,6 +17,8 @@ import {
   updateApiKeyAssignments,
 } from '@/lib/services/api-key-service';
 import { UpdateApiKeyAssignmentsSchema, formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET /api/super-admin/api-keys/[id]
@@ -55,6 +57,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -100,6 +104,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

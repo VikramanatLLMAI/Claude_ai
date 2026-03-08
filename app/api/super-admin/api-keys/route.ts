@@ -12,6 +12,8 @@ import { requireSuperAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { listApiKeys, createApiKey } from '@/lib/services/api-key-service';
 import { CreateApiKeySchema, formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET /api/super-admin/api-keys
@@ -39,6 +41,9 @@ export async function GET(req: NextRequest) {
  * Returns 201 with created key (masked).
  */
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

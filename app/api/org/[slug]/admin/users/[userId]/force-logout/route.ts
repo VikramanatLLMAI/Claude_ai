@@ -14,6 +14,8 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { forceLogoutUser } from '@/lib/services/session-service';
 import { auditLog, getIpAddress } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * POST /api/org/[slug]/admin/users/[userId]/force-logout
@@ -23,6 +25,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string; userId: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

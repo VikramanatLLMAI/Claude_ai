@@ -12,6 +12,8 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { auditLog, getIpAddress } from '@/lib/services/audit-service';
 import { validate, ConversationVisibilityToggleSchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET - Return current conversationVisibility boolean
@@ -34,10 +36,17 @@ export async function GET(req: NextRequest) {
  * PATCH - Toggle conversation visibility on/off
  */
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
   const { organization, user } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPatch = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPatch.allowed) return rateLimitResponse(rlPatch.retryAfterSeconds);
   const ipAddress = getIpAddress(req);
 
   try {

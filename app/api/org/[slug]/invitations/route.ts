@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { createInvitation, listInvitations } from '@/lib/services/invitation-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import {
   CreateInvitationSchema,
   formatValidationErrors,
@@ -41,6 +43,9 @@ export async function GET(req: NextRequest) {
  * Create a new invitation. Sends email to the invited user.
  */
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

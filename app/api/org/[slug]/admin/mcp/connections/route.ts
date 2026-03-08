@@ -17,6 +17,8 @@ import { getIpAddress, auditLog } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 import { z } from 'zod';
 import { formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const CreateOrgMcpConnectionSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -81,6 +83,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/org/[slug]/admin/mcp/connections
 export async function POST(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

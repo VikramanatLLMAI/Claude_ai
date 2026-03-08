@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 // GET /api/mcp/connections/[id] - Get a single MCP connection
 export async function GET(
@@ -9,6 +11,10 @@ export async function GET(
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -56,9 +62,15 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlPatch = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlPatch.allowed) return rateLimitResponse(rlPatch.retryAfterSeconds);
 
   try {
     const { id } = await params;
@@ -122,9 +134,15 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
   const { user, tenantDb } = auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlDel = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
+  if (!rlDel.allowed) return rateLimitResponse(rlDel.retryAfterSeconds);
 
   try {
     const { id } = await params;

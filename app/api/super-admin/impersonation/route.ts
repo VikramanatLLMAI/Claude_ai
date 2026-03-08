@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import {
   getImpersonationStatus,
   endImpersonation,
@@ -32,6 +34,13 @@ function extractToken(req: NextRequest): string | null {
  * Returns impersonation details or { isImpersonating: false }.
  */
 export async function GET(req: NextRequest) {
+  // Rate limiting: 60 requests per minute per IP
+  const ipGet = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  const rlGet = checkRateLimit(`api:${ipGet}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
+
   const auth = await validateSession(req);
   if (!auth.authenticated || !auth.user) {
     return NextResponse.json(
@@ -67,6 +76,16 @@ export async function GET(req: NextRequest) {
  * The impersonatorId from the session is used to verify authorization.
  */
 export async function DELETE(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
+  // Rate limiting: 60 requests per minute per IP
+  const ipDel = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  const rlDel = checkRateLimit(`api:${ipDel}`, RATE_LIMITS.api);
+  if (!rlDel.allowed) return rateLimitResponse(rlDel.retryAfterSeconds);
+
   const auth = await validateSession(req);
   if (!auth.authenticated || !auth.user) {
     return NextResponse.json(

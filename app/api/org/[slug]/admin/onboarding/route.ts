@@ -15,6 +15,8 @@ import {
   updateOnboardingConfig,
 } from '@/lib/services/onboarding-service';
 import { validate, UpdateOnboardingConfigSchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET - Return current onboarding config (text + version)
@@ -31,6 +33,9 @@ export async function GET(req: NextRequest) {
  * PUT - Update onboarding text and bump version
  */
 export async function PUT(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

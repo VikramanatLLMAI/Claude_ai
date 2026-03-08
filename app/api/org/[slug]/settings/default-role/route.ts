@@ -13,6 +13,8 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { auditLog, type PrismaTransactionClient } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import {
   SetDefaultRoleSchema,
   formatValidationErrors,
@@ -49,6 +51,9 @@ export async function GET(req: NextRequest) {
  * Set or clear the default role for new invitations.
  */
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

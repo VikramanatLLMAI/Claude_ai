@@ -14,6 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getAllModels } from '@/lib/services/model-registry-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET /api/org/[slug]/admin/models
@@ -23,6 +25,10 @@ import { getAllModels } from '@/lib/services/model-registry-service';
 export async function GET(req: NextRequest) {
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const models = await getAllModels('ACTIVE');

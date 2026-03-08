@@ -22,6 +22,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth-middleware';
 import { exportAuditLogs } from '@/lib/services/audit-log-service';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const ExportQuerySchema = z.object({
   format: z.enum(['csv', 'json']).default('csv'),
@@ -40,6 +42,10 @@ const ExportQuerySchema = z.object({
 export async function GET(req: NextRequest) {
   const authResult = await requireSuperAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     const { searchParams } = req.nextUrl;

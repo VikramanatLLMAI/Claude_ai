@@ -17,6 +17,8 @@ import {
   updatePasswordPolicy,
 } from '@/lib/services/password-policy-service';
 import { formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * Default password policy values when no policy record exists.
@@ -84,6 +86,9 @@ export async function GET(req: NextRequest) {
  * The admin's own password will be checked on their next login, and they can change it before then.
  */
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

@@ -12,6 +12,8 @@ import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress, auditLog } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const LoginPageSchema = z.object({
   tagline: z.string().max(100, 'Tagline must be at most 100 characters').optional(),
@@ -40,6 +42,9 @@ export async function GET(req: NextRequest) {
  * PUT - Update login page tagline and welcome message
  */
 export async function PUT(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

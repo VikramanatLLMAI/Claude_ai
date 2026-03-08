@@ -17,6 +17,8 @@ import { auditLog, getIpAddress } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 import { z } from 'zod';
 import { formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const MAX_AVATAR_BYTES = 200 * 1024; // 200KB decoded
 
@@ -63,6 +65,9 @@ export async function GET(req: NextRequest) {
  * Update display name and/or avatar. Email and role fields in body are ignored.
  */
 export async function PATCH(req: NextRequest) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
 

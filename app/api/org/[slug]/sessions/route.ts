@@ -15,6 +15,8 @@ import { requireOrgAuth } from '@/lib/auth-middleware';
 import { listUserSessions } from '@/lib/services/session-service';
 import { parseUserAgent } from '@/lib/user-agent';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET /api/org/[slug]/sessions
@@ -23,6 +25,10 @@ import prisma from '@/lib/db';
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${auth.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   try {
     // Extract current session token from Authorization header

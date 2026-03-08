@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { getIpAddress } from '@/lib/services/audit-service';
 import { revokeInvitation } from '@/lib/services/invitation-service';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * POST /api/org/[slug]/invitations/[id]/revoke
@@ -20,6 +22,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 

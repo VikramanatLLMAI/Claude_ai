@@ -15,6 +15,8 @@ import { getIpAddress, auditLog } from '@/lib/services/audit-service';
 import prisma from '@/lib/db';
 import { z } from 'zod';
 import { formatValidationErrors } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const UpdateOrgMcpConnectionSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -90,6 +92,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
@@ -203,6 +207,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAdmin(req);
   if (auth instanceof NextResponse) return auth;
 

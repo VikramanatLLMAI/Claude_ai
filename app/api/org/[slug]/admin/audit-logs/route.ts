@@ -29,6 +29,8 @@ import {
 } from '@/lib/services/audit-log-service';
 import { AuditLogFilterSchema, formatValidationErrors } from '@/lib/validation';
 import prisma from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 /**
  * GET /api/org/[slug]/admin/audit-logs
@@ -36,6 +38,10 @@ import prisma from '@/lib/db';
 export async function GET(req: NextRequest) {
   const authResult = await requireOrgAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
+
+  // Rate limiting: 60 requests per minute per user (api tier)
+  const rlGet = checkRateLimit(`api:${authResult.user.id}`, RATE_LIMITS.api);
+  if (!rlGet.allowed) return rateLimitResponse(rlGet.retryAfterSeconds);
 
   const orgId = authResult.organization.id;
 

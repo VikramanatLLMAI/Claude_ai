@@ -10,6 +10,8 @@
  * Response 409: { error: string } -- email already registered
  */
 
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { acceptInvitation } from '@/lib/services/registration-service';
@@ -25,6 +27,16 @@ const AcceptInvitationSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: 5 requests per 15 minutes per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  const rl = checkRateLimit(`auth:${ip}`, RATE_LIMITS.auth);
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
+
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   try {
     const body = await req.json();
 
