@@ -27,6 +27,42 @@ export function formatMs(ms: number): string {
 }
 
 // ============================================
+// Data Padding Utilities
+// ============================================
+
+/**
+ * Pad single-point time-series data with synthetic zero-valued neighbors
+ * so Recharts Area components can render a visible fill region.
+ * If data has 2+ points, returns it unchanged.
+ */
+export function padSinglePointData<T extends Record<string, any>>(
+  data: T[],
+  dateKey: string = "date"
+): T[] {
+  if (data.length !== 1) return data
+  const point = data[0]
+  const dateStr = point[dateKey] as string
+  // Create day-before and day-after with zeroed numeric fields
+  const zeroed = Object.fromEntries(
+    Object.entries(point).map(([k, v]) =>
+      k === dateKey ? [k, v] : [k, typeof v === "number" ? 0 : v]
+    )
+  )
+  const date = new Date(dateStr + "T00:00:00")
+  const dayBefore = new Date(date)
+  dayBefore.setDate(dayBefore.getDate() - 1)
+  const dayAfter = new Date(date)
+  dayAfter.setDate(dayAfter.getDate() + 1)
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  return [
+    { ...zeroed, [dateKey]: fmt(dayBefore) } as T,
+    point,
+    { ...zeroed, [dateKey]: fmt(dayAfter) } as T,
+  ]
+}
+
+// ============================================
 // Semantic Color Constants
 // ============================================
 

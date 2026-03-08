@@ -106,7 +106,8 @@ const ChartContainer = React.forwardRef<
           "[&_.recharts-sector[stroke='#fff']]:stroke-transparent",
           "[&_.recharts-sector]:outline-none",
           "[&_.recharts-surface]:outline-none",
-          "flex aspect-video justify-center text-xs",
+          "[&_.recharts-tooltip-wrapper]:!z-50",
+          "flex justify-center text-xs [&_.recharts-responsive-container]:!h-full",
           className
         )}
         style={
@@ -123,7 +124,7 @@ const ChartContainer = React.forwardRef<
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
           {children}
         </ResponsiveContainer>
       </div>
