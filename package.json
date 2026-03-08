@@ -13,6 +13,8 @@
     "db:studio": "prisma studio",
     "db:reset": "npx prisma db push --force-reset && npx tsx prisma/seed.ts",
     "db:seed": "npx tsx prisma/seed.ts",
+    "test": "vitest",
+    "test:run": "vitest run",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -75,9 +77,13 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
+    "happy-dom": "^20.8.3",
     "prisma": "^7.4.1",
     "shadcn": "^3.8.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18",
+    "vitest-mock-extended": "^3.1.0"
   }
 }
