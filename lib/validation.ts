@@ -416,3 +416,82 @@ export const UpdatePlatformPromptSchema = z.object({
 
 export type UpdatePlatformSettingsInput = z.infer<typeof UpdatePlatformSettingsSchema>;
 export type UpdatePlatformPromptInput = z.infer<typeof UpdatePlatformPromptSchema>;
+
+// ============================================
+// Phase 11: Input Validation Hardening Schemas
+// ============================================
+
+// Artifact creation
+export const CreateArtifactSchema = z.object({
+  conversationId: z.string().uuid('Invalid conversation ID'),
+  messageId: z.string().uuid('Invalid message ID'),
+  type: z.enum(['html', 'code']).default('html'),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
+  content: z.string().min(1, 'Content is required').max(500000, 'Content exceeds maximum length'),
+});
+
+// Artifact update
+export const UpdateArtifactSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().min(1).max(500000).optional(),
+});
+
+// User settings update
+export const UpdateUserSettingsSchema = z.object({
+  name: z.string().max(100).optional().nullable(),
+  avatarBase64: z.string().max(300000, 'Avatar must be less than ~200KB').optional().nullable(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
+});
+
+// Anthropic API key
+export const AnthropicApiKeySchema = z.object({
+  apiKey: z.string()
+    .min(10, 'API key must be at least 10 characters')
+    .max(500, 'API key is too long')
+    .refine((val) => val.startsWith('sk-ant-'), {
+      message: 'Invalid Anthropic API key format. Key should start with "sk-ant-"',
+    }),
+});
+
+// Onboarding config update (admin)
+export const UpdateOnboardingConfigSchema = z.object({
+  text: z.string().max(10000, 'Onboarding text must be at most 10,000 characters'),
+});
+
+// Conversation visibility toggle
+export const ConversationVisibilityToggleSchema = z.object({
+  enabled: z.boolean({ error: 'enabled must be a boolean' }),
+});
+
+// Conversation export
+export const ConversationExportSchema = z.object({
+  conversationIds: z.array(z.string().uuid('Invalid conversation ID'))
+    .min(1, 'At least one conversation ID is required')
+    .max(100, 'Cannot export more than 100 conversations at once'),
+});
+
+// Enhance prompt
+export const EnhancePromptSchema = z.object({
+  text: z.string()
+    .min(1, 'Text is required')
+    .max(100000, 'Text is too long'),
+  type: z.enum(['platform', 'org-instructions', 'org-restrictions', 'role-instructions', 'role-restrictions']),
+});
+
+// Login
+export const LoginRequestSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email format'),
+  password: z.string().min(1, 'Password is required'),
+  slug: z.string().max(50).optional(),
+});
+
+// Type exports for Phase 11 schemas
+export type CreateArtifactInput = z.infer<typeof CreateArtifactSchema>;
+export type UpdateArtifactInput = z.infer<typeof UpdateArtifactSchema>;
+export type UpdateUserSettingsInput = z.infer<typeof UpdateUserSettingsSchema>;
+export type AnthropicApiKeyInput = z.infer<typeof AnthropicApiKeySchema>;
+export type UpdateOnboardingConfigInput = z.infer<typeof UpdateOnboardingConfigSchema>;
+export type ConversationVisibilityToggleInput = z.infer<typeof ConversationVisibilityToggleSchema>;
+export type ConversationExportInput = z.infer<typeof ConversationExportSchema>;
+export type EnhancePromptInput = z.infer<typeof EnhancePromptSchema>;
+export type LoginRequestInput = z.infer<typeof LoginRequestSchema>;
