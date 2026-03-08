@@ -173,5 +173,5 @@ Plans:
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
 | 10.1. Migrate Recharts to shadcn/ui Charts | 4/4 | Complete    | 2026-03-08 | - |
 | 11. Security Hardening | 4/4 | Complete    | 2026-03-08 | - |
-| 12. Testing & CI | 3/3 | Complete   | 2026-03-08 | - |
+| 12. Testing & CI | 3/3 | Complete    | 2026-03-08 | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |
