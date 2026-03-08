@@ -168,7 +168,7 @@ Plans:
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
-| 10.1. Migrate Recharts to shadcn/ui Charts | 3/3 | Complete   | 2026-03-08 | - |
+| 10.1. Migrate Recharts to shadcn/ui Charts | 3/3 | Complete    | 2026-03-08 | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |
