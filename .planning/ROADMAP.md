@@ -133,7 +133,7 @@ Plans:
   1. Vitest runs with path aliases, happy-dom, and TypeScript support; unit tests pass for auth middleware, tenant isolation, prompt sanitizer/composition, and usage limit enforcement
   2. Playwright is configured and E2E tests pass for login flow (bare domain + org login) and admin navigation (sidebar collapse, profile expander, back-to-chat)
   3. GitHub Actions CI pipeline runs unit tests with a PostgreSQL service container on every push, and Playwright tests on pull requests
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 12-01-PLAN.md — Vitest config, test helpers (mock-db, mock-auth, factories), directory structure, npm scripts
@@ -173,5 +173,5 @@ Plans:
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
 | 10.1. Migrate Recharts to shadcn/ui Charts | 4/4 | Complete    | 2026-03-08 | - |
 | 11. Security Hardening | 4/4 | Complete    | 2026-03-08 | - |
-| 12. Testing & CI | 1/3 | In Progress|  | - |
+| 12. Testing & CI | 2/3 | In Progress|  | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |

@@ -93,10 +93,10 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 - [ ] **TEST-03**: Unit tests for tenant isolation (org-scoped queries, cross-org prevention)
 - [ ] **TEST-04**: Unit tests for prompt sanitizer and system prompt composition
 - [ ] **TEST-05**: Unit tests for usage limit enforcement
-- [ ] **TEST-06**: Playwright configured for E2E testing
-- [ ] **TEST-07**: E2E tests for login flow (bare domain, org login)
-- [ ] **TEST-08**: E2E tests for admin navigation (sidebar, profile, back-to-chat)
-- [ ] **TEST-09**: GitHub Actions CI pipeline with PostgreSQL service container
+- [x] **TEST-06**: Playwright configured for E2E testing
+- [x] **TEST-07**: E2E tests for login flow (bare domain, org login)
+- [x] **TEST-08**: E2E tests for admin navigation (sidebar, profile, back-to-chat)
+- [x] **TEST-09**: GitHub Actions CI pipeline with PostgreSQL service container
 
 ### Functionality Audit
 
@@ -201,10 +201,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | TEST-03 | Phase 12 | Pending |
 | TEST-04 | Phase 12 | Pending |
 | TEST-05 | Phase 12 | Pending |
-| TEST-06 | Phase 12 | Pending |
-| TEST-07 | Phase 12 | Pending |
-| TEST-08 | Phase 12 | Pending |
-| TEST-09 | Phase 12 | Pending |
+| TEST-06 | Phase 12 | Complete |
+| TEST-07 | Phase 12 | Complete |
+| TEST-08 | Phase 12 | Complete |
+| TEST-09 | Phase 12 | Complete |
 | AUDIT-01 | Phase 13 | Pending |
 | AUDIT-02 | Phase 13 | Pending |
 | AUDIT-03 | Phase 13 | Pending |
