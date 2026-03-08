@@ -8,18 +8,30 @@
  * - Returns a generic "not_found" for unknown emails (no info leakage)
  * - Uses constant-time response pattern to prevent timing attacks
  * - Does NOT require authentication (public endpoint)
- *
- * Rate limiting: TODO - Add rate limiting in production to prevent enumeration
+ * - Rate limited: 5 requests per 15 minutes per IP
  */
 
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 const FindOrgSchema = z.object({
   email: z.string().email('Invalid email format').max(255),
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // Rate limiting: 5 requests per 15 minutes per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  const rl = checkRateLimit(`auth:${ip}`, RATE_LIMITS.auth);
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
+
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   try {
     const body = await req.json();
 

@@ -16,8 +16,20 @@ import {
   checkPasswordChangeRequired,
 } from '@/lib/services/password-policy-service';
 import { validate, LoginRequestSchema } from '@/lib/validation';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';
+import { validateOrigin, originDeniedResponse } from '@/lib/origin-validator';
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: 5 requests per 15 minutes per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  const rl = checkRateLimit(`auth:${ip}`, RATE_LIMITS.auth);
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfterSeconds);
+
+  // Origin validation for mutation requests
+  if (!validateOrigin(req)) return originDeniedResponse();
+
   try {
     const body = await req.json();
     const result = validate(LoginRequestSchema, body);
