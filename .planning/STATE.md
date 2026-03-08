@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Completed 10.1-02-PLAN.md (Org Admin charts migrated to shadcn/ui)
-last_updated: "2026-03-07T10:52:59.349Z"
+stopped_at: Completed 10.1-03-PLAN.md (UAT gap closure for chart fixes)
+last_updated: "2026-03-08T01:19:25.992Z"
 last_activity: 2026-03-07 -- Completed 10.1-02 (Org Admin charts migration + cleanup)
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 14
+  completed_plans: 14
 ---
 
 ---
@@ -117,6 +117,7 @@ Recent decisions affecting current work:
 - Two-column login layout: left branding panel (hidden on mobile), right form panel
 - Live preview editor pattern for branding admin page
 - [Phase 10.1]: ChartConfig objects defined per-chart inline with satisfies ChartConfig for type safety
+- [Phase 10.1]: Removed aspect-video from ChartContainer; used TooltipProvider delayDuration=0 for instant heatmap tooltips
 
 ### Pending Todos
 
@@ -129,6 +130,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T10:47:18Z
-Stopped at: Completed 10.1-02-PLAN.md (Org Admin charts migrated to shadcn/ui)
+Last session: 2026-03-08T01:19:25.982Z
+Stopped at: Completed 10.1-03-PLAN.md (UAT gap closure for chart fixes)
 Next step: Execute Phase 11 (Security & Headers)

@@ -30,7 +30,7 @@
 - [x] **Phase 8: Schema & Prompt Stack** - Add restriction layers to the prompt system and schema fields for suggestions (2/2 plans complete)
 - [x] **Phase 9: Admin UI Overhaul** - Collapsible sidebar, navigation rework, and visual polish across all admin pages (6/6 plans complete)
 - [x] **Phase 10: Prompt Suggestions, Login Polish & Chat Welcome** - Starter prompts, login customization UI, and welcome screen improvements (completed 2026-03-07)
-- [ ] **Phase 10.1: Migrate Recharts to shadcn/ui Charts** - Replace direct Recharts usage with shadcn/ui Chart wrappers for theme-aware, consistent analytics charts (3 plans, gap closure pending)
+- [x] **Phase 10.1: Migrate Recharts to shadcn/ui Charts** - Replace direct Recharts usage with shadcn/ui Chart wrappers for theme-aware, consistent analytics charts (3 plans, gap closure pending) (completed 2026-03-08)
 - [ ] **Phase 11: Security Hardening** - Rate limiting, security headers, input validation, and tech debt cleanup
 - [ ] **Phase 12: Testing & CI** - Vitest unit tests, Playwright E2E tests, and GitHub Actions pipeline
 - [ ] **Phase 13: Functionality Audit** - Verify every UI control works end-to-end, fix mismatches, complete pending tests
@@ -99,7 +99,7 @@ Plans:
   3. Semantic-meaning charts (error rates, invitation status) retain fixed hex colors
   4. Shared chart utilities (EmptyState, formatters, color constants) are extracted to chart-utils.tsx
   5. No gradient fills remain -- all area charts use solid fills with low opacity
-**Plans:** 3 plans (2 complete, 1 gap closure)
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 10.1-01-PLAN.md — Create chart.tsx wrapper + chart-utils.tsx utilities, migrate 8 Super Admin charts
@@ -168,7 +168,7 @@ Plans:
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
-| 10.1. Migrate Recharts to shadcn/ui Charts | v1.1 | 2/3 | Gap closure | - |
+| 10.1. Migrate Recharts to shadcn/ui Charts | 3/3 | Complete   | 2026-03-08 | - |
 | 11. Security Hardening | v1.1 | 0/2 | Not started | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |
