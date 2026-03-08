@@ -117,7 +117,7 @@ Plans:
   3. Content-Security-Policy is active in report-only mode without breaking Sandpack live preview, Mermaid diagrams, or KaTeX rendering
   4. Mutation requests validate Origin header; all API routes have Zod input validation
   5. Debug console.log statements are removed from API routes, and tenantDb aggregate casts are reviewed and minimized
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] 11-01-PLAN.md — Rate limiter module, origin validator, and security headers in next.config.ts
@@ -172,6 +172,6 @@ Plans:
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
 | 10.1. Migrate Recharts to shadcn/ui Charts | 4/4 | Complete    | 2026-03-08 | - |
-| 11. Security Hardening | 1/4 | In Progress|  | - |
+| 11. Security Hardening | 2/4 | In Progress|  | - |
 | 12. Testing & CI | v1.1 | 0/3 | Not started | - |
 | 13. Functionality Audit | v1.1 | 0/2 | Not started | - |
