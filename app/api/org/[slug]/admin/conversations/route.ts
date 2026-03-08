@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { listOrgConversations } from '@/lib/services/conversation-visibility-service';
+import type { OrgMember, User } from '@/lib/generated/prisma/client';
 
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAdmin(req);
@@ -56,19 +57,20 @@ export async function GET(req: NextRequest) {
       });
 
       // Get distinct models used in conversations
-      const modelsRaw = await (tenantDb.conversation as any).findMany({
+      // Cast required: Prisma $extends loses model types in tenantPrisma()
+      const modelsRaw = await (tenantDb.conversation as typeof prisma.conversation).findMany({
         select: { model: true },
         distinct: ['model'],
         orderBy: { model: 'asc' as const },
       });
 
       return NextResponse.json({
-        members: members.map((m: any) => ({
+        members: members.map((m: OrgMember & { user: Pick<User, 'id' | 'name' | 'email'> }) => ({
           userId: m.user.id,
           name: m.user.name,
           email: m.user.email,
         })),
-        models: modelsRaw.map((m: any) => m.model),
+        models: modelsRaw.map((m: { model: string }) => m.model),
       });
     }
 

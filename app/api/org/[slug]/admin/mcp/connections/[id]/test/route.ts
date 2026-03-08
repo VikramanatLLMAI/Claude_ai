@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
 import { decrypt } from '@/lib/encryption';
+import type { Prisma } from '@/lib/generated/prisma/client';
 
 // POST /api/org/[slug]/admin/mcp/connections/[id]/test
 export async function POST(
@@ -201,7 +202,8 @@ export async function POST(
 
             await auth.tenantDb.mcpConnection.update({
               where: { id },
-              data: { availableTools: discoveredTools as any },
+              // Cast required: Prisma InputJsonValue is stricter than runtime Json
+              data: { availableTools: discoveredTools as Prisma.InputJsonValue },
             });
           }
         }

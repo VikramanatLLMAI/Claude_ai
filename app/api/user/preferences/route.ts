@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-middleware';
 import prisma from '@/lib/db';
 import { z } from 'zod';
+import type { Prisma } from '@/lib/generated/prisma/client';
 
 const PatchPreferencesSchema = z.object({
   themeMode: z.enum(['light', 'dark', 'system']).optional(),
@@ -50,8 +51,8 @@ export async function PATCH(req: NextRequest) {
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: { preferences: updatedPreferences as any },
+      // Cast required: Prisma InputJsonValue is stricter than runtime Json
+      data: { preferences: updatedPreferences as Prisma.InputJsonValue },
       select: { preferences: true },
     });
 

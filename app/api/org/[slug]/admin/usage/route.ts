@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAdmin } from '@/lib/auth-middleware';
+import prisma from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const auth = await requireOrgAdmin(req);
@@ -25,38 +26,42 @@ export async function GET(req: NextRequest) {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     // Total requests and tokens for different time ranges
+    // Cast required: Prisma $extends loses model types in tenantPrisma()
+    const usageRecord = tenantDb.usageRecord as typeof prisma.usageRecord;
+
     const [totals24h, totals7d, totals30d] = await Promise.all([
-      (tenantDb.usageRecord as any).aggregate({
+      usageRecord.aggregate({
         where: { createdAt: { gte: twentyFourHoursAgo } },
         _count: { id: true },
         _sum: { inputTokens: true, outputTokens: true, thinkingTokens: true },
       }),
-      (tenantDb.usageRecord as any).aggregate({
+      usageRecord.aggregate({
         where: { createdAt: { gte: sevenDaysAgo } },
         _count: { id: true },
         _sum: { inputTokens: true, outputTokens: true, thinkingTokens: true },
       }),
-      (tenantDb.usageRecord as any).aggregate({
+      usageRecord.aggregate({
         where: { createdAt: { gte: thirtyDaysAgo } },
         _count: { id: true },
         _sum: { inputTokens: true, outputTokens: true, thinkingTokens: true },
       }),
     ]);
 
-    const sumTokens = (agg: any) =>
+    const sumTokens = (agg: { _sum: { inputTokens: number | null; outputTokens: number | null; thinkingTokens: number | null } }) =>
       (agg._sum?.inputTokens ?? 0) +
       (agg._sum?.outputTokens ?? 0) +
       (agg._sum?.thinkingTokens ?? 0);
 
     // Per-model breakdown (last 30 days)
-    const perModelGroups = await (tenantDb.usageRecord as any).groupBy({
+    const perModelGroups = await usageRecord.groupBy({
       by: ['model'],
       where: { createdAt: { gte: thirtyDaysAgo } },
       _count: { id: true },
       _sum: { inputTokens: true, outputTokens: true, thinkingTokens: true },
     });
 
-    const perModel = (perModelGroups as any[]).map((g: any) => ({
+    interface UsageGroupByResult { model: string; _count: { id: number }; _sum: { inputTokens: number | null; outputTokens: number | null; thinkingTokens: number | null } }
+    const perModel = (perModelGroups as UsageGroupByResult[]).map((g) => ({
       model: g.model,
       requests: g._count.id,
       tokens: (g._sum?.inputTokens ?? 0) + (g._sum?.outputTokens ?? 0) + (g._sum?.thinkingTokens ?? 0),
@@ -64,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     // Daily trend for last 30 days
     // Use raw SQL for date truncation since Prisma groupBy doesn't support date functions
-    const dailyTrend = await (tenantDb.$queryRawUnsafe as any)(`
+    const dailyTrend = await (tenantDb.$queryRawUnsafe as typeof prisma.$queryRawUnsafe)(`
       SELECT
         DATE(created_at) as date,
         COUNT(*)::int as requests,
@@ -76,7 +81,8 @@ export async function GET(req: NextRequest) {
       ORDER BY DATE(created_at) ASC
     `, organization.id, thirtyDaysAgo);
 
-    const trend = (dailyTrend as any[]).map((row: any) => ({
+    interface DailyTrendRow { date: Date | string; requests: number | bigint; tokens: number | bigint }
+    const trend = (dailyTrend as DailyTrendRow[]).map((row) => ({
       date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : String(row.date).split('T')[0],
       requests: Number(row.requests),
       tokens: Number(row.tokens),

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { decrypt } from '@/lib/encryption';
+import type { Prisma } from '@/lib/generated/prisma/client';
 
 // POST /api/mcp/connections/[id]/test - Test connection to MCP server
 export async function POST(
@@ -213,7 +214,8 @@ export async function POST(
             // Store discovered tools
             await tenantDb.mcpConnection.update({
               where: { id },
-              data: { availableTools: discoveredTools as any },
+              // Cast required: Prisma InputJsonValue is stricter than runtime Json
+              data: { availableTools: discoveredTools as Prisma.InputJsonValue },
             });
           }
         }

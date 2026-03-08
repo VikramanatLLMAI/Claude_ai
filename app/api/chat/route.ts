@@ -9,6 +9,7 @@ import { validate, ChatRequestSchema, formatValidationErrors } from '@/lib/valid
 import { composeSystemPrompt } from '@/lib/services/system-prompt-service';
 import { getModelByModelId } from '@/lib/services/model-registry-service';
 import { checkUserUsageLimits, getOrgMonthlyUsage, checkOrgMonthlyCeiling } from '@/lib/services/usage-service';
+import type { Prisma } from '@/lib/generated/prisma/client';
 
 export const maxDuration = 300;
 
@@ -92,8 +93,7 @@ export async function POST(req: NextRequest) {
 
     // Save user message to database if we have a conversation
     if (conversationId && lastUserMessage?.role === 'user') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const parts = lastUserMessage.parts as any[] | undefined;
+      const parts = lastUserMessage.parts as Array<{ type: string; text?: string }> | undefined;
       const userContent = parts
         ?.filter((p: { type: string }) => p.type === 'text')
         .map((p: { text?: string }) => p.text || '')
@@ -174,8 +174,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Convert UI messages to model messages format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const messages = await convertToModelMessages(uiMessages as any);
+    // Required cast: UIMessage[] from useChat has different shape than convertToModelMessages expects
+    const messages = await convertToModelMessages(uiMessages as Parameters<typeof convertToModelMessages>[0]);
 
     const toolNames = Object.keys(tools);
     const hasTools = toolNames.length > 0;
@@ -207,8 +207,8 @@ export async function POST(req: NextRequest) {
     const requestStart = Date.now();
 
     // Build streamText configuration
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const streamConfig: Record<string, any> = {
+    // Required cast: streamText config is built dynamically with optional tools/thinking
+    const streamConfig: Record<string, unknown> = {
       model: anthropic(modelId),
       system: systemPrompt,
       messages: fittedMessages,
@@ -224,8 +224,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build anthropic provider options
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const anthropicOptions: Record<string, any> = {};
+    const anthropicOptions: Record<string, unknown> = {};
 
     if (thinkingMode === 'adaptive') {
       anthropicOptions.thinking = { type: 'adaptive' };
@@ -257,8 +256,8 @@ export async function POST(req: NextRequest) {
     // then write file-download data chunks after completion - all in one response.
     // DB persistence uses onFinish which receives responseMessage.parts — the exact
     // parts the client saw (including step-start, interleaved text/tool parts).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = streamText(streamConfig as any);
+    // Required cast: dynamic config object doesn't match streamText's strict parameter type
+    const result = streamText(streamConfig as Parameters<typeof streamText>[0]);
 
     // Issue 18: Ensure backend completes even if client disconnects
     result.consumeStream();
@@ -374,8 +373,7 @@ export async function POST(req: NextRequest) {
         try {
           // Convert the streaming parts to a serializable format for DB storage
           const streamParts = Array.isArray(responseMessage.parts) ? responseMessage.parts : [];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const dbParts: Array<Record<string, unknown>> = streamParts.map((part: any) => {
+          const dbParts: Array<Record<string, unknown>> = streamParts.map((part: Record<string, unknown>) => {
             const partType = part.type as string;
 
             if (partType === 'text') {
@@ -440,14 +438,13 @@ export async function POST(req: NextRequest) {
               conversationId,
               role: 'assistant',
               content: text || '',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              parts: dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }] as any,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // Cast required: Prisma InputJsonValue is stricter than runtime Json objects
+              parts: (dbParts.length > 0 ? dbParts : [{ type: 'text', text: text || '' }]) as unknown as Prisma.InputJsonValue,
               metadata: {
                 reasoning: reasoning || null,
                 stepsCount: steps?.length || 0,
                 model: modelId,
-              } as any,
+              } as unknown as Prisma.InputJsonValue,
             },
           });
           // Update conversation's lastMessageAt (non-blocking)
@@ -466,6 +463,12 @@ export async function POST(req: NextRequest) {
           const totalUsage = await result.totalUsage;
           const requestEnd = Date.now();
 
+          // Required cast: AI SDK totalUsage type doesn't expose Anthropic-specific fields
+          const extendedUsage = totalUsage as typeof totalUsage & {
+            reasoningTokens?: number;
+            inputTokenDetails?: { cacheWriteTokens?: number; cacheReadTokens?: number };
+          };
+
           await tenantDb.usageRecord.create({
             data: {
               organizationId: '' as string, // auto-injected by tenant extension at runtime
@@ -475,12 +478,9 @@ export async function POST(req: NextRequest) {
               model: modelId,
               inputTokens: totalUsage.inputTokens ?? 0,
               outputTokens: totalUsage.outputTokens ?? 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              thinkingTokens: (totalUsage as any).reasoningTokens ?? 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              cacheCreationTokens: ((totalUsage as any).inputTokenDetails?.cacheWriteTokens) ?? 0,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              cacheReadTokens: ((totalUsage as any).inputTokenDetails?.cacheReadTokens) ?? 0,
+              thinkingTokens: extendedUsage.reasoningTokens ?? 0,
+              cacheCreationTokens: extendedUsage.inputTokenDetails?.cacheWriteTokens ?? 0,
+              cacheReadTokens: extendedUsage.inputTokenDetails?.cacheReadTokens ?? 0,
               requestDurationMs: requestEnd - requestStart,
             },
           });

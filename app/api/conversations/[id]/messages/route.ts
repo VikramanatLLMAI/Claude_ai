@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOrgAuth } from '@/lib/auth-middleware';
 import { toUIMessage } from '@/lib/storage';
+import type { Prisma } from '@/lib/generated/prisma/client';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -90,8 +91,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         conversationId: id,
         role,
         content,
-        parts: (parts as object) ?? null as any,
-        metadata: {} as any,
+        // Cast required: Prisma InputJsonValue is stricter than runtime Json
+        parts: ((parts as object) ?? null) as Prisma.InputJsonValue,
+        metadata: {} as Prisma.InputJsonValue,
       },
     });
 
