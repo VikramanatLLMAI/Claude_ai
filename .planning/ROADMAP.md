@@ -149,11 +149,11 @@ Plans:
   2. User settings controls (font size, appearance, etc.) are verified functional or removed if non-functional
   3. All 12 pending browser verification tests from v1.0 are completed and passing
   4. All discovered backend-frontend mismatches are documented and fixed
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 13-01: TBD
-- [ ] 13-02: TBD
+- [ ] 13-01-PLAN.md — Code-first audit scan, fix mismatches, implement missing settings backends, resolve tech debt
+- [ ] 13-02-PLAN.md — Browser verification of 12 pending v1.0 tests via Playwright MCP, formal audit report
 
 ## Progress
 
