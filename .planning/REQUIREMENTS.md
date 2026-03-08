@@ -88,7 +88,7 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 ### Testing & CI
 
-- [ ] **TEST-01**: Vitest configured with path aliases, happy-dom, and TypeScript support
+- [x] **TEST-01**: Vitest configured with path aliases, happy-dom, and TypeScript support
 - [ ] **TEST-02**: Unit tests for auth middleware (session validation, org auth, super admin check)
 - [ ] **TEST-03**: Unit tests for tenant isolation (org-scoped queries, cross-org prevention)
 - [ ] **TEST-04**: Unit tests for prompt sanitizer and system prompt composition
@@ -196,7 +196,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | DEBT-02 | Phase 11 | Complete |
 | DEBT-03 | Phase 11 | Complete |
 | DEBT-04 | Phase 11 | Complete |
-| TEST-01 | Phase 12 | Pending |
+| TEST-01 | Phase 12 | Complete |
 | TEST-02 | Phase 12 | Pending |
 | TEST-03 | Phase 12 | Pending |
 | TEST-04 | Phase 12 | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Phase 12 context gathered
-last_updated: "2026-03-08T10:46:59.766Z"
-last_activity: 2026-03-08 -- Completed 11-04 (input validation hardening)
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-08T11:39:16.439Z"
+last_activity: 2026-03-08 -- Completed 12-01 (test infrastructure setup)
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 22
+  completed_plans: 20
 ---
 
 ---
@@ -82,12 +82,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 11 of 13 (Security Hardening)
-Plan: 4 of 4 in current phase (11-04 complete)
-Status: Phase 11 complete
-Last activity: 2026-03-08 -- Completed 11-04 (input validation hardening)
+Phase: 12 of 13 (Testing & CI)
+Plan: 1 of 3 in current phase (12-01 complete)
+Status: Executing Phase 12
+Last activity: 2026-03-08 -- Completed 12-01 (test infrastructure setup)
 
-Progress: [█████████░] 100% -- 19/19 plans (v1.0 complete, v1.1 Phase 11 complete)
+Progress: [█████████░] 91% -- 20/22 plans (v1.0 complete, v1.1 Phase 12 in progress)
 
 ## Performance Metrics
 
@@ -140,6 +140,7 @@ Recent decisions affecting current work:
 - [Phase 11]: Used typeof prisma.model pattern for tenantDb type casts, Prisma.InputJsonValue for Json fields
 - [Phase 11]: Origin validation before auth check on mutations (fail fast, save DB lookups)
 - [Phase 11]: Rate limiting after auth check for user-keyed routes (needs user.id)
+- [Phase 12]: passWithNoTests in vitest config for CI-safe zero-test exit code
 
 ### Pending Todos
 
@@ -152,6 +153,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-08T10:46:59.763Z
-Stopped at: Phase 12 context gathered
+Last session: 2026-03-08T11:39:16.437Z
+Stopped at: Completed 12-01-PLAN.md
 Next step: Continue Phase 11 remaining plans or advance to Phase 12
