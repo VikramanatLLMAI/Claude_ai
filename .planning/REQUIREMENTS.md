@@ -72,12 +72,12 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 ### Security Hardening
 
-- [ ] **SEC-01**: Rate limiting on auth routes (login, register, password reset) with sliding window
-- [ ] **SEC-02**: Rate limiting on API routes with configurable per-route limits
-- [ ] **SEC-03**: Security headers configured (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
-- [ ] **SEC-04**: HSTS header enabled for production
-- [ ] **SEC-05**: Content-Security-Policy in report-only mode (does not break Sandpack/Mermaid/KaTeX)
-- [ ] **SEC-06**: Origin header validation on mutation requests
+- [x] **SEC-01**: Rate limiting on auth routes (login, register, password reset) with sliding window
+- [x] **SEC-02**: Rate limiting on API routes with configurable per-route limits
+- [x] **SEC-03**: Security headers configured (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
+- [x] **SEC-04**: HSTS header enabled for production
+- [x] **SEC-05**: Content-Security-Policy in report-only mode (does not break Sandpack/Mermaid/KaTeX)
+- [x] **SEC-06**: Origin header validation on mutation requests
 
 ### Tech Debt
 
@@ -186,12 +186,12 @@ Explicitly excluded. Documented to prevent scope creep.
 | CHART-04 | Phase 10.1 | Complete |
 | CHART-05 | Phase 10.1 | Complete |
 | CHART-06 | Phase 10.1 | Complete |
-| SEC-01 | Phase 11 | Pending |
-| SEC-02 | Phase 11 | Pending |
-| SEC-03 | Phase 11 | Pending |
-| SEC-04 | Phase 11 | Pending |
-| SEC-05 | Phase 11 | Pending |
-| SEC-06 | Phase 11 | Pending |
+| SEC-01 | Phase 11 | Complete |
+| SEC-02 | Phase 11 | Complete |
+| SEC-03 | Phase 11 | Complete |
+| SEC-04 | Phase 11 | Complete |
+| SEC-05 | Phase 11 | Complete |
+| SEC-06 | Phase 11 | Complete |
 | DEBT-01 | Phase 11 | Pending |
 | DEBT-02 | Phase 11 | Pending |
 | DEBT-03 | Phase 11 | Pending |
