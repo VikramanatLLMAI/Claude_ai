@@ -146,32 +146,36 @@ export async function POST(req: NextRequest) {
     let mcpToolDescriptions: { name: string; description: string }[] = [];
 
     // C. MCP tool filtering (UCHAT-05, OMCP-04)
-    // Query authorized MCP connections for this user
+    // Query authorized MCP connections with source info
     const authorizedMcpConnections = await tenantDb.mcpConnection.findMany({
       where: {
         isActive: true,
         OR: [
-          { roleId: null, userId: null },                    // Org-wide
-          { roleId: role.id, userId: null },                 // Role-specific
-          ...(role.personalMcpEnabled
-            ? [{ userId: user.id }]                          // Personal (if role permits)
-            : []),
+          { source: 'ORG' },
+          { source: 'ROLE', roleId: role.id },
+          ...(role.personalMcpEnabled ? [{ source: 'PERSONAL' as const, userId: user.id }] : []),
         ],
       },
-      select: { id: true },
+      select: { id: true, source: true },
     });
 
-    const authorizedMcpIds = new Set(authorizedMcpConnections.map(c => c.id));
+    // Build sourceMap for source-prefixed tool names
+    const sourceMap = new Map(authorizedMcpConnections.map(c => [c.id, c.source]));
 
-    // Filter client-requested MCP IDs against authorized set
-    const filteredMcpIds = (activeMcpIds || []).filter((id: string) => authorizedMcpIds.has(id));
+    // Org/role MCPs are always auto-included; personal MCPs are filtered by activeMcpIds
+    const orgRoleMcpIds = authorizedMcpConnections
+      .filter(c => c.source === 'ORG' || c.source === 'ROLE')
+      .map(c => c.id);
+    const personalMcpIds = new Set(
+      authorizedMcpConnections.filter(c => c.source === 'PERSONAL').map(c => c.id)
+    );
+    const filteredPersonalMcpIds = (activeMcpIds || []).filter((id: string) => personalMcpIds.has(id));
+    const allMcpIds = [...orgRoleMcpIds, ...filteredPersonalMcpIds];
 
-    // MCP IDs filtered against authorized set
-
-    // Load MCP tools if any authorized connections are active
-    if (filteredMcpIds && filteredMcpIds.length > 0) {
+    // Load MCP tools if any connections are active
+    if (allMcpIds.length > 0) {
       try {
-        const { tools: mcpTools, descriptions } = await loadActiveMcpToolsWithDescriptions(filteredMcpIds);
+        const { tools: mcpTools, descriptions } = await loadActiveMcpToolsWithDescriptions(allMcpIds, sourceMap);
         const mcpToolCount = Object.keys(mcpTools).length;
         if (mcpToolCount > 0) {
           Object.assign(tools, mcpTools);

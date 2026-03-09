@@ -296,36 +296,23 @@ export async function executeMcpTool(
  * Get tools from an MCP connection
  */
 export async function getMcpTools(connectionId: string): Promise<McpTool[]> {
-  console.log(`[MCP] getMcpTools called for connectionId: ${connectionId}`);
   const connection = await getMcpConnection(connectionId);
 
   if (!connection) {
-    console.log(`[MCP] Connection ${connectionId} NOT FOUND in database`);
     return [];
   }
 
-  console.log(`[MCP] Found connection: name='${connection.name}', status='${connection.status}', isActive=${connection.isActive}`);
-
   if (connection.status !== 'connected') {
-    console.log(`[MCP] Connection '${connection.name}' status is '${connection.status}', not 'connected'. Tools will not be loaded.`);
-    console.log(`[MCP] To use this connection, test it first via Settings > MCP Connections`);
     return [];
   }
 
   // Return cached tools
   const availableTools = connection.availableTools as unknown;
-  console.log(`[MCP] availableTools type: ${typeof availableTools}, isArray: ${Array.isArray(availableTools)}`);
 
-  if (Array.isArray(availableTools)) {
-    console.log(`[MCP] availableTools has ${availableTools.length} items`);
-    if (availableTools.length > 0) {
-      console.log(`[MCP] First tool:`, JSON.stringify(availableTools[0]));
-      console.log(`[MCP] Loaded ${availableTools.length} tools from connection '${connection.name}'`);
-      return availableTools as McpTool[];
-    }
+  if (Array.isArray(availableTools) && availableTools.length > 0) {
+    return availableTools as McpTool[];
   }
 
-  console.log(`[MCP] Connection '${connection.name}' has no discovered tools. Run tool discovery first.`);
   return [];
 }
 
@@ -335,7 +322,8 @@ export async function getMcpTools(connectionId: string): Promise<McpTool[]> {
  */
 export function convertMcpToolsToAiTools(
   mcpTools: McpTool[],
-  connectionId: string
+  connectionId: string,
+  sourcePrefix: string = 'mcp_'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -347,21 +335,14 @@ export function convertMcpToolsToAiTools(
 
     // Create a safe tool name (replace special chars)
     const safeName = mcpTool.name.replace(/[^a-zA-Z0-9_]/g, '_');
-    const toolKey = `mcp_${safeName}`;
-
-    console.log(`[MCP] Converting tool: ${mcpTool.name} -> ${toolKey}`);
+    const toolKey = `${sourcePrefix}${safeName}`;
 
     aiTools[toolKey] = tool({
       description: mcpTool.description || `MCP tool: ${mcpTool.name}`,
       inputSchema: zodSchema,
       execute: async (args) => {
-        console.log(`[MCP] ========== TOOL EXECUTION START ==========`);
-        console.log(`[MCP] Tool: ${mcpTool.name}`);
-        console.log(`[MCP] Args:`, JSON.stringify(args, null, 2));
-
         try {
           const result = await executeMcpTool(connectionId, mcpTool.name, args);
-          console.log(`[MCP] Raw MCP result:`, JSON.stringify(result, null, 2));
 
           // Convert MCP result to string for AI consumption
           const textContent = result.content
@@ -371,13 +352,9 @@ export function convertMcpToolsToAiTools(
 
           if (result.isError) {
             console.error(`[MCP] Tool ${mcpTool.name} returned error:`, textContent);
-            console.log(`[MCP] ========== TOOL EXECUTION END (ERROR) ==========`);
             // Return a proper error object that the AI can understand
             return { error: textContent || 'MCP tool execution failed', isError: true };
           }
-
-          console.log(`[MCP] Tool ${mcpTool.name} result preview:`, textContent.substring(0, 500));
-          console.log(`[MCP] ========== TOOL EXECUTION END (SUCCESS) ==========`);
 
           // Return the result in a format the AI can process
           // Try to parse as JSON first, otherwise return as text
@@ -390,7 +367,6 @@ export function convertMcpToolsToAiTools(
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Unknown error';
           console.error(`[MCP] Tool ${mcpTool.name} execution failed:`, errorMsg);
-          console.log(`[MCP] ========== TOOL EXECUTION END (EXCEPTION) ==========`);
           return { error: errorMsg, isError: true };
         }
       },
@@ -464,9 +440,12 @@ export async function loadActiveMcpTools(
 /**
  * Load all active MCP tools with their descriptions for system prompt
  * Returns both the AI SDK tools and descriptions for the LLM
+ *
+ * @param sourceMap - Optional map of connectionId -> source type for source-prefixed tool names
  */
 export async function loadActiveMcpToolsWithDescriptions(
-  activeMcpIds: string[]
+  activeMcpIds: string[],
+  sourceMap?: Map<string, 'ORG' | 'ROLE' | 'PERSONAL'>
 ): Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tools: Record<string, any>;
@@ -476,30 +455,27 @@ export async function loadActiveMcpToolsWithDescriptions(
   const allTools: Record<string, any> = {};
   const allDescriptions: { name: string; description: string }[] = [];
 
-  console.log(`[MCP] loadActiveMcpToolsWithDescriptions called with ${activeMcpIds.length} connection IDs:`, activeMcpIds);
-
   if (!activeMcpIds || activeMcpIds.length === 0) {
-    console.log('[MCP] No active MCP IDs provided, returning empty tools');
     return { tools: allTools, descriptions: allDescriptions };
   }
 
   for (const connectionId of activeMcpIds) {
-    console.log(`[MCP] Processing connection: ${connectionId}`);
     try {
       const mcpTools = await getMcpTools(connectionId);
-      console.log(`[MCP] getMcpTools returned ${mcpTools.length} tools for ${connectionId}`);
 
       if (mcpTools.length > 0) {
-        const aiTools = convertMcpToolsToAiTools(mcpTools, connectionId);
-        const toolKeys = Object.keys(aiTools);
-        console.log(`[MCP] Converted to AI SDK tools:`, toolKeys);
+        // Determine source prefix from sourceMap
+        const source = sourceMap?.get(connectionId);
+        const prefix = source === 'ORG' ? 'mcp__org__' : source === 'ROLE' ? 'mcp__role__' : 'mcp_';
+
+        const aiTools = convertMcpToolsToAiTools(mcpTools, connectionId, prefix);
         Object.assign(allTools, aiTools);
 
-        // Collect descriptions for the system prompt
+        // Collect descriptions for the system prompt with matching prefix
         for (const mcpTool of mcpTools) {
           const safeName = mcpTool.name.replace(/[^a-zA-Z0-9_]/g, '_');
           allDescriptions.push({
-            name: `mcp_${safeName}`,
+            name: `${prefix}${safeName}`,
             description: mcpTool.description || `MCP tool: ${mcpTool.name}`,
           });
         }
@@ -509,7 +485,5 @@ export async function loadActiveMcpToolsWithDescriptions(
     }
   }
 
-  console.log(`[MCP] Total MCP tools loaded: ${Object.keys(allTools).length}`);
-  console.log(`[MCP] Tool descriptions for prompt: ${allDescriptions.length}`);
   return { tools: allTools, descriptions: allDescriptions };
 }

@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
             id: orgMember.role.id,
             name: orgMember.role.name,
             permissions: orgMember.role.permissions,
+            personalMcpEnabled: orgMember.role.personalMcpEnabled,
           };
         }
       }

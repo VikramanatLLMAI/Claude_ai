@@ -66,7 +66,15 @@ export async function PATCH(
   if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user, tenantDb } = auth;
+  const { user, role, tenantDb } = auth;
+
+  // Guardrail: personalMcpEnabled must be true for the user's role
+  if (!role.personalMcpEnabled) {
+    return NextResponse.json(
+      { error: 'Personal MCP connections are not enabled for your role' },
+      { status: 403 }
+    );
+  }
 
   // Rate limiting: 60 requests per minute per user (api tier)
   const rlPatch = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);
@@ -138,7 +146,15 @@ export async function DELETE(
   if (!validateOrigin(req)) return originDeniedResponse();
   const auth = await requireOrgAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const { user, tenantDb } = auth;
+  const { user, role, tenantDb } = auth;
+
+  // Guardrail: personalMcpEnabled must be true for the user's role
+  if (!role.personalMcpEnabled) {
+    return NextResponse.json(
+      { error: 'Personal MCP connections are not enabled for your role' },
+      { status: 403 }
+    );
+  }
 
   // Rate limiting: 60 requests per minute per user (api tier)
   const rlDel = checkRateLimit(`api:${user.id}`, RATE_LIMITS.api);

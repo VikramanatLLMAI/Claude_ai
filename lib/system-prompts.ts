@@ -75,10 +75,21 @@ export function buildSystemPromptWithTools(
   if (mcpToolDescriptions.length > 0) {
     toolSections.push(''); // blank line before MCP section
     toolSections.push('**MCP Tools (external connections):**');
-    const mcpSection = mcpToolDescriptions.map(t =>
-      `- **${t.name}**: ${t.description || 'MCP tool (no description available)'}`
-    ).join('\n');
-    toolSections.push(mcpSection);
+    const orgTools = mcpToolDescriptions.filter(t => t.name.startsWith('mcp__org__'));
+    const roleTools = mcpToolDescriptions.filter(t => t.name.startsWith('mcp__role__'));
+    const personalTools = mcpToolDescriptions.filter(t => !t.name.startsWith('mcp__org__') && !t.name.startsWith('mcp__role__'));
+    if (orgTools.length > 0) {
+      toolSections.push('Organization-wide tools:');
+      toolSections.push(orgTools.map(t => `- **${t.name}**: ${t.description || 'MCP tool (no description available)'}`).join('\n'));
+    }
+    if (roleTools.length > 0) {
+      toolSections.push('Role-specific tools:');
+      toolSections.push(roleTools.map(t => `- **${t.name}**: ${t.description || 'MCP tool (no description available)'}`).join('\n'));
+    }
+    if (personalTools.length > 0) {
+      toolSections.push('Personal tools:');
+      toolSections.push(personalTools.map(t => `- **${t.name}**: ${t.description || 'MCP tool (no description available)'}`).join('\n'));
+    }
   }
 
   if (toolSections.length === 0) {
