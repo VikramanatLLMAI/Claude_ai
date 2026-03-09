@@ -25,6 +25,7 @@ import {
   Trash2,
   Upload,
   Shield,
+  Info,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { McpConnectionCard, type McpConnectionData } from "@/components/mcp/mcp-connection-card"
+import { McpReadonlyCard } from "@/components/mcp/mcp-readonly-card"
 import { McpAddDialog } from "@/components/mcp/mcp-add-dialog"
 import { InstructionEditor } from "@/components/admin/instruction-editor"
 import { cn } from "@/lib/utils"
@@ -131,6 +133,9 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
   const [mcpLoading, setMcpLoading] = useState(true)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingConnection, setEditingConnection] = useState<McpConnectionData | null>(null)
+  const [orgConnections, setOrgConnections] = useState<{ id: string; name: string; serverUrl: string; status: string; isActive: boolean; toolCount: number; source: 'ORG' | 'ROLE' }[]>([])
+  const [roleConnections, setRoleConnections] = useState<typeof orgConnections>([])
+  const [personalMcpEnabled, setPersonalMcpEnabled] = useState(true)
 
   // Org Profile state (Profile tab with org context)
   interface OrgProfileData {
@@ -201,6 +206,8 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
     loadUserProfile()
     loadAnthropicConfig()
     fetchConnections()
+    fetchOrgMcps()
+    fetchRoleMcps()
     loadCustomInstructions()
     loadOrgProfile()
     loadSessions()
@@ -214,6 +221,10 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
         const data = await res.json()
         setName(data.user.name || "")
         setEmail(data.user.email || "")
+        // Extract personalMcpEnabled from role data
+        if (data.role && typeof data.role.personalMcpEnabled === 'boolean') {
+          setPersonalMcpEnabled(data.role.personalMcpEnabled)
+        }
       }
     } catch (error) {
       console.error("Error loading profile:", error)
@@ -244,6 +255,30 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
       console.error("Error fetching MCP connections:", error)
     } finally {
       setMcpLoading(false)
+    }
+  }
+
+  const fetchOrgMcps = async () => {
+    try {
+      const res = await fetch("/api/mcp/org", { headers: getAuthHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setOrgConnections(data)
+      }
+    } catch (error) {
+      console.error("Error fetching org MCPs:", error)
+    }
+  }
+
+  const fetchRoleMcps = async () => {
+    try {
+      const res = await fetch("/api/mcp/role", { headers: getAuthHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setRoleConnections(data)
+      }
+    } catch (error) {
+      console.error("Error fetching role MCPs:", error)
     }
   }
 
@@ -1266,59 +1301,101 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
               {/* MCP TAB */}
               {activeTab === "mcp" && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <h4 className="text-sm font-medium text-foreground">MCP Connectors</h4>
-                      <p className="text-xs text-muted-foreground">Connect MCP servers to extend capabilities</p>
-                    </div>
-                    <Button size="sm" onClick={() => setShowAddDialog(true)}>
-                      <Plus className="mr-1.5 size-3.5" />
-                      Add
-                    </Button>
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-medium text-foreground">MCP Connectors</h4>
+                    <p className="text-xs text-muted-foreground">Connect MCP servers to extend capabilities</p>
                   </div>
 
                   <Separator />
 
-                  {mcpLoading ? (
-                    <div className="space-y-3">
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="rounded-md border border-border p-4 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="size-9 shrink-0 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-                            <div className="flex-1 space-y-1.5">
-                              <div className="h-4 w-1/3 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 50}ms` }} />
-                              <div className="h-3 w-1/2 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 100}ms` }} />
-                            </div>
-                            <div className="h-6 w-14 rounded-full bg-muted animate-pulse" />
-                          </div>
-                        </div>
-                      ))}
+                  {/* Organization MCP Tools */}
+                  {orgConnections.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Organization Tools</h4>
+                      <div className="space-y-1.5">
+                        {orgConnections.map(conn => (
+                          <McpReadonlyCard key={conn.id} {...conn} />
+                        ))}
+                      </div>
                     </div>
-                  ) : connections.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Plug className="mb-3 size-10 text-muted-foreground/40" />
-                      <p className="text-sm font-medium text-foreground mb-1">No connectors yet</p>
-                      <p className="text-xs text-muted-foreground mb-4 max-w-[260px]">
-                        Connect MCP servers to extend Claude&apos;s capabilities with external tools.
-                      </p>
-                      <Button size="sm" onClick={() => setShowAddDialog(true)}>
-                        <Plus className="mr-1.5 size-3.5" />
-                        Add Connector
-                      </Button>
+                  )}
+
+                  {/* Role MCP Tools */}
+                  {roleConnections.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Role Tools</h4>
+                      <div className="space-y-1.5">
+                        {roleConnections.map(conn => (
+                          <McpReadonlyCard key={conn.id} {...conn} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Separator between admin MCPs and personal MCPs */}
+                  {(orgConnections.length > 0 || roleConnections.length > 0) && <Separator />}
+
+                  {/* Personal Connections Section */}
+                  {personalMcpEnabled ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium">Your Connections</h4>
+                        <Button size="sm" onClick={() => setShowAddDialog(true)}>
+                          <Plus className="mr-1.5 size-3.5" />
+                          Add
+                        </Button>
+                      </div>
+
+                      {mcpLoading ? (
+                        <div className="space-y-3">
+                          {[0, 1, 2].map((i) => (
+                            <div key={i} className="rounded-md border border-border p-4 space-y-3">
+                              <div className="flex items-center gap-3">
+                                <div className="size-9 shrink-0 rounded-full bg-muted animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                                <div className="flex-1 space-y-1.5">
+                                  <div className="h-4 w-1/3 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 50}ms` }} />
+                                  <div className="h-3 w-1/2 rounded bg-muted animate-pulse" style={{ animationDelay: `${i * 100 + 100}ms` }} />
+                                </div>
+                                <div className="h-6 w-14 rounded-full bg-muted animate-pulse" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : connections.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <Plug className="mb-3 size-10 text-muted-foreground/40" />
+                          <p className="text-sm font-medium text-foreground mb-1">No personal connectors yet</p>
+                          <p className="text-xs text-muted-foreground mb-4 max-w-[260px]">
+                            Connect your own MCP servers to extend Claude&apos;s capabilities with external tools.
+                          </p>
+                          <Button size="sm" onClick={() => setShowAddDialog(true)}>
+                            <Plus className="mr-1.5 size-3.5" />
+                            Add Connector
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {connections.map((connection) => (
+                            <McpConnectionCard
+                              key={connection.id}
+                              connection={connection}
+                              onConnect={handleConnect}
+                              onDisconnect={handleDisconnect}
+                              onEdit={handleEditConnection}
+                              onDelete={handleDeleteConnection}
+                              onRefresh={handleRefreshTools}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {connections.map((connection) => (
-                        <McpConnectionCard
-                          key={connection.id}
-                          connection={connection}
-                          onConnect={handleConnect}
-                          onDisconnect={handleDisconnect}
-                          onEdit={handleEditConnection}
-                          onDelete={handleDeleteConnection}
-                          onRefresh={handleRefreshTools}
-                        />
-                      ))}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">Your Connections</h4>
+                      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                        <Info className="size-4 shrink-0" />
+                        <span>Personal MCP connections are not enabled for your role. Contact your admin.</span>
+                      </div>
                     </div>
                   )}
                 </div>
