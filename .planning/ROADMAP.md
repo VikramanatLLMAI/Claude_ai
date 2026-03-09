@@ -174,4 +174,4 @@ Plans:
 | 10.1. Migrate Recharts to shadcn/ui Charts | 4/4 | Complete    | 2026-03-08 | - |
 | 11. Security Hardening | 4/4 | Complete    | 2026-03-08 | - |
 | 12. Testing & CI | 3/3 | Complete    | 2026-03-08 | - |
-| 13. Functionality Audit | v1.1 | 0/2 | Not started | - |
+| 13. Functionality Audit | 1/2 | In Progress|  | - |

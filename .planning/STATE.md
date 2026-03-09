@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Phase 13 context gathered
-last_updated: "2026-03-08T16:09:54.330Z"
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-09T02:39:31.315Z"
 last_activity: 2026-03-08 -- Completed 12-02 (critical backend unit tests)
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 22
-  completed_plans: 22
+  total_plans: 24
+  completed_plans: 23
 ---
 
 ---
@@ -177,6 +177,8 @@ Recent decisions affecting current work:
 - [Phase 12]: Tenant isolation tested by capturing $extends callback and invoking $allOperations directly
 - [Phase 12]: Encryption tests use real crypto (no mocks) for AES-256-GCM and scrypt
 - [Phase 12]: Usage service tests use lightweight mock tenantDb objects
+- [Phase 13]: Font size and code theme persist to User.preferences JSON via /api/user/preferences
+- [Phase 13]: 4 non-functional General tab controls removed (reasoning level, language, send-with-enter, show-code-results)
 
 ### Pending Todos
 
@@ -189,6 +191,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-08T16:09:54.325Z
-Stopped at: Phase 13 context gathered
+Last session: 2026-03-09T02:39:31.308Z
+Stopped at: Completed 13-01-PLAN.md
 Next step: Phase 12 complete -- all 22 v1.1 plans done
