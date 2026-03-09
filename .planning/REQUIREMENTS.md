@@ -102,7 +102,7 @@ Requirements for Harden & Polish milestone. Each maps to roadmap phases.
 
 - [x] **AUDIT-01**: Every admin UI control verified to have working backend implementation
 - [x] **AUDIT-02**: User settings controls (font size, appearance, etc.) verified functional or removed
-- [ ] **AUDIT-03**: All 12 pending browser verification tests from v1.0 completed
+- [x] **AUDIT-03**: All 12 pending browser verification tests from v1.0 completed
 - [x] **AUDIT-04**: Backend-frontend mismatches documented and fixed
 
 ## v1.2 Requirements
@@ -207,7 +207,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | TEST-09 | Phase 12 | Complete |
 | AUDIT-01 | Phase 13 | Complete |
 | AUDIT-02 | Phase 13 | Complete |
-| AUDIT-03 | Phase 13 | Pending |
+| AUDIT-03 | Phase 13 | Complete |
 | AUDIT-04 | Phase 13 | Complete |
 
 **Coverage:**

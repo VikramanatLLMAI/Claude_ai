@@ -3,14 +3,29 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
+stopped_at: Completed 13-02-PLAN.md
+last_updated: "2026-03-09T03:02:44.705Z"
+last_activity: 2026-03-09 -- Completed 13-02 (browser verification + audit report)
+progress:
+  total_phases: 7
+  completed_phases: 7
+  total_plans: 24
+  completed_plans: 24
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Harden & Polish
+status: executing
 stopped_at: Completed 13-01-PLAN.md
-last_updated: "2026-03-09T02:39:31.315Z"
+last_updated: "2026-03-09T03:02:01.804Z"
 last_activity: 2026-03-08 -- Completed 12-02 (critical backend unit tests)
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 24
-  completed_plans: 23
+  completed_plans: 24
 ---
 
 ---
@@ -109,16 +124,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 11 Security Hardening complete
+**Current focus:** Phase 13 Functionality Audit complete -- all v1.1 phases done
 
 ## Current Position
 
-Phase: 12 of 13 (Testing & CI)
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase 12 Complete
-Last activity: 2026-03-08 -- Completed 12-02 (critical backend unit tests)
+Phase: 13 of 13 (Functionality Audit)
+Plan: 2 of 2 in current phase (all complete)
+Status: Phase 13 Complete -- All v1.1 plans done
+Last activity: 2026-03-09 -- Completed 13-02 (browser verification + audit report)
 
-Progress: [██████████] 100% -- 22/22 plans (v1.0 + v1.1 complete)
+Progress: [██████████] 100% -- 24/24 plans (v1.0 + v1.1 complete)
 
 ## Performance Metrics
 
@@ -179,6 +194,10 @@ Recent decisions affecting current work:
 - [Phase 12]: Usage service tests use lightweight mock tenantDb objects
 - [Phase 13]: Font size and code theme persist to User.preferences JSON via /api/user/preferences
 - [Phase 13]: 4 non-functional General tab controls removed (reasoning level, language, send-with-enter, show-code-results)
+- [Phase 13]: Two-pass audit methodology: code scan (128 controls) + browser verification (12 tests) -- zero remaining issues
+- [Phase 13]: Onboarding wizard verified via code path since seed user already completed onboarding
+- [Phase 13]: Cron cleanup test validates guard behavior (not-configured) since CRON_SECRET unset in dev
+- [Phase 13]: Two-pass audit methodology: code scan (128 controls) + browser verification (12 tests) confirms zero non-functional controls
 
 ### Pending Todos
 
@@ -191,6 +210,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-09T02:39:31.308Z
-Stopped at: Completed 13-01-PLAN.md
-Next step: Phase 12 complete -- all 22 v1.1 plans done
+Last session: 2026-03-09T03:02:39.294Z
+Stopped at: Completed 13-02-PLAN.md
+Next step: All v1.1 plans complete (24/24) -- milestone signoff ready
