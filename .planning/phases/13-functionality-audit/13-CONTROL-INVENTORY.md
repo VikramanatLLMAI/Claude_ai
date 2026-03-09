@@ -262,10 +262,10 @@ Status values: `pass` (works end-to-end), `pass*` (works but localStorage-only),
 | # | Control | Persistence | API Endpoint | Method | Status |
 |---|---------|-------------|-------------|--------|--------|
 | 4 | Default model select | In-memory (prop callback) | N/A | N/A | pass |
-| 5 | Default reasoning level (Low/Med/High) | **None** | N/A | N/A | no-backend |
-| 6 | Language select | **None** | N/A | N/A | no-backend |
-| 7 | Send with Enter toggle | Local state only | N/A | N/A | no-backend |
-| 8 | Show code results toggle | Local state only | N/A | N/A | no-backend |
+| 5 | ~~Default reasoning level~~ | ~~None~~ | N/A | N/A | removed |
+| 6 | ~~Language select~~ | ~~None~~ | N/A | N/A | removed |
+| 7 | ~~Send with Enter toggle~~ | ~~Local state only~~ | N/A | N/A | removed |
+| 8 | ~~Show code results toggle~~ | ~~Local state only~~ | N/A | N/A | removed |
 | 9 | Display name input + Save | API-backed | `/api/user/settings` | PATCH | pass |
 | 10 | Email display (read-only) | N/A | N/A | N/A | pass |
 | 11 | Change password form | API-backed | `/api/auth/change-password` | POST | pass |
@@ -275,8 +275,8 @@ Status values: `pass` (works end-to-end), `pass*` (works but localStorage-only),
 | # | Control | Persistence | API Endpoint | Method | Status |
 |---|---------|-------------|-------------|--------|--------|
 | 12 | Theme select (light/dark/system) | localStorage + API | `/api/user/preferences` | PATCH | pass |
-| 13 | Font size slider | **localStorage only** | N/A | N/A | fix-needed |
-| 14 | Code theme select | **localStorage only** | N/A | N/A | fix-needed |
+| 13 | Font size slider | localStorage + API | `/api/user/preferences` | PATCH | fixed |
+| 14 | Code theme select | localStorage + API | `/api/user/preferences` | PATCH | fixed |
 
 ### API Keys Tab
 
@@ -323,23 +323,23 @@ Status values: `pass` (works end-to-end), `pass*` (works but localStorage-only),
 
 ---
 
-## Issues Found
+## Issues Found (all resolved)
 
-### Fix-Needed (requires backend persistence implementation)
+### Fixed: Backend persistence added
 
-1. **Font size (Appearance tab)**: Uses `localStorage.setItem(FONT_SIZE_KEY, ...)` but has NO API call. Lost on device switch. Per CONTEXT.md decision: implement server-side persistence via `/api/user/preferences`.
+1. **Font size (Appearance tab)**: Was localStorage-only. FIXED: Added fire-and-forget PATCH to `/api/user/preferences` with fontSize field. Server syncs on modal open.
 
-2. **Code theme (Appearance tab)**: Uses `localStorage.setItem(CODE_THEME_KEY, ...)` but has NO API call. Lost on device switch. Per CONTEXT.md decision: implement server-side persistence via `/api/user/preferences`.
+2. **Code theme (Appearance tab)**: Was localStorage-only. FIXED: Added fire-and-forget PATCH to `/api/user/preferences` with codeTheme field. Server syncs on modal open.
 
-### No-Backend (non-functional controls to be removed)
+### Fixed: Non-functional controls removed
 
-3. **Default reasoning level (General tab)**: Three buttons (Low/Medium/High) with NO state management at all -- no useState, no localStorage, no API call. Buttons are completely decorative. Remove per CONTEXT.md decision (not a user settings control -- it is admin/placeholder functionality).
+3. **Default reasoning level (General tab)**: Removed. Three buttons with no state management at all.
 
-4. **Language select (General tab)**: HTML select with `defaultValue="en-US"` but NO state management, NO onChange handler connected to persistence, NO API endpoint. The application is English-only. Remove per CONTEXT.md decision.
+4. **Language select (General tab)**: Removed. No state, no onChange, app is English-only.
 
-5. **Send with Enter toggle (General tab)**: Uses `useState(true)` but resets to default on every mount. No localStorage, no API. The chat input hardcodes Enter-to-send behavior. Remove per CONTEXT.md decision (cosmetic toggle with no effect).
+5. **Send with Enter toggle (General tab)**: Removed. Local state only, reset on mount, not wired to chat input.
 
-6. **Show code results toggle (General tab)**: Uses `useState(true)` but resets to default on every mount. No localStorage, no API. Not wired to any rendering logic. Remove per CONTEXT.md decision (cosmetic toggle with no effect).
+6. **Show code results toggle (General tab)**: Removed. Local state only, reset on mount, not wired to rendering.
 
 ---
 
@@ -357,17 +357,19 @@ Status values: `pass` (works end-to-end), `pass*` (works but localStorage-only),
 
 ## Removed Controls
 
-*Tracking for potential future implementation. Updated after Task 2 fixes.*
-
 | # | Location | Control | Reason |
 |---|----------|---------|--------|
-| - | (to be populated after removals in Task 2) | | |
+| 1 | Settings > General | Default Reasoning Level (Low/Med/High buttons) | No state management at all -- buttons were purely decorative |
+| 2 | Settings > General | Language select | No state, no onChange handler -- app is English-only |
+| 3 | Settings > General | Send with Enter toggle | Local state only, reset on mount, not wired to chat input |
+| 4 | Settings > General | Show code execution results toggle | Local state only, reset on mount, not wired to rendering logic |
 
 ---
 
-**Summary:**
+**Summary (final):**
 - Super Admin: 40 controls, 0 issues
 - Org Admin: 58 controls, 0 issues
-- User Settings: 30 controls, 2 fix-needed, 4 no-backend
-- Tech Debt: 5/5 resolved
-- Total: 128 controls catalogued
+- User Settings: 30 controls -- 2 fixed (server persistence added), 4 removed (non-functional), 24 pass
+- Tech Debt: 5/5 verified resolved
+- Total: 128 controls catalogued, 0 remaining issues
+- Zero "fail" or "fix-needed" entries remain
