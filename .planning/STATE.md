@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Phase 13.1 context gathered
-last_updated: "2026-03-09T04:16:35.284Z"
-last_activity: 2026-03-09 -- Completed 13-02 (browser verification + audit report)
+stopped_at: Completed 13.1-01-PLAN.md
+last_updated: "2026-03-09T05:40:08Z"
+last_activity: 2026-03-09 -- Completed 13.1-01 (backend MCP source enum and auto-include)
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 26
+  completed_plans: 25
 ---
 
 ---
@@ -143,12 +143,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 13 of 13 (Functionality Audit)
-Plan: 2 of 2 in current phase (all complete)
-Status: Phase 13 Complete -- All v1.1 plans done
-Last activity: 2026-03-09 -- Completed 13-02 (browser verification + audit report)
+Phase: 13.1 of 13.1 (Fix MCP Connections Visibility in Chat UI)
+Plan: 1 of 2 in current phase
+Status: Plan 01 complete, Plan 02 pending
+Last activity: 2026-03-09 -- Completed 13.1-01 (backend MCP source enum and auto-include)
 
-Progress: [██████████] 100% -- 24/24 plans (v1.0 + v1.1 complete)
+Progress: [█████████░] 96% -- 25/26 plans (v1.0 + v1.1)
 
 ## Performance Metrics
 
@@ -214,6 +214,9 @@ Recent decisions affecting current work:
 - [Phase 13]: Onboarding wizard verified via code path since seed user already completed onboarding
 - [Phase 13]: Cron cleanup test validates guard behavior (not-configured) since CRON_SECRET unset in dev
 - [Phase 13]: Two-pass audit methodology: code scan (128 controls) + browser verification (12 tests) confirms zero non-functional controls
+- [Phase 13.1]: Source prefix convention: mcp__org__ and mcp__role__ (double underscores) vs personal mcp_ (single underscore)
+- [Phase 13.1]: Org/role MCPs auto-included in chat without frontend activeMcpIds; personal MCPs still require explicit selection
+- [Phase 13.1]: Cleaned up verbose MCP debug console.log statements as Phase 11 debt cleanup
 
 ### Pending Todos
 
@@ -226,6 +229,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-09T04:16:35.281Z
-Stopped at: Phase 13.1 context gathered
-Next step: All v1.1 plans complete (24/24) -- milestone signoff ready
+Last session: 2026-03-09T05:40:08Z
+Stopped at: Completed 13.1-01-PLAN.md
+Next step: Execute 13.1-02-PLAN.md (frontend MCP visibility)
