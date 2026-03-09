@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Completed 13.1-01-PLAN.md
-last_updated: "2026-03-09T05:40:08Z"
-last_activity: 2026-03-09 -- Completed 13.1-01 (backend MCP source enum and auto-include)
+stopped_at: Completed 13.1-02-PLAN.md
+last_updated: "2026-03-09T05:47:15Z"
+last_activity: 2026-03-09 -- Completed 13.1-02 (frontend MCP visibility + settings modal)
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 26
-  completed_plans: 25
+  completed_plans: 26
 ---
 
 ---
@@ -139,16 +139,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Organizations can securely deploy AI chat to their teams with full control over who can access what -- models, tools, settings, and conversations -- while maintaining complete data isolation between organizations.
-**Current focus:** Phase 13 Functionality Audit complete -- all v1.1 phases done
+**Current focus:** Phase 13.1 MCP visibility fix complete -- all v1.1 phases done
 
 ## Current Position
 
 Phase: 13.1 of 13.1 (Fix MCP Connections Visibility in Chat UI)
-Plan: 1 of 2 in current phase
-Status: Plan 01 complete, Plan 02 pending
-Last activity: 2026-03-09 -- Completed 13.1-01 (backend MCP source enum and auto-include)
+Plan: 2 of 2 in current phase
+Status: Plan 02 complete (pending human-verify checkpoint), Phase 13.1 complete
+Last activity: 2026-03-09 -- Completed 13.1-02 (frontend MCP visibility + settings modal)
 
-Progress: [█████████░] 96% -- 25/26 plans (v1.0 + v1.1)
+Progress: [██████████] 100% -- 26/26 plans (v1.0 + v1.1)
 
 ## Performance Metrics
 
@@ -229,6 +229,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-09T05:40:08Z
-Stopped at: Completed 13.1-01-PLAN.md
-Next step: Execute 13.1-02-PLAN.md (frontend MCP visibility)
+Last session: 2026-03-09T05:47:15Z
+Stopped at: Completed 13.1-02-PLAN.md (pending human-verify checkpoint)
+Next step: Human verification of MCP visibility end-to-end
