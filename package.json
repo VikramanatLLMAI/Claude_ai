@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "db:reset": "npx prisma db push --force-reset && npx tsx prisma/seed.ts",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:backfill-mcp": "npx tsx prisma/backfill-mcp-source.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "playwright test",

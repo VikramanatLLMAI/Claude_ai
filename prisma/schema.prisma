@@ -13,6 +13,16 @@ datasource db {
 }
 
 // ============================================================================
+// ENUMS
+// ============================================================================
+
+enum McpSource {
+  ORG
+  ROLE
+  PERSONAL
+}
+
+// ============================================================================
 // CORE USER & SESSION MODELS (not org-scoped)
 // ============================================================================
 
@@ -515,6 +525,7 @@ model McpConnection {
   authCredentialsEncrypted String?   @map("auth_credentials_encrypted")
   availableTools           Json      @default("[]") @map("available_tools")
   isActive                 Boolean   @default(true) @map("is_active")
+  source                   McpSource @default(PERSONAL)
   status                   String    @default("disconnected") // 'connected' | 'disconnected' | 'error'
   lastError                String?   @map("last_error")
   sessionId                String?   @map("session_id") // MCP session ID for stateful servers
