@@ -191,4 +191,4 @@ Plans:
 | 11. Security Hardening | v1.1 | 4/4 | Complete | 2026-03-08 |
 | 12. Testing & CI | v1.1 | 3/3 | Complete | 2026-03-08 |
 | 13. Functionality Audit | v1.1 | 2/2 | Complete | 2026-03-09 |
-| 13.1. Fix MCP visibility | 2/2 | Complete   | 2026-03-09 | - |
+| 13.1. Fix MCP visibility | 2/2 | Complete    | 2026-03-09 | - |
