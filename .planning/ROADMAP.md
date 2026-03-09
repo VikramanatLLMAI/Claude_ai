@@ -165,7 +165,7 @@ Plans:
   3. Settings modal MCP tab shows read-only org/role MCP sections above personal connections
   4. personalMcpEnabled is enforced on both frontend (UI gating) and backend (403 on CRUD)
   5. McpConnection model has explicit source enum (ORG, ROLE, PERSONAL)
-**Plans:** 3 plans (gap closure in progress)
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 13.1-01-PLAN.md — Schema (McpSource enum), backfill script, new API endpoints (/api/mcp/org, /api/mcp/role), chat route fix, auth/me enhancement, personalMcpEnabled guardrails
@@ -192,4 +192,4 @@ Plans:
 | 11. Security Hardening | v1.1 | 4/4 | Complete | 2026-03-08 |
 | 12. Testing & CI | v1.1 | 3/3 | Complete | 2026-03-08 |
 | 13. Functionality Audit | v1.1 | 2/2 | Complete | 2026-03-09 |
-| 13.1. Fix MCP visibility | 2/3 | Gap closure    | 2026-03-09 | - |
+| 13.1. Fix MCP visibility | 3/3 | Complete   | 2026-03-09 | - |

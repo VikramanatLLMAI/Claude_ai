@@ -3,14 +3,29 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
-stopped_at: Completed 13.1-02-PLAN.md (all tasks verified)
-last_updated: "2026-03-09T06:22:45.245Z"
-last_activity: 2026-03-09 -- Completed 13.1-02 verification (human-verify checkpoint approved)
+stopped_at: Completed 13.1-03-PLAN.md (gap closure complete)
+last_updated: "2026-03-09T08:36:31.982Z"
+last_activity: 2026-03-09 -- Completed 13.1-03 gap closure (admin MCP source, auth/me fallback, edit dialog, 403 toast)
 progress:
   total_phases: 8
   completed_phases: 8
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 27
+  completed_plans: 27
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Harden & Polish
+status: executing
+stopped_at: Completed 13.1-03-PLAN.md (gap closure complete)
+last_updated: "2026-03-09T08:35:17Z"
+last_activity: 2026-03-09 -- Completed 13.1-03 gap closure (admin MCP source, auth/me fallback, edit dialog, 403 toast)
+progress:
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 27
+  completed_plans: 27
 ---
 
 ---
@@ -159,11 +174,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 13.1 of 13.1 (Fix MCP Connections Visibility in Chat UI)
-Plan: 2 of 2 in current phase
-Status: Plan 02 complete (all tasks verified), Phase 13.1 complete
-Last activity: 2026-03-09 -- Completed 13.1-02 verification (human-verify checkpoint approved)
+Plan: 3 of 3 in current phase
+Status: Plan 03 complete (gap closure), Phase 13.1 complete
+Last activity: 2026-03-09 -- Completed 13.1-03 gap closure (admin MCP source, auth/me fallback, edit dialog, 403 toast)
 
-Progress: [██████████] 100% -- 26/26 plans (v1.0 + v1.1)
+Progress: [██████████] 100% -- 27/27 plans (v1.0 + v1.1)
 
 ## Performance Metrics
 
@@ -232,6 +247,7 @@ Recent decisions affecting current work:
 - [Phase 13.1]: Source prefix convention: mcp__org__ and mcp__role__ (double underscores) vs personal mcp_ (single underscore)
 - [Phase 13.1]: Org/role MCPs auto-included in chat without frontend activeMcpIds; personal MCPs still require explicit selection
 - [Phase 13.1]: Cleaned up verbose MCP debug console.log statements as Phase 11 debt cleanup
+- [Phase 13.1]: One-user-one-org fallback in /api/auth/me: query orgMember by userId without slug filter when resolveOrgSlug returns null
 
 ### Pending Todos
 
@@ -244,6 +260,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-09T06:15:00Z
-Stopped at: Completed 13.1-02-PLAN.md (all tasks verified)
-Next step: All v1.1 milestones complete
+Last session: 2026-03-09T08:35:17Z
+Stopped at: Completed 13.1-03-PLAN.md (gap closure complete)
+Next step: All v1.1 milestones complete, UAT retesting recommended
