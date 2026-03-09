@@ -168,8 +168,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 13.1-01-PLAN.md — Schema (McpSource enum), backfill script, new API endpoints (/api/mcp/org, /api/mcp/role), chat route fix, auth/me enhancement, personalMcpEnabled guardrails
-- [ ] 13.1-02-PLAN.md — Frontend tool source labels, read-only MCP card component, settings modal MCP tab with org/role sections and personalMcpEnabled gating
+- [x] 13.1-01-PLAN.md — Schema (McpSource enum), backfill script, new API endpoints (/api/mcp/org, /api/mcp/role), chat route fix, auth/me enhancement, personalMcpEnabled guardrails
+- [x] 13.1-02-PLAN.md — Frontend tool source labels, read-only MCP card component, settings modal MCP tab with org/role sections and personalMcpEnabled gating
 
 ## Progress
 
