@@ -25,6 +25,16 @@ import {
 } from "lucide-react"
 import { useState, type ReactNode } from "react"
 
+// -- Parse MCP tool source from prefixed name ----
+
+function parseToolSource(name: string): { source: 'org' | 'role' | null; cleanName: string } {
+  const match = name.match(/^mcp__(org|role)__(.+)$/)
+  if (match) {
+    return { source: match[1] as 'org' | 'role', cleanName: match[2] }
+  }
+  return { source: null, cleanName: name }
+}
+
 // -- Icon mapping ----
 
 function getToolIcon(toolName: string, state: string): ReactNode {
@@ -38,7 +48,8 @@ function getToolIcon(toolName: string, state: string): ReactNode {
     return <XCircle className="size-4 text-red-500" />
   }
 
-  const name = toolName.toLowerCase()
+  const { cleanName } = parseToolSource(toolName)
+  const name = cleanName.toLowerCase()
 
   if (name === "web_search" || name === "web_fetch") {
     return <Globe className="size-4 text-blue-500" />
@@ -85,12 +96,13 @@ const PATTERN_VERBS: [RegExp, string][] = [
 
 function getToolActionVerb(toolName: string): string {
   if (TOOL_ACTION_VERBS[toolName]) return TOOL_ACTION_VERBS[toolName]
-  const lower = toolName.toLowerCase()
+  const { cleanName } = parseToolSource(toolName)
+  const lower = cleanName.toLowerCase()
   for (const [pattern, verb] of PATTERN_VERBS) {
     if (pattern.test(lower)) return verb
   }
   // Fallback: format tool name
-  const formatted = toolName
+  const formatted = cleanName
     .replace(/^mcp_/, "")
     .replace(/_/g, " ")
     .replace(/([A-Z])/g, " $1")
@@ -118,13 +130,14 @@ function generateTimelineSummary(tools: ToolPart[]): string {
 // -- Format tool name for display ----
 
 function formatToolName(name: string): string {
+  const { cleanName } = parseToolSource(name)
   const knownNames: Record<string, string> = {
     web_search: "Web Search",
     web_fetch: "Web Fetch",
     code_execution: "Code Execution",
   }
   if (knownNames[name]) return knownNames[name]
-  return name
+  return cleanName
     .replace(/^mcp_/, "")
     .replace(/_/g, " ")
     .replace(/([A-Z])/g, " $1")
@@ -154,6 +167,7 @@ interface ToolTimelineItemProps {
 function ToolTimelineItem({ toolPart, isLast, artifact, onOpenArtifact }: ToolTimelineItemProps) {
   const [detailOpen, setDetailOpen] = useState(false)
   const { state, input, output, errorText } = toolPart
+  const { source } = parseToolSource(toolPart.type)
   const isProcessing = state === "input-streaming" || state === "input-available"
   const isError = state === "output-error"
   const hasDetails = (input && Object.keys(input).length > 0) || output || (isError && errorText)
@@ -179,6 +193,11 @@ function ToolTimelineItem({ toolPart, isLast, artifact, onOpenArtifact }: ToolTi
           <span className="text-sm text-foreground">
             {getToolActionVerb(toolPart.type)}
           </span>
+          {source && (
+            <span className="text-xs text-muted-foreground">
+              ({source === 'org' ? 'Org' : 'Role'})
+            </span>
+          )}
           {isProcessing && (
             <Loader2 className="size-3 animate-spin text-muted-foreground" />
           )}

@@ -16,6 +16,16 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 
+// -- Parse MCP tool source from prefixed name ----
+
+function parseToolSource(name: string): { source: 'org' | 'role' | null; cleanName: string } {
+  const match = name.match(/^mcp__(org|role)__(.+)$/)
+  if (match) {
+    return { source: match[1] as 'org' | 'role', cleanName: match[2] }
+  }
+  return { source: null, cleanName: name }
+}
+
 // PromptKit-aligned tool states
 export type ToolState =
   | "input-streaming"   // Tool input is being streamed
@@ -122,6 +132,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
   }
 
   const formatToolName = (name: string) => {
+    const { cleanName } = parseToolSource(name)
     const knownNames: Record<string, string> = {
       'web_search': 'Web Search',
       'web_fetch': 'Web Fetch',
@@ -129,7 +140,7 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
     };
     if (knownNames[name]) return knownNames[name];
     // Convert snake_case or camelCase to Title Case
-    return name
+    return cleanName
       .replace(/^mcp_/, "") // Remove mcp_ prefix
       .replace(/_/g, " ")
       .replace(/([A-Z])/g, " $1")
@@ -237,6 +248,14 @@ const Tool = ({ toolPart, defaultOpen = false, className }: ToolProps) => {
               <span className="font-mono text-sm font-medium">
                 {formatToolName(toolPart.type)}
               </span>
+              {(() => {
+                const { source } = parseToolSource(toolPart.type)
+                return source ? (
+                  <span className="text-xs text-muted-foreground">
+                    ({source === 'org' ? 'Org' : 'Role'})
+                  </span>
+                ) : null
+              })()}
               {getStateBadge()}
             </div>
             <ChevronDown className={cn("h-4 w-4 transition-transform duration-200 ease-out", isOpen ? "rotate-180" : "rotate-0")} />
