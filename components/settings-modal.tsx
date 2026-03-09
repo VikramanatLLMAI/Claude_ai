@@ -198,7 +198,7 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
     if (savedCodeTheme) setCodeTheme(savedCodeTheme)
 
     // Sync theme mode from API (server is source of truth)
-    syncThemeModeFromApi()
+    syncPreferencesFromApi()
 
     // Load profile and settings
     loadUserProfile()
@@ -540,20 +540,32 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
     }
   }
 
-  const syncThemeModeFromApi = async () => {
+  const syncPreferencesFromApi = async () => {
     try {
       const res = await fetch("/api/user/preferences", { headers: getAuthHeaders() })
       if (res.ok) {
         const data = await res.json()
-        const serverThemeMode = data.preferences?.themeMode as Theme | undefined
+        const prefs = data.preferences || {}
+        const serverThemeMode = prefs.themeMode as Theme | undefined
         if (serverThemeMode && serverThemeMode !== theme) {
           setTheme(serverThemeMode)
           localStorage.setItem(THEME_KEY, serverThemeMode)
           applyTheme(serverThemeMode)
         }
+        const serverFontSize = prefs.fontSize as number | undefined
+        if (serverFontSize && serverFontSize !== fontSize) {
+          setFontSize(serverFontSize)
+          localStorage.setItem(FONT_SIZE_KEY, String(serverFontSize))
+          document.documentElement.style.setProperty("--base-font-size", `${serverFontSize}px`)
+        }
+        const serverCodeTheme = prefs.codeTheme as CodeTheme | undefined
+        if (serverCodeTheme && serverCodeTheme !== codeTheme) {
+          setCodeTheme(serverCodeTheme)
+          localStorage.setItem(CODE_THEME_KEY, serverCodeTheme)
+        }
       }
     } catch (error) {
-      console.error("Error syncing theme preferences:", error)
+      console.error("Error syncing preferences:", error)
     }
   }
 
@@ -573,11 +585,23 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
     setFontSize(newSize)
     localStorage.setItem(FONT_SIZE_KEY, String(newSize))
     document.documentElement.style.setProperty("--base-font-size", `${newSize}px`)
+    // Persist to API (fire-and-forget)
+    fetch("/api/user/preferences", {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ fontSize: newSize }),
+    }).catch((err) => console.error("Error persisting font size:", err))
   }
 
   const handleCodeThemeChange = (newCodeTheme: CodeTheme) => {
     setCodeTheme(newCodeTheme)
     localStorage.setItem(CODE_THEME_KEY, newCodeTheme)
+    // Persist to API (fire-and-forget)
+    fetch("/api/user/preferences", {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ codeTheme: newCodeTheme }),
+    }).catch((err) => console.error("Error persisting code theme:", err))
   }
 
   // Profile save

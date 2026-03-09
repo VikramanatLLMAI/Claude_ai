@@ -8,6 +8,8 @@ import type { Prisma } from '@/lib/generated/prisma/client';
 
 const PatchPreferencesSchema = z.object({
   themeMode: z.enum(['light', 'dark', 'system']).optional(),
+  fontSize: z.number().int().min(10).max(24).optional(),
+  codeTheme: z.enum(['github-dark', 'one-dark-pro', 'dracula']).optional(),
 });
 
 // GET /api/user/preferences - Return user preferences
@@ -60,6 +62,12 @@ export async function PATCH(req: NextRequest) {
 
     if (parsed.data.themeMode !== undefined) {
       updatedPreferences.themeMode = parsed.data.themeMode;
+    }
+    if (parsed.data.fontSize !== undefined) {
+      updatedPreferences.fontSize = parsed.data.fontSize;
+    }
+    if (parsed.data.codeTheme !== undefined) {
+      updatedPreferences.codeTheme = parsed.data.codeTheme;
     }
 
     const updatedUser = await prisma.user.update({
