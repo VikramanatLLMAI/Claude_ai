@@ -131,6 +131,7 @@ export async function PATCH(
     // Handle assignment type change
     if (assignmentType === 'org-wide') {
       updateData.roleId = null;
+      updateData.source = 'ORG';
     } else if (assignmentType === 'role-specific' && parsed.data.roleId) {
       // Verify role belongs to this org
       const role = await auth.tenantDb.role.findUnique({ where: { id: parsed.data.roleId } });
@@ -141,6 +142,7 @@ export async function PATCH(
         );
       }
       updateData.roleId = parsed.data.roleId;
+      updateData.source = 'ROLE';
     }
 
     // Handle credential encryption

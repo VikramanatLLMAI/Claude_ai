@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
           organizationId: auth.organization.id,
           userId: null, // org-managed, not personal
           roleId: assignmentType === 'role-specific' ? roleId! : null,
+          source: assignmentType === 'role-specific' ? 'ROLE' : 'ORG',
           name,
           serverUrl,
           authType,

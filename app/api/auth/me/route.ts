@@ -39,8 +39,11 @@ export async function GET(req: NextRequest) {
     // If org context available and user is not Super Admin, enrich with org info
     if (!user.isSuperAdmin) {
       const slug = resolveOrgSlug(req);
+      let orgMember = null;
+
       if (slug) {
-        const orgMember = await prisma.orgMember.findFirst({
+        // Slug available (production subdomain routing or /org/:slug/ path)
+        orgMember = await prisma.orgMember.findFirst({
           where: {
             userId: user.id,
             organization: {
@@ -54,20 +57,36 @@ export async function GET(req: NextRequest) {
             role: true,
           },
         });
+      } else {
+        // Fallback: find user's org membership directly (one user = one org)
+        // This handles dev mode where /api/auth/me URL has no slug in the path
+        orgMember = await prisma.orgMember.findFirst({
+          where: {
+            userId: user.id,
+            organization: {
+              deletedAt: null,
+              status: 'ACTIVE',
+            },
+          },
+          include: {
+            organization: true,
+            role: true,
+          },
+        });
+      }
 
-        if (orgMember) {
-          response.organization = {
-            id: orgMember.organization.id,
-            name: orgMember.organization.name,
-            slug: orgMember.organization.slug,
-          };
-          response.role = {
-            id: orgMember.role.id,
-            name: orgMember.role.name,
-            permissions: orgMember.role.permissions,
-            personalMcpEnabled: orgMember.role.personalMcpEnabled,
-          };
-        }
+      if (orgMember) {
+        response.organization = {
+          id: orgMember.organization.id,
+          name: orgMember.organization.name,
+          slug: orgMember.organization.slug,
+        };
+        response.role = {
+          id: orgMember.role.id,
+          name: orgMember.role.name,
+          permissions: orgMember.role.permissions,
+          personalMcpEnabled: orgMember.role.personalMcpEnabled,
+        };
       }
     }
 
