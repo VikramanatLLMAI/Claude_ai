@@ -8,10 +8,9 @@
  * Sections:
  * 1. Organization Info (read-only): org name, slug, created date
  * 2. Logo: upload/remove org logo
- * 3. Login Page: tagline, welcome message customization
- * 4. Theme: active theme selector
- * 5. Onboarding: onboarding text configuration
- * 6. Platform API Keys: assigned keys with masked values, test button
+ * 3. Theme: active theme selector
+ * 4. Onboarding: onboarding text configuration
+ * 5. Platform API Keys: assigned keys with masked values, test button
  */
 
 import * as React from "react"
@@ -28,7 +27,6 @@ import {
   FileText,
   Upload,
   Trash2,
-  LogIn,
   BookOpen,
   Save,
   AlertCircle,
@@ -245,12 +243,6 @@ export default function OrgSettingsPage() {
   const [logoError, setLogoError] = React.useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  // --- Login page state ---
-  const [tagline, setTagline] = React.useState("")
-  const [welcomeMessage, setWelcomeMessage] = React.useState("")
-  const [loginSaving, setLoginSaving] = React.useState(false)
-  const [loginLoading, setLoginLoading] = React.useState(true)
-
   // --- Onboarding state ---
   const [onboardingText, setOnboardingText] = React.useState("")
   const [onboardingVersion, setOnboardingVersion] = React.useState(1)
@@ -306,27 +298,6 @@ export default function OrgSettingsPage() {
   React.useEffect(() => {
     fetchApiKeys()
   }, [fetchApiKeys])
-
-  // ---- Fetch login page settings ----
-  React.useEffect(() => {
-    async function fetchLoginSettings() {
-      try {
-        const res = await fetch(`/api/org/${slug}/admin/settings/login-page`, {
-          headers: getAuthHeaders(),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setTagline(data.tagline || "")
-          setWelcomeMessage(data.welcomeMessage || "")
-        }
-      } catch {
-        // Ignore - defaults are empty
-      } finally {
-        setLoginLoading(false)
-      }
-    }
-    fetchLoginSettings()
-  }, [slug])
 
   // ---- Fetch onboarding config ----
   React.useEffect(() => {
@@ -472,29 +443,6 @@ export default function OrgSettingsPage() {
       setLogoError(err instanceof Error ? err.message : "Remove failed")
     } finally {
       setLogoRemoving(false)
-    }
-  }
-
-  // ---- Login page save ----
-  const handleLoginSave = async () => {
-    setLoginSaving(true)
-    try {
-      const res = await fetch(`/api/org/${slug}/admin/settings/login-page`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ tagline, welcomeMessage }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || "Save failed")
-      }
-
-      setToast({ message: "Login page settings saved", type: "success" })
-    } catch (err) {
-      setToast({ message: err instanceof Error ? err.message : "Save failed", type: "error" })
-    } finally {
-      setLoginSaving(false)
     }
   }
 
@@ -667,83 +615,6 @@ export default function OrgSettingsPage() {
               </div>
             )}
           </div>
-        </section>
-
-        {/* Login Page Section */}
-        <section>
-          <div className="flex items-center gap-2 mb-1">
-            <LogIn className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-base font-semibold text-foreground">Login Page</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Customize the login page for your organization members.
-          </p>
-
-          {loginLoading ? (
-            <div className="space-y-3">
-              <div className="h-10 w-full rounded-lg bg-muted animate-pulse" />
-              <div className="h-24 w-full rounded-lg bg-muted animate-pulse" />
-            </div>
-          ) : (
-            <div className="rounded-lg border border-border p-4 space-y-4">
-              {/* Tagline */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Tagline
-                </label>
-                <div className="relative">
-                  <Input
-                    value={tagline}
-                    onChange={(e) => setTagline(e.target.value.slice(0, 100))}
-                    placeholder="e.g., Your AI-powered workspace"
-                    maxLength={100}
-                    className="pr-12"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                    {tagline.length}/100
-                  </span>
-                </div>
-              </div>
-
-              {/* Welcome message */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Welcome message
-                </label>
-                <div className="relative">
-                  <textarea
-                    value={welcomeMessage}
-                    onChange={(e) => setWelcomeMessage(e.target.value.slice(0, 500))}
-                    placeholder="Displayed below the tagline on the login page"
-                    maxLength={500}
-                    rows={3}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <span className="absolute right-3 bottom-2 text-xs text-muted-foreground">
-                    {welcomeMessage.length}/500
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">
-                  Visit your org login page to see changes.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={handleLoginSave}
-                  disabled={loginSaving}
-                >
-                  {loginSaving ? (
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Save className="mr-1.5 h-3.5 w-3.5" />
-                  )}
-                  Save
-                </Button>
-              </div>
-            </div>
-          )}
         </section>
 
         {/* Theme Section */}
