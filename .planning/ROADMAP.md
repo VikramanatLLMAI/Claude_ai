@@ -155,9 +155,25 @@ Plans:
 - [ ] 13-01-PLAN.md — Code-first audit scan, fix mismatches, implement missing settings backends, resolve tech debt
 - [ ] 13-02-PLAN.md — Browser verification of 12 pending v1.0 tests via Playwright MCP, formal audit report
 
+### Phase 13.1: Fix MCP connections visibility in chat UI (INSERTED)
+**Goal:** Org-wide and role-scoped MCP connections are auto-included in chat, visible in settings, and source-labeled in tool call displays, with personalMcpEnabled enforced as defense-in-depth
+**Depends on:** Phase 13
+**Requirements**: N/A (urgent fix, no formal requirement IDs)
+**Success Criteria** (what must be TRUE):
+  1. Chat route auto-includes org-wide and role-scoped MCP tools regardless of frontend activeMcpIds
+  2. Tool call timeline shows (Org) or (Role) source labels next to admin-managed MCP tool names
+  3. Settings modal MCP tab shows read-only org/role MCP sections above personal connections
+  4. personalMcpEnabled is enforced on both frontend (UI gating) and backend (403 on CRUD)
+  5. McpConnection model has explicit source enum (ORG, ROLE, PERSONAL)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 13.1-01-PLAN.md — Schema (McpSource enum), backfill script, new API endpoints (/api/mcp/org, /api/mcp/role), chat route fix, auth/me enhancement, personalMcpEnabled guardrails
+- [ ] 13.1-02-PLAN.md — Frontend tool source labels, read-only MCP card component, settings modal MCP tab with org/role sections and personalMcpEnabled gating
+
 ## Progress
 
-**Execution Order:** Phases 8 -> 9 -> 10 -> 10.1 -> 11 -> 12 -> 13
+**Execution Order:** Phases 8 -> 9 -> 10 -> 10.1 -> 11 -> 12 -> 13 -> 13.1
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -171,7 +187,8 @@ Plans:
 | 8. Schema & Prompt Stack | v1.1 | 2/2 | Complete | 2026-03-06 |
 | 9. Admin UI Overhaul | v1.1 | 6/6 | Complete | 2026-03-07 |
 | 10. Prompt Suggestions, Login Polish & Chat Welcome | v1.1 | 3/3 | Complete | 2026-03-07 |
-| 10.1. Migrate Recharts to shadcn/ui Charts | 4/4 | Complete    | 2026-03-08 | - |
-| 11. Security Hardening | 4/4 | Complete    | 2026-03-08 | - |
-| 12. Testing & CI | 3/3 | Complete    | 2026-03-08 | - |
-| 13. Functionality Audit | 2/2 | Complete    | 2026-03-09 | - |
+| 10.1. Migrate Recharts to shadcn/ui Charts | v1.1 | 4/4 | Complete | 2026-03-08 |
+| 11. Security Hardening | v1.1 | 4/4 | Complete | 2026-03-08 |
+| 12. Testing & CI | v1.1 | 3/3 | Complete | 2026-03-08 |
+| 13. Functionality Audit | v1.1 | 2/2 | Complete | 2026-03-09 |
+| 13.1. Fix MCP visibility | v1.1 | 0/2 | Planning | - |
