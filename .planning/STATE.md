@@ -3,6 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Harden & Polish
 status: executing
+stopped_at: Phase 13.1 context gathered
+last_updated: "2026-03-09T04:16:35.284Z"
+last_activity: 2026-03-09 -- Completed 13-02 (browser verification + audit report)
+progress:
+  total_phases: 8
+  completed_phases: 7
+  total_plans: 24
+  completed_plans: 24
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.1
+milestone_name: Harden & Polish
+status: executing
 stopped_at: Completed 13-02-PLAN.md
 last_updated: "2026-03-09T03:05:52.095Z"
 last_activity: 2026-03-09 -- Completed 13-02 (browser verification + audit report)
@@ -148,6 +163,7 @@ Progress: [██████████] 100% -- 24/24 plans (v1.0 + v1.1 comp
 ### Roadmap Evolution
 
 - Phase 10.1 inserted after Phase 10: Migrate Recharts to shadcn/ui Charts (INSERTED)
+- Phase 13.1 inserted after Phase 13: Fix MCP connections visibility in chat UI (URGENT)
 
 ### Decisions
 
@@ -210,6 +226,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-09T03:02:39.294Z
-Stopped at: Completed 13-02-PLAN.md
+Last session: 2026-03-09T04:16:35.281Z
+Stopped at: Phase 13.1 context gathered
 Next step: All v1.1 plans complete (24/24) -- milestone signoff ready
