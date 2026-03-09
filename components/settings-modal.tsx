@@ -31,7 +31,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
 import { McpConnectionCard, type McpConnectionData } from "@/components/mcp/mcp-connection-card"
 import { McpAddDialog } from "@/components/mcp/mcp-add-dialog"
 import { InstructionEditor } from "@/components/admin/instruction-editor"
@@ -119,8 +118,6 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
   useEffect(() => {
     if (currentModel) setDefaultModel(currentModel)
   }, [currentModel])
-  const [sendWithEnter, setSendWithEnter] = useState(true)
-  const [showCodeResults, setShowCodeResults] = useState(true)
 
   // Instructions Tuning state
   const [customInstructions, setCustomInstructions] = useState("")
@@ -988,62 +985,6 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
                       </select>
                     </div>
 
-                    <div>
-                      <Label className="mb-1.5 block">Default Reasoning Level</Label>
-                      <div className="flex rounded-md border border-border overflow-hidden">
-                        {["Low", "Medium", "High"].map((level) => (
-                          <button
-                            key={level}
-                            className={cn(
-                              "flex-1 py-2 text-sm font-medium transition-colors",
-                              level === "Medium"
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-background text-foreground hover:bg-muted"
-                            )}
-                          >
-                            {level}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="mb-1.5 block">Language</Label>
-                      <select
-                        className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        defaultValue="en-US"
-                      >
-                        <option value="en-US">English (US)</option>
-                        <option value="en-GB">English (UK)</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="ja">Japanese</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Chat Behavior */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-foreground">Chat Behavior</h4>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-foreground">Send with Enter</p>
-                        <p className="text-xs text-muted-foreground">Use Shift+Enter for new line</p>
-                      </div>
-                      <Switch checked={sendWithEnter} onCheckedChange={setSendWithEnter} />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-foreground">Show code execution results</p>
-                        <p className="text-xs text-muted-foreground">Display output of code blocks</p>
-                      </div>
-                      <Switch checked={showCodeResults} onCheckedChange={setShowCodeResults} />
-                    </div>
                   </div>
 
                   <Separator />
