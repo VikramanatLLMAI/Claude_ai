@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -46,6 +46,28 @@ export function McpAddDialog({ open, onOpenChange, onAdd, editData }: McpAddDial
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isEditing = !!editData
+
+  // Sync form state when editData changes (dialog opens for edit)
+  useEffect(() => {
+    if (editData) {
+      setName(editData.name)
+      setServerUrl(editData.serverUrl)
+      setAuthType(editData.authType)
+      if (editData.authType !== 'none') {
+        setShowAdvanced(true)
+      }
+    } else {
+      setName("")
+      setServerUrl("")
+      setAuthType("none")
+      setShowAdvanced(false)
+    }
+    // Clear credential fields and errors on any editData change
+    setOauthClientId("")
+    setOauthClientSecret("")
+    setApiKey("")
+    setErrors({})
+  }, [editData])
 
   const validate = () => {
     const newErrors: Record<string, string> = {}

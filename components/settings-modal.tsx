@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
+import { toast } from "sonner"
 import {
   Settings,
   Palette,
@@ -755,8 +756,13 @@ export function SettingsModal({ open, onClose, defaultTab = "profile", currentMo
     if (res.ok) {
       await fetchConnections()
     } else {
-      const error = await res.json()
-      throw new Error(error.message || "Failed to add connection")
+      const errorData = await res.json()
+      if (res.status === 403) {
+        toast.error("Personal MCP connections are not enabled for your role. Contact your admin.")
+      } else {
+        toast.error(errorData.error || errorData.message || "Failed to add connection")
+      }
+      throw new Error(errorData.error || errorData.message || "Failed to add connection")
     }
   }
 
