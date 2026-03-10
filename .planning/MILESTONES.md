@@ -1,4 +1,42 @@
 # Milestones: LLMatscale.ai
+## v1.1 Harden & Polish (Shipped: 2026-03-10)
+
+**Phases:** 8 (8-13.1, incl. decimal inserts 10.1, 13.1)
+**Plans:** 27
+**Requirements:** 62/62 complete
+
+**Delivered:** Elevated LLMatscale.ai from MVP to production-grade SaaS quality with Vercel-level admin UI polish, 6-layer prompt stack with restriction enforcement, prompt suggestions, login branding customization, theme-aware chart migration, comprehensive security hardening, automated test suite with CI pipeline, full functionality audit, and MCP connections visibility fix.
+
+**Key Accomplishments:**
+1. 6-layer XML-tagged prompt stack with org/role restriction enforcement and AI-powered Enhance button on all prompt surfaces
+2. Production-grade admin dashboards with collapsible icon-mode sidebar, profile expander, AdminPageHeader, and Vercel-level visual polish across all 20+ admin pages
+3. Prompt suggestions, login branding, and chat welcome screen with customizable starter prompts, two-column login redesign, and live preview branding editor
+4. Theme-aware shadcn/ui chart migration replacing all 17 direct Recharts components with CSS variable colors
+5. Security hardening with rate limiting on all 100+ routes, security headers, origin validation, CSP report-only, and Zod input validation audit
+6. 86 unit tests + 6 E2E tests + GitHub Actions CI pipeline with PostgreSQL service container
+7. Full functionality audit verifying 128 UI controls, fixing settings persistence, and removing non-functional controls
+8. MCP connections visibility with auto-include org/role tools in chat, source labels, and personalMcpEnabled gating
+
+**Stats:**
+- Commits: 156
+- Files modified: 296
+- Lines: +34,840 / -6,381 (net +28,459)
+- Total TypeScript LOC: 73,515
+- Timeline: 4 days (2026-03-06 to 2026-03-09)
+- Git range: v1.0..HEAD
+
+**Known Tech Debt:**
+- "Coming Soon" tooltip on disabled admin nav items (intentional)
+- "Coming soon" in Settings Advanced tab (intentional placeholder)
+- Nyquist validation partial (3 draft, 5 missing) — non-blocking
+
+**Archives:**
+- Roadmap: `.planning/milestones/v1.1-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.1-REQUIREMENTS.md`
+- Audit: `.planning/milestones/v1.1-MILESTONE-AUDIT.md`
+
+---
+
 
 ## v1.0 MVP — RBAC Multi-Tenant Platform
 
